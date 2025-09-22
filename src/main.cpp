@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/22 16:36:40 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/22 17:10:27 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,10 +178,43 @@ int main(int ac, char *av[])
 	}
 	std::cout << "Clinet connected successfully √ √ √ ! ! ! " << std::endl;
 	//here we will be the client info
-	memset(host, 0, 1025);
-	memset(service, 0, 32);
+	memset(host, 0, 1025); // clear the arr
+	memset(service, 0, 32); 
 	
-	// 					========= IRC =============
+	/*
+				========= IRC =============
+		recive client name through the socket connection and display in 
+		 the format  ClientName connected on ServiceName
+		
+	*/
+
+	//Welcome message
+	std::string welcomeMsg = "Welcome! Please enter your name: ";
+	/*
+				================= SEND ========================
+		the send() dunction is able to transmit data to a connected socket.
+
+		ssize_t send(int sockfd, const void* buf, size_t len, int flags);
+		Parameters:
+		1) sockfd - socked fd
+		2) buf - pointer to the data that will be send
+		3) len - num of bytes that will be send
+		4) flags - control flags usually 0
+		
+		RETURN: 
+			success -> the number of bytes sent
+			ERROR => -1
+	*/
+	// This was sending the client msg
+	int byte_sent;
+	if(byte_sent = send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)
+	{
+		std::cerr << "Failed on welcome msg " << std::endl;
+		close(clientSocket);
+		close(listening);
+		return -1;
+	}
+	//Recive client response
 	
 	return 0;
 }
