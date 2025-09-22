@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/22 15:42:28 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/22 15:58:52 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,36 @@
 
 
 /*====== TEST ========*/
+
+/*
+	External Functions
+	socket √
+	close √
+	setsockopt
+	getsockname
+	getprotobyname
+ 	gethostbyname
+	getaddrinfo
+	freeaddrinfo
+ 	bind √
+  	connect
+	listen  
+	accept
+	htons √
+	htonl 
+	ntohs
+	ntohl
+	inet_addr √
+	inet_ntoa
+	send
+	recv
+	signal
+	sigaction
+	lseek
+	fstat
+	fcntl
+	poll
+*/
 
 int main(int ac, char *av[])
 {
@@ -87,6 +117,33 @@ int main(int ac, char *av[])
 		close(listening);
 		return -1;
 	}
-	//
+	std::cout << "Binding IP to port is √ !  !  !" << std::endl;
+	// Mark socket for listening in
+	/*
+				==================== LISTEN ====================
+			listen() -> this function marks the socket referred by sockedfd as a passivesocket
+			that will be used to accept incoming connection requests.
+			
+			 int listen(int sockfd, int backlog)
+			Parameters:
+			sockfd - the socket file descriptor (in my case listening vriable)
+			backlog - the maximum number of pending connections that can be queued
+
+			RETURN:
+				success => 0
+				ERROR => -1
+			
+				backlog values : SOMAXCONN (system maximum usually 128)
+				          		 5 to 10 for  small servers.
+						 
+	*/
+	if(listen(listening, SOMAXCONN) == -1)
+	{
+		std::cerr << "Can't listen in the socker" << std::endl;
+		close(listening);
+		return -1;
+	}
+	std::cout << "Server is listening on 127.0.0.1:54000" << std::endl;
+ 
 	return 0;
 }
