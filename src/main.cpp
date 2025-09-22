@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/22 15:58:52 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/22 16:36:40 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <sys/socket.h> // for socket liberary
 #include <netinet/in.h> // for socketaddr
 #include <arpa/inet.h> // for inet_addr
+#include <netdb.h> // defines NI_MAXHOST 
+#include <unistd.h>
 
 
 /*====== TEST ========*/
@@ -144,6 +146,42 @@ int main(int ac, char *av[])
 		return -1;
 	}
 	std::cout << "Server is listening on 127.0.0.1:54000" << std::endl;
- 
+	// ACCEPTING CONNECTION , this is where we will do the client. 
+	sockaddr_in client;
+	socklen_t	clientSize = sizeof(client);
+	char		host[NI_MAXHOST]; // 1025 max num of hosts
+	char		service[NI_MAXSERV]; // 32 max num of serv
+	
+	/*
+				===================== ACCEPT ======================
+		the accept() function first extracts the first connection request on the
+		queue of pending connections for the listening socket, creates a new connected socket, 
+		and returns the new fd referring to that socket.
+	
+		int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+		Parameters:
+		1) sockfd - listening socket file descriptor
+		2) addr - pointer to sockaddr struct to store client info
+		3) addrlen - pointer to size of addr struct
+
+		RETURN:
+			success => New socket file descriptor for the connection
+			ERROR => -1
+	*/
+
+	int clientSocket;
+	if(clientSocket = accept(listening, (sockaddr*)&client, &clientSize) == -1)
+	{
+		std::cerr << "Failed in connecting the client !  !  !" << std::endl;
+		close(listening);
+		return -1;
+	}
+	std::cout << "Clinet connected successfully √ √ √ ! ! ! " << std::endl;
+	//here we will be the client info
+	memset(host, 0, 1025);
+	memset(service, 0, 32);
+	
+	// 					========= IRC =============
+	
 	return 0;
 }
