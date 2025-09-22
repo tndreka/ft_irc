@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/22 17:10:27 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/22 17:22:18 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,6 +215,38 @@ int main(int ac, char *av[])
 		return -1;
 	}
 	//Recive client response
-	
+		/*
+				==================== RECV ======================
+			recv() function recives data from a connected socket.
+		
+			ssize_t send(int sockfd, boid *buf, size_t len, int flags);
+		Parameters:
+		1)sockfd -> socked fd
+		2) buf -> to store the recived data.
+		3) len -> max number of bytes to recive
+		4) flag ->  control flags usually 0
+
+		RETUER:
+			SUCCESS: Number if bytes recived.
+			ERROR: -1
+			Connection CLOSED  = 0;
+		*/
+	char buff[1024] = {0};
+	int byteRecived;
+	if(byteRecived = recv(clientSocket, buff, 1024, 0) == -1)
+	{
+		std::cerr << "Failed to recive data from CLIENT !  !  ! " << std::endl;
+		close(clientSocket);
+		close(listening);
+		return -1;
+	}
+	else if(byteRecived == 0)
+	{
+		std::cout << "client disconnected"<< std::endl;
+	}
+	else
+	{
+		//procces the data
+	}
 	return 0;
 }
