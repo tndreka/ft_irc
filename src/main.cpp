@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/20 18:58:54 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/22 15:42:28 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include <unistd.h> 
 #include <sys/socket.h> // for socket liberary
 #include <netinet/in.h> // for socketaddr
-#include <netinet/in.h> // for inet_addr
+#include <arpa/inet.h> // for inet_addr
 
 
 /*====== TEST ========*/
@@ -63,7 +63,30 @@ int main(int ac, char *av[])
 		
 	//bind the socket to an IP
 	sockaddr_in hint;
-	hint.sin_family = AF_INET; 
+	hint.sin_family = AF_INET;
 	hint.sin_port = htons(54000);
+	hint.sin_addr.s_addr = inet_addr("127.0.0.1");
+	/*
+				=================== BIND ======================
+		bind() function assigns the address specified by the hinf to the socked referred to by the
+		file descriptor listening.
+		
+		bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+		Parameter:
+		1) sockfd - socket file descriptor (listening) 
+		2) addr - pointer to sockaddr structure (cast hint to sockaddr *)
+		3) addrlen - size of the address structure (sizeof(hint))
+		
+		RETURN:
+			Success => 0
+			ERROR => -1
+	*/
+	if (bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1)
+	{
+		std::cerr << "Cant bind IP to PORT" << std::endl;
+		close(listening);
+		return -1;
+	}
+	//
 	return 0;
 }
