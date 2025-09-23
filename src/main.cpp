@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/23 13:24:08 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/23 13:35:07 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,8 @@ int main(int ac, char *av[])
 	sockaddr_in hint;
 	hint.sin_family = AF_INET;
 	hint.sin_port = htons(54000);
-	hint.sin_addr.s_addr = inet_addr("127.0.0.1");
+	//hint.sin_addr.s_addr = inet_addr("127.0.0.1"); // this listen to one IP
+	hint.sin_addr.s_addr = INADDR_ANY;
 	/*
 				=================== BIND ======================
 		bind() function assigns the address specified by the hinf to the socked referred to by the
@@ -145,7 +146,7 @@ int main(int ac, char *av[])
 		close(listening);
 		return -1;
 	}
-	std::cout << "Server is listening on 127.0.0.1:54000" << std::endl;
+	std::cout << "Server is listening on 0.0.0.0:54000" << std::endl;
 	// ACCEPTING CONNECTION , this is where we will do the client. 
 	sockaddr_in client;
 	socklen_t	clientSize = sizeof(client);
@@ -274,7 +275,7 @@ int main(int ac, char *av[])
 			 break;
 		}
 		std::cout << "Recived: " << std::string(buf, 0, byte_recv);
-		send(clientSocket, buf, byte_recv + 1 , 0);
+		send(clientSocket, buf, byte_recv, 0);
 	}
 	close(clientSocket);
 	return 0;
