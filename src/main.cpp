@@ -6,7 +6,7 @@
 /*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/22 17:22:18 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/23 13:24:08 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,7 +170,7 @@ int main(int ac, char *av[])
 	*/
 
 	int clientSocket;
-	if(clientSocket = accept(listening, (sockaddr*)&client, &clientSize) == -1)
+	if((clientSocket = accept(listening, (sockaddr*)&client, &clientSize)) == -1)
 	{
 		std::cerr << "Failed in connecting the client !  !  !" << std::endl;
 		close(listening);
@@ -207,7 +207,7 @@ int main(int ac, char *av[])
 	*/
 	// This was sending the client msg
 	int byte_sent;
-	if(byte_sent = send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0) == -1)
+	if((byte_sent = send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0)) == -1)
 	{
 		std::cerr << "Failed on welcome msg " << std::endl;
 		close(clientSocket);
@@ -233,7 +233,7 @@ int main(int ac, char *av[])
 		*/
 	char buff[1024] = {0};
 	int byteRecived;
-	if(byteRecived = recv(clientSocket, buff, 1024, 0) == -1)
+	if((byteRecived = recv(clientSocket, buff, 1024, 0)) == -1)
 	{
 		std::cerr << "Failed to recive data from CLIENT !  !  ! " << std::endl;
 		close(clientSocket);
@@ -246,7 +246,36 @@ int main(int ac, char *av[])
 	}
 	else
 	{
-		//procces the data
+		//Null-terminate and displayed the recived data
+		buff[byteRecived] = '\0';
+		
+		//client ip
+		char* client_ip = inet_ntoa(client.sin_addr);
+		
+		std::cout << buff << "connected from " << client_ip << std::endl;
+		std::string reply = "Connected\n";
+		send(clientSocket, reply.c_str(), reply.length(), 0);
 	}
+	char buf[4444];
+	while (true)
+	{
+		//clear the buf
+		memset(buf, 0, 4444);
+		//waiting for a msg
+		int byte_recv = recv(clientSocket, buf, 4444, 0); 
+		if(byte_recv == -1)
+		{
+			std::cerr << "There was a connection issue ! ! !\n";
+			break;
+		}
+		if (byte_recv == 0)
+		{
+			 std::cout << "The client disconected ! ! !\n";
+			 break;
+		}
+		std::cout << "Recived: " << std::string(buf, 0, byte_recv);
+		send(clientSocket, buf, byte_recv + 1 , 0);
+	}
+	close(clientSocket);
 	return 0;
 }
