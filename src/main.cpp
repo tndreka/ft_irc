@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 18:53:31 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 21:26:02 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -360,7 +360,22 @@ int main(int ac, char *av[])
 			if (incoming_data)
 			{
 				//accept new connection
-				//configur client
+				int new_connection = accept(listening, (sockaddr*)&client, &clientSize);
+				//check if connection is handle successfully
+				if(new_connection)
+				{
+					//configure the new client as non-blocking
+					if(fcntl(new_connection, F_SETFL, O_NONBLOCK)!= -1)
+					{
+						//configure client
+						//add the client to the vector
+						pollfd new_client_fd;
+						new_client_fd.fd = new_connection;
+						new_client_fd.events = POLLIN;
+						new_client_fd.revents = 0;
+					}
+					
+				}
 				//add to monitoring vector
 				
 			}
