@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 17:54:09 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 18:53:31 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,17 +341,30 @@ int main(int ac, char *av[])
 		//check for events
 		for(size_t i = 0; i < poll_fds.size(); i++)
 		{
-			//check if we have data
-			if(poll_fds[i].revents & POLLIN)
+			//flags
+			bool incoming_data = false;
+			bool client_hungup = false;
+			bool is_listening = false;
+			bool err = false;
+			
+			//cheks for each event POLLIN,POLLERR, POLLHUP,
+			if (poll_fds[i].revents & POLLIN)
+				incoming_data = true;
+			if (poll_fds[i].revents & POLLHUP)
+				client_hungup = true;
+			if (poll_fds[i].revents & POLLERR)
+				err = true;
+			if ((poll_fds[i].fd == listening) && incoming_data)
+				is_listening = true;
+			//here handle client incoming data [new_connection or messages]	
+			if (incoming_data)
 			{
-				//check listen socket
-				if(poll_fds[i].fd == listening)
-				{
-					//connect new client
-					int new_client = accept(listening, (sockaddr*)&client, &clientSize);
-					
-				}	
+				//accept new connection
+				//configur client
+				//add to monitoring vector
+				
 			}
+			
 		}
 	}
 	return 0;
