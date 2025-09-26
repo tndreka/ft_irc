@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 15:39:36 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 17:54:09 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,9 @@
 #include <netdb.h> // defines NI_MAXHOST 
 #include <unistd.h>
 #include <fcntl.h> // fcntl()
+#include <poll.h> // for poll()
+#include <vector>
+#include <map>
 
 /*====== TEST ========*/
 
@@ -172,113 +175,184 @@ int main(int ac, char *av[])
 			ERROR => -1
 	*/
 
-	int clientSocket;
-	if((clientSocket = accept(listening, (sockaddr*)&client, &clientSize)) == -1)
-	{
-		std::cerr << "Failed in connecting the client !  !  !" << std::endl;
-		close(listening);
-		return -1;
-	}
-	std::cout << "Clinet connected successfully √ √ √ ! ! ! " << std::endl;
-	//here we will be the client info
-	memset(host, 0, 1025); // clear the arr
-	memset(service, 0, 32); 
-	
 	/*
-				========= IRC =============
-		recive client name through the socket connection and display in 
-		 the format  ClientName connected on ServiceName
-		
+		=============== HANDLING ONE CLIENT CONNECTION ===============
 	*/
+				// int clientSocket;
+				// if((clientSocket = accept(listening, (sockaddr*)&client, &clientSize)) == -1)
+				// {
+				// 	std::cerr << "Failed in connecting the client !  !  !" << std::endl;
+				// 	close(listening);
+				// 	return -1;
+				// }
+				// std::cout << "Clinet connected successfully √ √ √ ! ! ! " << std::endl;
+				// //here we will be the client info
+				// memset(host, 0, 1025); // clear the arr
+				// memset(service, 0, 32); 
+				
+				// /*
+				// 			========= IRC =============
+				// 	recive client name through the socket connection and display in 
+				// 	the format  ClientName connected on ServiceName
+					
+				// */
 
-	//Welcome message
-	std::string welcomeMsg = "Welcome! Please enter your name: ";
+				// //Welcome message
+				// std::string welcomeMsg = "Welcome! Please enter your name: ";
+				// /*
+				// 			================= SEND ========================
+				// 	the send() dunction is able to transmit data to a connected socket.
+
+				// 	ssize_t send(int sockfd, const void* buf, size_t len, int flags);
+				// 	Parameters:
+				// 	1) sockfd - socked fd
+				// 	2) buf - pointer to the data that will be send
+				// 	3) len - num of bytes that will be send
+				// 	4) flags - control flags usually 0
+					
+				// 	RETURN: 
+				// 		success -> the number of bytes sent
+				// 		ERROR => -1
+				// */
+				// // This was sending the client msg
+				// int byte_sent;
+				// if((byte_sent = send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0)) == -1)
+				// {
+				// 	std::cerr << "Failed on welcome msg " << std::endl;
+				// 	close(clientSocket);
+				// 	close(listening);
+				// 	return -1;
+				// }
+				// //Recive client response
+				// 	/*
+				// 			==================== RECV ======================
+				// 		recv() function recives data from a connected socket.
+					
+				// 		ssize_t send(int sockfd, boid *buf, size_t len, int flags);
+				// 	Parameters:
+				// 	1)sockfd -> socked fd
+				// 	2) buf -> to store the recived data.
+				// 	3) len -> max number of bytes to recive
+				// 	4) flag ->  control flags usually 0
+
+				// 	RETUER:
+				// 		SUCCESS: Number if bytes recived.
+				// 		ERROR: -1
+				// 		Connection CLOSED  = 0;
+				// 	*/
+				// char buff[1024] = {0};
+				// int byteRecived;
+				// if((byteRecived = recv(clientSocket, buff, 1024, 0)) == -1)
+				// {
+				// 	std::cerr << "Failed to recive data from CLIENT !  !  ! " << std::endl;
+				// 	close(clientSocket);
+				// 	close(listening);
+				// 	return -1;
+				// }
+				// else if(byteRecived == 0)
+				// {
+				// 	std::cout << "client disconnected"<< std::endl;
+				// }
+				// else
+				// {
+				// 	//Null-terminate and displayed the recived data
+				// 	buff[byteRecived] = '\0';
+					
+				// 	//client ip
+				// 	char* client_ip = inet_ntoa(client.sin_addr);
+					
+				// 	std::cout << buff << "connected from " << client_ip << std::endl;
+				// 	std::string reply = "Connected\n";
+				// 	send(clientSocket, reply.c_str(), reply.length(), 0);
+				// }
+				// char buf[4444];
+				// while (true)
+				// {
+				// 	//clear the buf
+				// 	memset(buf, 0, 4444);
+				// 	//waiting for a msg
+				// 	int byte_recv = recv(clientSocket, buf, 4444, 0); 
+				// 	if(byte_recv == -1)
+				// 	{
+				// 		std::cerr << "There was a connection issue ! ! !\n";
+				// 		break;
+				// 	}
+				// 	if (byte_recv == 0)
+				// 	{
+				// 		std::cout << "The client disconected ! ! !\n";
+				// 		break;
+				// 	}
+				// 	std::cout << "Recived: " << std::string(buf, 0, byte_recv);
+				// 	send(clientSocket, buf, byte_recv, 0);
+				// }
+				// close(clientSocket);
+				// close(listening);
+
 	/*
-				================= SEND ========================
-		the send() dunction is able to transmit data to a connected socket.
-
-		ssize_t send(int sockfd, const void* buf, size_t len, int flags);
-		Parameters:
-		1) sockfd - socked fd
-		2) buf - pointer to the data that will be send
-		3) len - num of bytes that will be send
-		4) flags - control flags usually 0
-		
-		RETURN: 
-			success -> the number of bytes sent
-			ERROR => -1
+			=============== HANDLING MULTIPLE CLIENTS ==============
 	*/
-	// This was sending the client msg
-	int byte_sent;
-	if((byte_sent = send(clientSocket, welcomeMsg.c_str(), welcomeMsg.length(), 0)) == -1)
-	{
-		std::cerr << "Failed on welcome msg " << std::endl;
-		close(clientSocket);
-		close(listening);
-		return -1;
-	}
-	//Recive client response
+		
 		/*
-				==================== RECV ======================
-			recv() function recives data from a connected socket.
+            ==================== POLL ======================
+        poll() function allows monitoring multiple file descriptors to see if I/O is 
+        possible on any of them. It's essential for handling multiple clients simultaneously.
+        int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+        struct pollfd {
+            int   fd;         // file descriptor to monitor
+            short events;     // events to monitor (POLLIN, POLLOUT, etc.)
+            short revents;    // events that actually occurred
+        };
+        Parameters:
+        1) fds -> array of pollfd structures (file descriptors to monitor)
+        2) nfds -> number of file descriptors in the array
+        3) timeout -> timeout in milliseconds (-1 = infinite, 0 = don't block)
+        Events:
+        - POLLIN: Data available for reading  
+        - POLLOUT: Ready for writing
+        - POLLHUP: Hang up (connection closed)
+        - POLLERR: Error condition
+        RETURN:
+            SUCCESS: Number of file descriptors with events
+            TIMEOUT: 0 (if timeout occurred)
+            ERROR: -1
+*/
 		
-			ssize_t send(int sockfd, boid *buf, size_t len, int flags);
-		Parameters:
-		1)sockfd -> socked fd
-		2) buf -> to store the recived data.
-		3) len -> max number of bytes to recive
-		4) flag ->  control flags usually 0
-
-		RETUER:
-			SUCCESS: Number if bytes recived.
-			ERROR: -1
-			Connection CLOSED  = 0;
-		*/
-	char buff[1024] = {0};
-	int byteRecived;
-	if((byteRecived = recv(clientSocket, buff, 1024, 0)) == -1)
+	std::vector<pollfd> poll_fds;
+	pollfd listening_fd;
+	listening_fd.fd = listening; //watch the listening socket
+	listening_fd.events = POLLIN; // check for incoming events
+	listening_fd.revents = 0; // clear reevents
+	poll_fds.push_back(listening_fd);
+	
+	//store client info
+	std::map<int, std::string> clients;
+	
+	std::cout << "READY TO GET CONNECTED > > > . . .\n";
+	
+	while(true)
 	{
-		std::cerr << "Failed to recive data from CLIENT !  !  ! " << std::endl;
-		close(clientSocket);
-		close(listening);
-		return -1;
-	}
-	else if(byteRecived == 0)
-	{
-		std::cout << "client disconnected"<< std::endl;
-	}
-	else
-	{
-		//Null-terminate and displayed the recived data
-		buff[byteRecived] = '\0';
-		
-		//client ip
-		char* client_ip = inet_ntoa(client.sin_addr);
-		
-		std::cout << buff << "connected from " << client_ip << std::endl;
-		std::string reply = "Connected\n";
-		send(clientSocket, reply.c_str(), reply.length(), 0);
-	}
-	char buf[4444];
-	while (true)
-	{
-		//clear the buf
-		memset(buf, 0, 4444);
-		//waiting for a msg
-		int byte_recv = recv(clientSocket, buf, 4444, 0); 
-		if(byte_recv == -1)
+		//init poll
+		int poll_count = poll(&poll_fds[0], poll_fds.size(), -1);
+		if(-1 == poll_count)
 		{
-			std::cerr << "There was a connection issue ! ! !\n";
+			std::cerr<<"Poll Failed ! ! !\n";
 			break;
 		}
-		if (byte_recv == 0)
+		//check for events
+		for(size_t i = 0; i < poll_fds.size(); i++)
 		{
-			 std::cout << "The client disconected ! ! !\n";
-			 break;
+			//check if we have data
+			if(poll_fds[i].revents & POLLIN)
+			{
+				//check listen socket
+				if(poll_fds[i].fd == listening)
+				{
+					//connect new client
+					int new_client = accept(listening, (sockaddr*)&client, &clientSize);
+					
+				}	
+			}
 		}
-		std::cout << "Recived: " << std::string(buf, 0, byte_recv);
-		send(clientSocket, buf, byte_recv, 0);
 	}
-	close(clientSocket);
 	return 0;
 }
