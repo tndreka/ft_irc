@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 22:53:31 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 23:01:54 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,12 +399,25 @@ int main(int ac, char *av[])
 							close(new_connection);
 						}
 					}
-				//add to monitoring vector
+				}
+				else
+				{
+					char buff[4444] = {0};
+					int	bytes_recived = recv(poll_fds[i].fd, buff, 4444, 0);
+					
+					//if we recived bytes 
+					if (bytes_recived > 0)
+					{
+						buff[bytes_recived] = '\0';
+						send(poll_fds[i].fd, buff, bytes_recived, 0);
+					}
+					// else if (bytes_recived 
+					// {
+					// 	/* code */
+					// }	
+					
 				}
 			}
-			else
-						std::cout << "ERROR ! ! ! ==================> \n";
-			
 		}
 	}
 	return 0;
