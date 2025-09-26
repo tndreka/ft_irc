@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 21:53:07 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 22:06:41 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -354,38 +354,42 @@ int main(int ac, char *av[])
 				client_hungup = true;
 			if (poll_fds[i].revents & POLLERR)
 				err = true;
-			if ((poll_fds[i].fd == listening) && incoming_data)
+			if (poll_fds[i].fd == listening)
 				is_listening = true;
 			//here handle client incoming data [new_connection or messages]
-					std::cout << "socket: " << poll_fds[i].fd << " data: " << incoming_data << " listening: " << is_listening << " size: " << poll_fds.size() << std::endl;	
+					
+			if(incoming_data || client_hungup || err)
+				std::cout << "socket: " << poll_fds[i].fd << " data: " << incoming_data << " listening: " << is_listening << " size: " << poll_fds.size() << std::endl;	
 			if (incoming_data)
 			{
-						std::cout << "=========== LISTENIN SOCKET>>> ==================> \n";
-				//accept new connection
-				int new_connection = accept(listening, (sockaddr*)&client, &clientSize);
-				//check if connection is handle successfully
-				std::cout << " ======= aceppt passed ==================> \n";
-				if(new_connection)
+				//d::cout << "=========== LISTENIN SOCKET>>> ==================> \n";
+				if(is_listening)
 				{
+				//accept new connection
+					int new_connection = accept(listening, (sockaddr*)&client, &clientSize);
+					//check if connection is handle successfully
+					std::cout << " ======= aceppt passed ==================> \n";
+					if(new_connection)
+					{
 							std::cout << "============== connection aceppted ==================> \n";
 					//configure the new client as non-blocking
-					if(fcntl(new_connection, F_SETFL, O_NONBLOCK)!= -1)
-					{
+						if(fcntl(new_connection, F_SETFL, O_NONBLOCK)!= -1)
+						{
 						//configure client
 						//add the client to the vector
-						pollfd new_client_fd; //new structor for the new accepted host
-						new_client_fd.fd = new_connection;
-						new_client_fd.events = POLLIN;
-						new_client_fd.revents = 0;
+							pollfd new_client_fd; //new structor for the new accepted host
+							new_client_fd.fd = new_connection;
+							new_client_fd.events = POLLIN;
+							new_client_fd.revents = 0;
 
 						//add it in the vector
-						poll_fds.push_back(new_client_fd);
+							poll_fds.push_back(new_client_fd);
 								std::cout << "SIZE: " << poll_fds.size() << std::endl;
 					}
 					
 				}
 				//add to monitoring vector
-				
+				}
 			}
 			else
 						std::cout << "ERROR ! ! ! ==================> \n";
