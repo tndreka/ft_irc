@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/26 22:06:41 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 22:53:31 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -325,6 +325,7 @@ int main(int ac, char *av[])
 	poll_fds.push_back(listening_fd);
 	
 	//store client info
+	
 	std::map<int, std::string> clients;
 	
 	std::cout << "READY TO GET CONNECTED > > > . . .\n";
@@ -369,7 +370,7 @@ int main(int ac, char *av[])
 					int new_connection = accept(listening, (sockaddr*)&client, &clientSize);
 					//check if connection is handle successfully
 					std::cout << " ======= aceppt passed ==================> \n";
-					if(new_connection)
+					if(new_connection != -1)
 					{
 							std::cout << "============== connection aceppted ==================> \n";
 					//configure the new client as non-blocking
@@ -385,9 +386,19 @@ int main(int ac, char *av[])
 						//add it in the vector
 							poll_fds.push_back(new_client_fd);
 								std::cout << "SIZE: " << poll_fds.size() << std::endl;
+						//store client info
+							char *client_ip = inet_ntoa(client.sin_addr);
+							clients[new_connection] = std::string(client_ip);
+						//welcome msg from the server
+							std::string welcome = "Welcome to IRC \n";
+							send(new_connection, welcome.c_str(), welcome.length(), 0);
+						}
+						else
+						{
+							std::cout << "Failed to set non-blocking for the host" << std::endl;
+							close(new_connection);
+						}
 					}
-					
-				}
 				//add to monitoring vector
 				}
 			}
