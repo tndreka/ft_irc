@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: tndreka < tndreka@student.42heilbronn.d    +#+  +:+       +#+        */
+/*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/23 13:35:07 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/26 15:39:36 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include <arpa/inet.h> // for inet_addr
 #include <netdb.h> // defines NI_MAXHOST 
 #include <unistd.h>
-
+#include <fcntl.h> // fcntl()
 
 /*====== TEST ========*/
 
@@ -52,6 +52,8 @@
 	poll
 */
 
+
+
 int main(int ac, char *av[])
 {
 	/*
@@ -75,7 +77,7 @@ int main(int ac, char *av[])
 	int listening = socket(AF_INET, SOCK_STREAM, 0);
 	if (listening == -1)
 		return std::cerr << "Can't create Socket" << std::endl, -1;
-	
+	fcntl(listening, F_SETFL, O_NONBLOCK);	
 	/*
 				================== sockaddr_in ===================
 		this is a structure used  to represent IPv4 internet domain socket address.
