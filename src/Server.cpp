@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 20:52:37 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:01:13 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,5 +152,27 @@ void Server::accept_connection()
     listening_fd.events = POLLIN;
     listening_fd.revents = 0;
     poll_fds.push_back(listening_fd);
+    
+}
+
+bool Server::init_poll()
+{
+    if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1)
+    {
+        std::cerr<<""<<std::endl;
+        return false;
+    }
+    return true;
+}
+
+
+void Server::run_Server()
+{
+    while (true)
+    {
+        if (init_poll() == false)
+            break;
+                
+    }
     
 }
