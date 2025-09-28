@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:01:13 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:06:20 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,31 @@ void Server::accept_connection()
     
 }
 
+/*
+            ==================== POLL ======================
+    poll() function allows monitoring multiple file descriptors to see if I/O is 
+    possible on any of them. It's essential for handling multiple clients simultaneously.
+     int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+    struct pollfd {
+       int   fd;         // file descriptor to monitor
+       hort events;     // events to monitor (POLLIN, POLLOUT, etc.)
+       hort revents;    // events that actually occurred
+       };
+    Parameters:
+        1) fds -> array of pollfd structures (file descriptors to monitor)
+        2) nfds -> number of file descriptors in the array
+        3) timeout -> timeout in milliseconds (-1 = infinite, 0 = don't block)
+    Events:
+       - POLLIN: Data available for reading  
+       - POLLOUT: Ready for writing
+       - POLLHUP: Hang up (connection closed)
+       - POLLERR: Error condition
+    RETURN:
+        SUCCESS: Number of file descriptors with events
+        TIMEOUT: 0 (if timeout occurred)
+        ERROR: -1
+*/
+
 bool Server::init_poll()
 {
     if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1)
@@ -165,6 +190,16 @@ bool Server::init_poll()
     return true;
 }
 
+/*
+    === EVENTS ===
+*/
+void Server::event_state()
+{
+    incoming_data = false;
+    client_hungup = false;
+    err = false;
+    is_listening =false;
+}
 
 void Server::run_Server()
 {
