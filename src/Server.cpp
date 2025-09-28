@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:06:20 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:14:03 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -201,12 +201,35 @@ void Server::event_state()
     is_listening =false;
 }
 
+void Server::event_check(size_t index)
+{
+    //flags 
+    event_state();
+    
+    if (poll_fds[index].revents & POLLIN)
+        incoming_data = true;
+    if (poll_fds[index].revents & POLLHUP)
+        client_hungup = true;
+    if (poll_fds[index].revents & POLLERR)
+        err = true;
+    if (poll_fds[index].fd == listening)
+        is_listening = true;
+}
+
 void Server::run_Server()
 {
     while (true)
     {
         if (init_poll() == false)
             break;
+        for (size_t i = 0; i < poll_fds.size(); i++)
+        {
+            event_check(i);
+            if(incoming_data)
+            {
+                
+            }
+        }
                 
     }
     

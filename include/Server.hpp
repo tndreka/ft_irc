@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 19:38:33 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:15:08 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <poll.h> // for poll()
 #include <vector>
 #include <map>
+
 class Server
 {
 private:
@@ -36,10 +37,10 @@ private:
     std::vector<pollfd> poll_fds;
     pollfd listening_fd;
     int poll_count;
-    bool incoming_data = false;
-	bool client_hungup = false;
-	bool is_listening = false;
-	bool err = false;
+    bool incoming_data;
+	bool client_hungup;
+	bool is_listening;
+	bool err;
     char buff[4444];
     std::map<int, std::string> clients;
     
@@ -47,6 +48,14 @@ private:
     bool createSocket();
     bool bindSocket();
     bool listenSocket();
+    void accept_connection();
+    bool init_poll();
+    void run_Server();
+    void event_check(size_t index);
+    void event_state();
+    void handle_new_host();
+    void handle_messages(size_t index);
+    
 public:
     Server();
     Server(const Server& other);
