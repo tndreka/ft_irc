@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:14:03 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:31:27 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,6 +216,32 @@ void Server::event_check(size_t index)
         is_listening = true;
 }
 
+void Server::handle_new_host()
+{
+    new_connection = accept(listening, (sockaddr*)&client, &clientSize);
+    if (new_connection != -1)
+    {
+        if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1)
+        {
+            new_client_fd.fd = new_connection;
+            new_client_fd.events = POLLIN;
+            new_client_fd.revents = 0;
+            poll_fds.push_back(new_client_fd);
+            client_ip = inet_ntoa(client.sin_addr);
+            clients[new_connection] = std::string(client_ip);
+            std::string welcome = "Welcome to IRC \n";
+			send(new_connection, welcome.c_str(), welcome.length(), 0);
+        }
+        else
+            std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl; 
+    }
+    else
+    {
+        std::cerr<< "Failed accepting new connections" << std::endl;
+        close(new_connection);
+    }
+}
+
 void Server::run_Server()
 {
     while (true)
@@ -227,7 +253,10 @@ void Server::run_Server()
             event_check(i);
             if(incoming_data)
             {
-                
+                if(is_listening)
+                    handle_new_host();
+                else
+                    handle_messages(i);
             }
         }
                 

@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:15:08 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:26:19 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,21 +28,24 @@
 class Server
 {
 private:
-    int listening;
-    sockaddr_in hint;
-    sockaddr_in client;
-    socklen_t	clientSize;
-    char		host[NI_MAXHOST]; // 1025 max num of hosts
-	char		service[NI_MAXSERV]; // 32 max num of serv
+    int             listening;
+    sockaddr_in     hint;
+    sockaddr_in     client;
+    socklen_t       clientSize;
+    char		    host[NI_MAXHOST]; // 1025 max num of hosts
+	char		    service[NI_MAXSERV]; // 32 max num of serv
+    char            *client_ip;
     std::vector<pollfd> poll_fds;
-    pollfd listening_fd;
-    int poll_count;
-    bool incoming_data;
-	bool client_hungup;
-	bool is_listening;
-	bool err;
-    char buff[4444];
     std::map<int, std::string> clients;
+    pollfd          listening_fd;
+    pollfd          new_client_fd; //new structor for the new accepted host
+    int             poll_count;
+    int             new_connection;
+    bool            incoming_data;
+	bool            client_hungup;
+	bool            is_listening;
+	bool            err;
+    char            buff[4444];
     
     //Helper
     bool createSocket();
