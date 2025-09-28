@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 20:24:34 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 20:39:23 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,63 @@ bool Server::createSocket()
 {
     listening = socket(AF_INET, SOCK_STREAM, 0);
     if(listening == -1)
+    {
+        std::cerr <<" Create Socket() failed "<<std::endl;
         return false;
+    }
+    else
+        return true;
+}
+
+/*
+				================== BIND_SOCKET ===================
+		sockaddr_in this is a structure used  to represent IPv4 internet domain socket address.
+		it is designed for IPv4 only and it contains mambers for the family addres as: 
+		->address_family(sin_family) = should be set as AF_INET to use the IPv4
+		->port_number(sin_port) = holdsthe portnumber in the network byte order requiring 
+		conversion from the host byte order using fucntion hstons().
+		->and IPv4 adress = this is the 32 bit IPv4 addres which it can be assigned manually or by using
+		functions like inet_addr()
+		====> htons(uint16_t hostshort);
+		->this function converts the unsigned short int hostshort from host byte order to network byte order.
+        ===>bind() function assigns the address specified by the hinf to the socked referred to by the
+		file descriptor listening.
+		    bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+		Parameter:
+		1) sockfd - socket file descriptor (listening) 
+		2) addr - pointer to sockaddr structure (cast hint to sockaddr *)
+		3) addrlen - size of the address structure (sizeof(hint))
+		RETURN:
+			Success => 0
+			ERROR => -1
+		
+*/
+
+bool Server::bindSocket()
+{
+    // socket non-block
+    fcntl(listening, F_SETFL, O_NONBLOCK);
+    //bind socket to IP
+    hint.sin_family = AF_INET;
+    hint.sin_port = htons(54000);
+    hint.sin_addr.s_addr = INADDR_ANY;
+    if((bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1))
+    {
+        std::cerr <<"Port failed to bind with an IP !"<<std::endl;
+        close(listening);
+        return false;    
+    }
+    return true;
+}
+
+bool Server::listenSocket()
+{
+    if (listen(listening, SOMAXCONN) == -1)
+    {
+        std::cerr <<"Can't listen the socket"<<std::endl;
+        close(listening);
+        return false;
+    }
     else
         return true;
 }
