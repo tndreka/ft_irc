@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:26:19 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 21:57:56 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,10 @@
 #include <poll.h> // for poll()
 #include <vector>
 #include <map>
+
+#ifndef MAX_BUFF
+#define MAX_BUFF 4444
+#endif
 
 class Server
 {
@@ -45,7 +49,8 @@ private:
 	bool            client_hungup;
 	bool            is_listening;
 	bool            err;
-    char            buff[4444];
+    char            buff[MAX_BUFF];
+    int	            bytes_recived;
     
     //Helper
     bool createSocket();
@@ -58,6 +63,8 @@ private:
     void event_state();
     void handle_new_host();
     void handle_messages(size_t index);
+    void remove_from_vector(size_t index);
+    void handle_disconn_err_hungup(size_t index);
     
 public:
     Server();
