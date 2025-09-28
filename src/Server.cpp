@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 20:39:23 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 20:52:37 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,18 +33,18 @@ Server::~Server()
 
 /*
             ====== Socket_creation ======
-        we use socket() function.
-		socket(int Domain, int type, int protocol);
-		1)First Param: 
+    we use socket() function.
+	    socket(int Domain, int type, int protocol);
+	1)First Param: 
 		-int Domain -> use AF_INET -> {is an addres family,
 		that is used to designate the type of address that your socket can communicate in this case IPV4(internet protocol V4)} 
-		2)Second Param:
+	2)Second Param:
 		-int type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection based byte streams.
 		it make sure that the data is not dublicated, it doesnt get lost and its delivered on correct order}
-		3) Third param:
+	3) Third param:
 		-int protocol -> 0 -> {Protocol specifies a particular protocol to be used with the socke.
 		Normally a single protocol exit to support the socket type within the given protocol family wich most of the times is 0}
-		RETURN:
+	RETURN:
 			SUCCESS: A file descriptor for the new socket created is being returned.
 			ERROR: -1
 */
@@ -63,25 +63,25 @@ bool Server::createSocket()
 
 /*
 				================== BIND_SOCKET ===================
-		sockaddr_in this is a structure used  to represent IPv4 internet domain socket address.
+	sockaddr_in this is a structure used  to represent IPv4 internet domain socket address.
 		it is designed for IPv4 only and it contains mambers for the family addres as: 
-		->address_family(sin_family) = should be set as AF_INET to use the IPv4
-		->port_number(sin_port) = holdsthe portnumber in the network byte order requiring 
+	->address_family(sin_family) = should be set as AF_INET to use the IPv4
+	->port_number(sin_port) = holdsthe portnumber in the network byte order requiring 
 		conversion from the host byte order using fucntion hstons().
-		->and IPv4 adress = this is the 32 bit IPv4 addres which it can be assigned manually or by using
+	->and IPv4 adress = this is the 32 bit IPv4 addres which it can be assigned manually or by using
 		functions like inet_addr()
-		====> htons(uint16_t hostshort);
+	====>htons(uint16_t hostshort);
 		->this function converts the unsigned short int hostshort from host byte order to network byte order.
-        ===>bind() function assigns the address specified by the hinf to the socked referred to by the
+    ===>bind() function assigns the address specified by the hinf to the socked referred to by the
 		file descriptor listening.
 		    bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
-		Parameter:
+	Parameter:
 		1) sockfd - socket file descriptor (listening) 
 		2) addr - pointer to sockaddr structure (cast hint to sockaddr *)
 		3) addrlen - size of the address structure (sizeof(hint))
-		RETURN:
-			Success => 0
-			ERROR => -1
+	RETURN:
+		Success => 0
+		ERROR => -1
 		
 */
 
@@ -102,6 +102,20 @@ bool Server::bindSocket()
     return true;
 }
 
+/*
+			==================== LISTEN ====================
+	listen() -> this function marks the socket referred by sockedfd as a passivesocket
+	that will be used to accept incoming connection requests.
+			
+		 int listen(int sockfd, int backlog)
+	Parameters:
+	    sockfd - the socket file descriptor (in my case listening vriable)
+	    backlog - the maximum number of pending connections that can be queued
+
+	RETURN:
+		success => 0
+		ERROR => -1 
+	*/
 bool Server::listenSocket()
 {
     if (listen(listening, SOMAXCONN) == -1)
@@ -114,3 +128,29 @@ bool Server::listenSocket()
         return true;
 }
 
+/*
+				===================== ACCEPT ======================
+	the accept() function first extracts the first connection request on the
+	queue of pending connections for the listening socket, creates a new connected socket, 
+	and returns the new fd referring to that socket.
+	
+		int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+	Parameters:
+		1) sockfd - listening socket file descriptor
+		2) addr - pointer to sockaddr struct to store client info
+		3) addrlen - pointer to size of addr struct
+
+	RETURN:
+			success => New socket file descriptor for the connection
+			ERROR => -1
+	*/
+
+void Server::accept_connection()
+{
+    clientSize = sizeof(client);
+    listening_fd.fd = listening;
+    listening_fd.events = POLLIN;
+    listening_fd.revents = 0;
+    poll_fds.push_back(listening_fd);
+    
+}
