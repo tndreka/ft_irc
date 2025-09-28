@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:57:56 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 22:30:36 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ private:
     bool listenSocket();
     void accept_connection();
     bool init_poll();
-    void run_Server();
     void event_check(size_t index);
     void event_state();
     void handle_new_host();
@@ -66,10 +65,11 @@ private:
     void remove_from_vector(size_t index);
     void handle_disconn_err_hungup(size_t index);
     
-public:
+    public:
     Server();
     Server(const Server& other);
     Server& operator=(const Server& other);
     ~Server();
+    void run_Server();
 };
 

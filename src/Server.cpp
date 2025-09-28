@@ -6,14 +6,16 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 21:56:46 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/09/28 22:45:55 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 Server::Server()
-{}
+{
+}
+
 
 Server::Server(const Server& other)
 {
@@ -254,7 +256,7 @@ void Server::remove_from_vector(size_t index)
 void Server::handle_messages(size_t index)
 {
     memset(buff, 0, MAX_BUFF);
-    bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF, 0);
+    bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
     if (bytes_recived > 0)
     {
         buff[bytes_recived] = '\0';
@@ -268,6 +270,14 @@ void Server::handle_messages(size_t index)
         remove_from_vector(index);
     }
     
+}
+
+void Server::handle_disconn_err_hungup(size_t index)
+{
+    std::cout<<"Client " << poll_fds[index].fd<< "(" << clients[poll_fds[index].fd] << ") error/hungup " <<std::endl;
+        close(poll_fds[index].fd);
+        clients[poll_fds[index].fd] = "_DISCONNECTED_";
+        remove_from_vector(index);
 }
 
 void Server::run_Server()
@@ -286,8 +296,14 @@ void Server::run_Server()
                 else
                 {
                     handle_messages(i);
+                    poll_fds[i].revents = 0;
                     i--;
                 }
+            }
+            if ((client_hungup || err) && !is_listening)
+            {
+                handle_disconn_err_hungup(i);
+                i--;
             }
         }
                 
