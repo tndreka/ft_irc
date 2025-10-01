@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 22:45:55 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/01 16:54:23 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 Server::Server()
 {
 }
-
 
 Server::Server(const Server& other)
 {
@@ -93,7 +92,7 @@ bool Server::bindSocket()
     fcntl(listening, F_SETFL, O_NONBLOCK);
     //bind socket to IP
     hint.sin_family = AF_INET;
-    hint.sin_port = htons(54000);
+    hint.sin_port = htons(port);
     hint.sin_addr.s_addr = INADDR_ANY;
     if((bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1))
     {
@@ -244,15 +243,6 @@ void Server::handle_new_host()
     }
 }
 
-void Server::remove_from_vector(size_t index)
-{
-    if (index >= poll_fds.size())
-        return ;
-    if (index < poll_fds.size() - 1)
-        poll_fds[index] = poll_fds[poll_fds.size() - 1];
-    poll_fds.pop_back();
-}
-
 void Server::handle_messages(size_t index)
 {
     memset(buff, 0, MAX_BUFF);
@@ -278,6 +268,27 @@ void Server::handle_disconn_err_hungup(size_t index)
         close(poll_fds[index].fd);
         clients[poll_fds[index].fd] = "_DISCONNECTED_";
         remove_from_vector(index);
+}
+
+int Server::init_Server()
+{
+    if (createSocket() == false)
+    {
+        std::cerr << "Failed to create socket\n";
+        return 1;
+    }
+    if (bindSocket() == false)
+    {
+        std::cerr << "Failed to bind socket\n";
+        return 1;
+    }
+    if (listenSocket() == false)
+    {
+        std::cerr << "Failed to listen socket\n";
+        return 1;
+    }
+    accept_connection();
+    return 0;
 }
 
 void Server::run_Server()
