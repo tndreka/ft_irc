@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/01 16:28:32 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:41:45 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/01 16:46:07 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ bool Server::set_Port(const std::string& port)
     portNum = atoi(port.c_str());
     if(portNum < 1024 || portNum > 65535)
     {
-        std::cerr<< "Port number must be between 1024 - 65535\n";
+        std::cerr<< "Invalid range!! Port number must be between 1024 - 65535\n";
         return false;
     }
     else
@@ -38,3 +38,16 @@ bool Server::set_Port(const std::string& port)
     }
 }
 
+bool Server::set_Pass(const std::string& pass)
+{
+    if (pass.empty())
+    {
+        std::cerr << "Password can not be empty\n";
+        return false;
+    }
+    else
+    {
+        this->password = pass;
+        return true;
+    }
+}
