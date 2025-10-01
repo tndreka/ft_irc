@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/09/28 22:30:36 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/01 16:50:04 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@
 class Server
 {
 private:
+    int             port;
+    std::string     password;
     int             listening;
     sockaddr_in     hint;
     sockaddr_in     client;
@@ -52,7 +54,7 @@ private:
     char            buff[MAX_BUFF];
     int	            bytes_recived;
     
-    //Helper
+    //Server
     bool createSocket();
     bool bindSocket();
     bool listenSocket();
@@ -62,14 +64,19 @@ private:
     void event_state();
     void handle_new_host();
     void handle_messages(size_t index);
-    void remove_from_vector(size_t index);
     void handle_disconn_err_hungup(size_t index);
+    //helper
+    void remove_from_vector(size_t index);
     
     public:
     Server();
     Server(const Server& other);
     Server& operator=(const Server& other);
     ~Server();
+    bool set_Port(const std::string& port);
+    bool set_Pass(const std::string& pass);
+    int  get_Port()const;
+    int  init_Server();
     void run_Server();
 };
 

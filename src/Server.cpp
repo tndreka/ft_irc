@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:54:23 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/01 16:59:27 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,6 +249,7 @@ void Server::handle_messages(size_t index)
     bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
     if (bytes_recived > 0)
     {
+        std::cout << "Recived from" << clients[poll_fds[index]] << ": "<< buff;
         buff[bytes_recived] = '\0';
         send(poll_fds[index].fd, buff, bytes_recived, 0);
     }
