@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:59:27 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/02 16:45:32 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,15 +243,26 @@ void Server::handle_new_host()
     }
 }
 
+void Server::broadcast_message(const std::string& message, int sender_fd)
+{
+    for(size_t i = 0; i < poll_fds.size(); i++)
+    {
+        if(poll_fds[i].fd != listening && poll_fds[i].fd != sender_fd)
+            send(poll_fds[i].fd, message.c_str(), message.length(), 0);
+    }
+}
+
 void Server::handle_messages(size_t index)
 {
     memset(buff, 0, MAX_BUFF);
     bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
     if (bytes_recived > 0)
     {
-        std::cout << "Recived from" << clients[poll_fds[index]] << ": "<< buff;
+        std::cout << "Recived from" << clients[poll_fds[index].fd] << ": "<< buff;
         buff[bytes_recived] = '\0';
-        send(poll_fds[index].fd, buff, bytes_recived, 0);
+        // send(poll_fds[index].fd, buff, bytes_recived, 0);
+        std::string message = clients[poll_fds[index].fd] + ": " + std::string(buff);
+        broadcast_message(message, poll_fds[index].fd); 
     }
     else if(bytes_recived <= 0)
     {
