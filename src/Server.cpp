@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/02 16:45:32 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/02 17:53:56 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,6 +217,11 @@ void Server::event_check(size_t index)
         is_listening = true;
 }
 
+void Server::parser_irc(int clients_fd, const std::string& messg)
+{
+    if ()
+}
+
 void Server::handle_new_host()
 {
     new_connection = accept(listening, (sockaddr*)&client, &clientSize);
@@ -230,8 +235,9 @@ void Server::handle_new_host()
             poll_fds.push_back(new_client_fd);
             client_ip = inet_ntoa(client.sin_addr);
             clients[new_connection] = std::string(client_ip);
-            std::string welcome = "Welcome to IRC \n";
-			send(new_connection, welcome.c_str(), welcome.length(), 0);
+            // std::string welcome = "Welcome to IRC \n";
+			// send(new_connection, welcome.c_str(), welcome.length(), 0);
+            client_states[new_connection] = WAITTING_PASS;//waiting state for authentication
         }
         else
             std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl; 
@@ -251,6 +257,7 @@ void Server::broadcast_message(const std::string& message, int sender_fd)
             send(poll_fds[i].fd, message.c_str(), message.length(), 0);
     }
 }
+
 
 void Server::handle_messages(size_t index)
 {
