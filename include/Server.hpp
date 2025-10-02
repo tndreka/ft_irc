@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:50:04 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/02 17:34:19 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,20 @@
 #include <poll.h> // for poll()
 #include <vector>
 #include <map>
+#include <cstdlib>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
 #endif
+
+//keeps the track of every client state
+enum ClientState
+{
+  WAITTING_PASS,
+  WAITING_NICKNAME,
+  WAITTING_USER,
+  VERIFYED
+};
 
 class Server
 {
@@ -42,7 +52,10 @@ private:
 	char		    service[NI_MAXSERV]; // 32 max num of serv
     char            *client_ip;
     std::vector<pollfd> poll_fds;
-    std::map<int, std::string> clients;
+    std::map<int, std::string> clients;// fd -> client IP
+    std::map<int, ClientState>client_states;// fd -> authentication state
+    std::map<int, std::string>client_nicknames; //fd-> nickname
+    std::map<int, std::string>client_username;// fd ->username
     pollfd          listening_fd;
     pollfd          new_client_fd; //new structor for the new accepted host
     int             poll_count;
@@ -65,6 +78,8 @@ private:
     void handle_new_host();
     void handle_messages(size_t index);
     void handle_disconn_err_hungup(size_t index);
+    void broadcast_message(const std::string& message, int sender_fd);
+    int  parser_irc(int client_fd, const std::string& messg);
     //helper
     void remove_from_vector(size_t index);
     
