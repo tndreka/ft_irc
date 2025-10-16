@@ -31,20 +31,23 @@ Server::~Server() {}
 
 /*
             ====== Socket_creation ======
-    we use socket() function.
-            socket(int Domain, int type, int protocol);
-        1)First Param:
-                -int Domain -> use AF_INET -> {is an addres family,
-                that is used to designate the type of address that your socket
-   can communicate in this case IPV4(internet protocol V4)} 2)Second Param: -int
-   type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection based
-   byte streams. it make sure that the data is not dublicated, it doesnt get
-   lost and its delivered on correct order} 3) Third param: -int protocol -> 0
-   -> {Protocol specifies a particular protocol to be used with the socke.
-                Normally a single protocol exit to support the socket type
-   within the given protocol family wich most of the times is 0} RETURN:
-                        SUCCESS: A file descriptor for the new socket created is
-   being returned. ERROR: -1
+  we use socket() function.
+    socket(int Domain, int type, int protocol);
+  1)First Param:
+    -int Domain -> use AF_INET -> {is an addres family,
+      that is used to designate the type of address that your socket
+      can communicate in this case IPV4(internet protocol V4)}
+  2)Second Param: -int
+    -type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection
+  based byte streams. it make sure that the data is not dublicated, it doesnt
+  get lost and its delivered on correct order} 3) Third param: -int protocol ->
+  0 -Protocol specifies a particular protocol to be used with the socke.
+      Normally a single protocol exit to support the socket type
+      within the given protocol family wich most of the times is 0}
+  RETURN:
+    SUCCESS: A file descriptor for the new socket created is
+      being returned.
+    ERROR: -1
 */
 
 std::string Server::getServerName() const { return serverName; }
@@ -235,6 +238,25 @@ void Server::parser_irc(int client_fd) {
       std::string capReply = ":" + serverName + " CAP * LS :\r\n";
       std::cout << "===>Sending capabilities" << std::endl;
       send(client_fd, capReply.c_str(), capReply.size(), 0);
+    } else if (line.rfind("PASS ") == 0) {
+      std::string pass = line.substr(5);
+      if (pass == password)
+        continue;
+      else {
+        std::string nick = client_nicknames[client_fd].empty()
+                               ? "*"
+                               : client_nicknames[client_fd];
+        std::string err =
+            ":" + serverName + " 464 " + nick + " :Password incorrect\r\n";
+        send(client_fd, err.c_str(), err.size(), 0);
+
+        std::string closing =
+            "ERROR :Closing link: " + nick + " (Password required)\r\n";
+        send(client_fd, closing.c_str(), closing.size(), 0);
+
+        close(client_fd);
+        return;
+      }
     } else if (line.rfind("NICK ", 0) == 0) {
       client_nicknames[client_fd] = line.substr(5);
       std::cout << "===>Grabed Nickname" << std::endl;
@@ -242,7 +264,7 @@ void Server::parser_irc(int client_fd) {
       client_username[client_fd] = line.substr(5);
       std::cout << "===>Grabed USer" << std::endl;
     } else if (line.find("CAP END") == 0) {
-      sendWelcome(client_fd);
+      Server::sendWelcome(new_client_fd.fd);
     } else if (line.rfind("PING ", 0) == 0) {
       std::string pong = "PONG " + line.substr(5) + "\r\n";
       std::cout << pong << std::endl;
@@ -267,7 +289,6 @@ void Server::handle_new_host() {
       while (client_states[new_client_fd.fd] != REGISTERED)
         Server::parser_irc(new_client_fd.fd);
 
-      Server::sendWelcome(new_client_fd.fd);
       client_states[new_connection] =
           WAITTING_PASS; // waiting state for authentication
     } else
