@@ -38,6 +38,11 @@ class User {
 		bool				getIsAdmin(void) const;
 		ClientState			getState(void) const;
 		pollfd				getPoll(void) const;
+		void				setUsername(std::string str);
+		void				setNickname(std::string str);
+		void				setRealname(std::string str);
+		void				setHostname(std::string str);
+		void				setState(ClientState state);
 };
 
 std::ostream&	operator<<(std::ostream& out, const User& other);

@@ -1,4 +1,5 @@
 #include "../include/User.hpp"
+#include <unistd.h>
 
 User::User() :
 	_username("default"),
@@ -16,12 +17,14 @@ User::User(const std::string un, const std::string nn, const std::string rn, con
 	_isAdmin(false)
 {};
 
-User::User(int fd, const std::string hostname) {
-	_poll.fd = fd;
+User::User(int connection, const std::string hostname) {
+	std::cout << "con: " << connection << std::endl;
+	_poll.fd = connection;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
 	_hostname = hostname;
 	_state = WAITING_AUTH;
+	std::cout << "poll fd: " << _poll.fd << std::endl;
 };
 
 User::User(const User& other) :
@@ -32,7 +35,9 @@ User::User(const User& other) :
 	_isAdmin(other._isAdmin)
 {};
 
-User::~User() {};
+User::~User() {
+	close(_poll.fd);
+};
 
 User	User::operator=(const User& other) {
 	if (this != &other) {
@@ -71,9 +76,31 @@ bool	User::getIsAdmin(void) const {
 
 pollfd	User::getPoll(void) const {
 	return (_poll);
+};
+
+void	User::setUsername(std::string str) {
+	_username = str;
+};
+
+void	User::setNickname(std::string str) {
+	_nickname = str;
+};
+
+void	User::setRealname(std::string str) {
+	_realname = str;
+};
+
+void	User::setHostname(std::string str) {
+	_hostname = str;
+};
+
+void	User::setState(ClientState state) {
+	_state = state;
 }
 
+
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
-	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname() << std::endl;
+	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()
+		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << std::endl;
 	return (out);
 };

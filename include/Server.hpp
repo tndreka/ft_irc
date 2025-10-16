@@ -48,12 +48,6 @@ class Server {
         std::vector<pollfd> poll_fds;
 
         char *client_ip;
-        std::map<int, std::string> clients;          // fd -> client IP
-        std::map<int, ClientState> client_states;    // fd -> authentication state
-        std::map<int, std::string> client_nicknames; // fd-> nickname
-        std::map<int, std::string> client_username;  // fd ->username
-        pollfd new_client_fd; // new structor for the new accepted host
-       
         pollfd listening_fd;
         int poll_count;
         int new_connection;
@@ -77,10 +71,14 @@ class Server {
         void handle_new_host();
         void handle_messages(size_t index);
         void handle_disconn_err_hungup(size_t index);
-        void broadcast_message(const std::string &message, int sender_fd);
-        void parser_irc(int client_fd);
+        int parser_irc(User user);
         void remove_from_vector(size_t index);
-        void sendWelcome(int fd);
+        
+        // Messages
+        void broadcast_message(const std::string &message, User user);
+        void sendWelcome(User user);
+        void sendWronPassword(User user);
+        void sendCapabilities(User user);
 
     public:
         Server();

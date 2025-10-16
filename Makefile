@@ -2,7 +2,7 @@ NAME = IRC
 
 CPP = c++
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
+CPPFLAGS = -Wall -Wextra -Werror -g -fsanitize=address -fno-omit-frame-pointer -std=c++98 -I$(INC_DIR)
 
 #Folders
 SRC_DIR = src
