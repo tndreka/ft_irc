@@ -227,7 +227,7 @@ void Server::parser_irc(int client_fd) {
 
   std::istringstream iss(msg);
   std::string line;
-  while (std::getline(iss, line) && client_states[client_fd] != VERIFYED) {
+  while (std::getline(iss, line) && client_states[client_fd] != REGISTERED) {
     if (!line.empty() && line[line.size() - 1] == '\r')
       line.erase(line.size() - 1);
 
@@ -238,12 +238,9 @@ void Server::parser_irc(int client_fd) {
     } else if (line.rfind("NICK ", 0) == 0) {
       client_nicknames[client_fd] = line.substr(5);
       std::cout << "===>Grabed Nickname" << std::endl;
-      // client_states[client_fd] = WAITING_USER;
     } else if (line.rfind("USER ", 0) == 0) {
       client_username[client_fd] = line.substr(5);
       std::cout << "===>Grabed USer" << std::endl;
-      // client_states[client_fd] = VERIFYED;
-      // sendWelcome(client_fd);
     } else if (line.find("CAP END") == 0) {
       sendWelcome(client_fd);
     } else if (line.rfind("PING ", 0) == 0) {
@@ -251,12 +248,7 @@ void Server::parser_irc(int client_fd) {
       std::cout << pong << std::endl;
       std::cout << "===>Send PONG" << std::endl;
       send(client_fd, pong.c_str(), pong.size(), 0);
-      // } else if (line.find("CAP END") == 0) {
-      //   if (!client_nicknames[client_fd].empty() &&
-      //       !client_username[client_fd].empty()) {
-      //     client_states[client_fd] = VERIFYED;
-      //     sendWelcome(client_fd);
-      //   }
+      client_states[client_fd] = REGISTERED;
     }
   }
 }
@@ -275,6 +267,7 @@ void Server::handle_new_host() {
       while (client_states[new_client_fd.fd] != REGISTERED)
         Server::parser_irc(new_client_fd.fd);
 
+      Server::sendWelcome(new_client_fd.fd);
       client_states[new_connection] =
           WAITTING_PASS; // waiting state for authentication
     } else
