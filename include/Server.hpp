@@ -79,9 +79,13 @@ private:
   void handle_messages(size_t index);
   void handle_disconn_err_hungup(size_t index);
   void broadcast_message(const std::string &message, int sender_fd);
-  void parser_irc(int client_fd);
+  int parser_irc(int client_fd);
   void remove_from_vector(size_t index);
+
+  // Messages
   void sendWelcome(int fd);
+  void sendWronPassword(int fd);
+  void sendCapabilities(int fd);
 
 public:
   Server();

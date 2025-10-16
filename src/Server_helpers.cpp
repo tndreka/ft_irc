@@ -10,44 +10,35 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "../include/Server.hpp"
 
-void Server::remove_from_vector(size_t index)
-{
-    if (index >= poll_fds.size())
-        return ;
-    if (index < poll_fds.size() - 1)
-        poll_fds[index] = poll_fds[poll_fds.size() - 1];
-    poll_fds.pop_back();
+void Server::remove_from_vector(size_t index) {
+  if (index >= poll_fds.size())
+    return;
+  if (index < poll_fds.size() - 1)
+    poll_fds[index] = poll_fds[poll_fds.size() - 1];
+  poll_fds.pop_back();
 }
 
-bool Server::set_Port(const std::string& port)
-{
-    int portNum;
+bool Server::set_Port(const std::string &port) {
+  int portNum;
 
-    portNum = atoi(port.c_str());
-    if(portNum < 1024 || portNum > 65535)
-    {
-        std::cerr<< "Invalid range!! Port number must be between 1024 - 65535\n";
-        return false;
-    }
-    else
-    {
-        this->port = portNum;
-        return true;
-    }
+  portNum = atoi(port.c_str());
+  if (portNum < 1024 || portNum > 65535) {
+    std::cerr << "Invalid range!! Port number must be between 1024 - 65535\n";
+    return false;
+  } else {
+    this->port = portNum;
+    return true;
+  }
 }
 
-bool Server::set_Pass(const std::string& pass)
-{
-    if (pass.empty())
-    {
-        std::cerr << "Password can not be empty\n";
-        return false;
-    }
-    else
-    {
-        this->password = pass;
-        return true;
-    }
+bool Server::set_Pass(const std::string &pass) {
+  if (pass.empty()) {
+    std::cerr << "Password can not be empty\n";
+    return false;
+  } else {
+    this->password = pass;
+    return true;
+  }
 }
