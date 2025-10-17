@@ -17,7 +17,7 @@
 #include <string>
 #include <unistd.h>
 
-Server::Server() : serverName("MalakaIRC") {}
+Server::Server() : _serverName("MalakaIRC"), _activeUsers() {}
 
 Server::Server(const Server &other) {
   (void)other;
@@ -54,7 +54,15 @@ Server::~Server() {}
 */
 
 std::string Server::getServerName() const {
-    return serverName;
+    return _serverName;
+}
+
+const std::string Server::getPass() const {
+    return _password;
+}
+
+std::map<int, User*>	Server::getActiveMembers(void) const {
+	return (_activeUsers);
 }
 
 bool Server::createSocket() {
@@ -235,16 +243,16 @@ int Server::parser_irc(User& user) {
 			line.erase(line.size() - 1);
 		if (line.rfind("PASS ") == 0) {
 			pass = line.substr(5);
-			if (pass != password) {
+			if (pass != _password) {
 				Server::sendWronPassword(user);
 				return -1;
 			}
 		} else if (line.rfind("NICK ", 0) == 0) {
 			user.setNickname(line.substr(5));
-			std::cout << "===>Grabed Nickname" << std::endl;
+			// std::cout << "===>Grabed Nickname" << std::endl;
 		} else if (line.rfind("USER ", 0) == 0) {
 			user.setUsername(line.substr(5));
-			std::cout << "===>Grabed USer" << std::endl;
+			// std::cout << "===>Grabed USer" << std::endl;
 		} else if (line.rfind("PING ", 0) == 0) {
 			std::string pong = "PONG " + line.substr(5) + "\r\n";
 			std::cout << pong << std::endl;
@@ -263,7 +271,7 @@ void Server::handle_new_host() {
 	if (new_connection != -1) {
 		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
 			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-			_activeUsers[new_connection] = *user;
+			_activeUsers[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
 			if (Server::parser_irc(*user) == -1) {
@@ -272,6 +280,10 @@ void Server::handle_new_host() {
 			}
 			user->setState(VERIFIED);
 			Server::sendWelcome(*user);
+
+			std::cout << "User\n" << *user << std::endl << std::endl;
+			std::cout << "\nServer\n" << *this << std::endl;
+
 		} else
 			std::cerr << "handle_new_host() making new_connection non-blocking failed"
 					<< std::endl;
@@ -282,28 +294,28 @@ void Server::handle_new_host() {
 }
 
 void Server::handle_messages(size_t index) {
-	User user = _activeUsers[index];
+	User *user = _activeUsers[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
 	if (bytes_recived > 0) {
-		std::cout << "Recived from " << user.getHostname() << ": " << buff;
+		std::cout << "Recived from " << user->getHostname() << ": " << buff;
 		buff[bytes_recived] = '\0';
 		// send(poll_fds[index].fd, buff, bytes_recived, 0);
-		std::string message = user.getHostname() + ": " + std::string(buff);
+		std::string message = user->getHostname() + ": " + std::string(buff);
 		std::cout << message << std::endl;
 		// broadcast_message(message, poll_fds[index].fd);
 	} else if (bytes_recived <= 0) {
-		std::cout << "Client " << user.getPoll().fd << "("
-					<< user.getHostname() << ") disconnected" << std::endl;
-		close(user.getPoll().fd);
+		std::cout << "Client " << user->getPoll().fd << "("
+					<< user->getHostname() << ") disconnected" << std::endl;
+		close(user->getPoll().fd);
 		poll_fds.erase(poll_fds.begin() + index);
-		user.setHostname("_DISCONNECTED_");
+		user->setHostname("_DISCONNECTED_");
 		remove_from_vector(index);
 	}
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
-	User user = _activeUsers[index];
+	User user = *_activeUsers[index];
 	std::cout << "Client " << poll_fds[index].fd << "(" << user.getHostname() << ") error/hungup " << std::endl;
 	close(poll_fds[index].fd);
 	user.setHostname("_DISCONNECTED_");
@@ -348,4 +360,23 @@ void Server::run_Server() {
       }
     }
   }
+}
+
+std::ostream& operator<<(std::ostream& out, const Server& obj) {
+    const std::map<int, User*>& activeMembers = obj.getActiveMembers();
+    typedef std::map<int, User*>::const_iterator iter; 
+
+    out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
+    out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
+    if (activeMembers.empty())
+        out << "\tNo members in the server!\n";
+    else {
+        for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
+            if (it->second != NULL)
+                out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
+            else
+                out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
+        }
+    }
+    return out;
 }

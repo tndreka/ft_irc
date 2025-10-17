@@ -29,7 +29,7 @@ class User {
 		User(const User& other);
 		~User();
 
-		User	operator=(const User& other);
+		User&	operator=(const User& other);
 
 		const std::string	getUsername(void) const;
 		const std::string	getNickname(void) const;

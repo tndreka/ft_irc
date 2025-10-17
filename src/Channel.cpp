@@ -1,0 +1,56 @@
+#include "../include/Channel.hpp"
+#include "../include/User.hpp"
+
+Channel::Channel() :
+	_name("default"),
+	_admin(NULL),
+	_members()
+{};
+
+Channel::Channel(std::string name, User admin) :
+	_name(name),
+	_admin(&admin),
+	_members()
+{};
+
+Channel::Channel(const Channel& other) :
+	_name(other._name),
+	_admin(other._admin),
+	_members(other._members)
+{};
+
+Channel::~Channel() {};
+
+Channel&	Channel::operator=(const Channel& other) {
+	if (this != &other) {
+		_name = other._name;
+		_admin = other._admin;
+		_members = other._members;
+	}
+	return (*this);
+};
+
+std::string	Channel::getName(void) const {
+	return (_name);
+};
+
+User	Channel::getAdmin(void) const {
+	return (*_admin);
+};
+
+std::map<int, User*>	Channel::getMembers(void) const {
+	return (_members);
+};
+
+void	Channel::addMember(User& member) {
+	_members[member.getPoll().fd] = &member;
+};
+
+void	Channel::removeMember(User& member) {
+	_members.erase(member.getPoll().fd);
+};
+
+std::ostream&	operator<<(std::ostream& out, const Channel& obj) {
+	out << "Channel name: " << obj.getName() << "\nChannel Admin: " << obj.getAdmin().getUsername();
+	return (out);
+};

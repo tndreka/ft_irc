@@ -31,12 +31,14 @@
 #endif
 
 #include "User.hpp"
+#include "Channel.hpp"
 
 class Server {
     private:
-        std::string serverName;
-        std::string password;
-        std::map<int, User> _activeUsers;
+        std::string             _serverName;
+        std::string             _password;
+        std::map<int, User*>    _activeUsers;
+        std::vector<Channel>    _channels;    
 
         int port;
         int listening;
@@ -82,12 +84,18 @@ class Server {
     public:
         Server();
         Server(const Server &other);
-        Server &operator=(const Server &other);
         ~Server();
+        
+        Server &operator=(const Server &other);
+
         bool set_Port(const std::string &port);
         bool set_Pass(const std::string &pass);
         int get_Port() const;
         int init_Server();
         void run_Server();
         std::string getServerName() const;
+        const  std::string		getPass(void) const;
+        std::map<int, User*>	getActiveMembers(void) const;
 };
+
+std::ostream&   operator<<(std::ostream& out, const Server& obj);

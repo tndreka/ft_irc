@@ -38,7 +38,7 @@ bool Server::set_Pass(const std::string &pass) {
     std::cerr << "Password can not be empty\n";
     return false;
   } else {
-    this->password = pass;
+    this->_password = pass;
     return true;
   }
 }
