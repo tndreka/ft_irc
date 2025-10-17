@@ -4,15 +4,24 @@ void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
 
+	std::cout << user << std::endl;
 	std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 
 	while (std::getline(iss, line)) {
-		if (line.rfind("PING ", 0) == 0) {
+		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
-		} else if (line.rfind("JOIN #") == 0) {
+		} else if (!line.rfind("JOIN #")) {
 			return; // Create Channel
+		} else if (!line.rfind("NICK ")) {
+			Server::cmdNick(&user, line);
+		} else if (!line.rfind("userhost ")) {
+			// Server::cmdUser(&user, line); // Maybe change userName
+			return;
+		} else if (!line.rfind("WHOIS ")) {
+			Server::cmdWhois(&user, line);
+		} else if (!line.rfind("OPER ")) {
+			Server::cmdOper(&user, line);
 		}
-
 	}
 }
 
@@ -43,13 +52,15 @@ int Server::authenticateParser(User& user) {
 			}
 		} else if (line.rfind("NICK ", 0) == 0) {
 			user.setNickname(line.substr(5));
-			std::cout << "===>Grabed Nickname" << std::endl;
 		} else if (line.rfind("USER ", 0) == 0) {
 			std::istringstream issUser(line.substr(5));
-			std::string username;
-			issUser >> username;
+			std::string username, hostname, reallarg, firstName, lastName;
+			issUser >> username >> hostname >> reallarg >> firstName >> lastName;
+			
+			if (firstName[0] == ':')
+				firstName = firstName.substr(1);
+			user.setRealname(firstName + " " + lastName);
 			user.setUsername(username);
-			std::cout << "===>Grabed USer" << std::endl;
 		}
 	}
 	if (pass.empty() || user.getNickname().empty() || user.getUsername().empty())

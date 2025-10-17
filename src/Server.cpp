@@ -253,10 +253,6 @@ void Server::handle_messages(size_t index) {
 
 	buff[bytes_recived] = '\0';
 	Server::parse(*user, buff);
-	// send(poll_fds[index].fd, buff, bytes_recived, 0);
-	// std::string message = user.getHostname() + ": " + std::string(buff);
-	// std::cout << message << std::endl;
-	// broadcast_message(message, poll_fds[index].fd);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

@@ -43,6 +43,7 @@ class User {
 		void				setRealname(std::string str);
 		void				setHostname(std::string str);
 		void				setState(ClientState state);
+		void				setAdmin(bool isAdmin);
 };
 
 std::ostream&	operator<<(std::ostream& out, const User& other);

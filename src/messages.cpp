@@ -45,7 +45,5 @@ void Server::sendCapabilities(User& user) {
 void Server::sendPong(User *user, std::string ping) {
 
 	std::string pong = "PONG " + ping.substr(5) + "\r\n";
-	std::cout << pong << std::endl;
-	std::cout << "===>Send PONG" << std::endl;
 	send(user->getPoll().fd, pong.c_str(), pong.size(), 0);
 }

@@ -22,12 +22,15 @@
 #include <poll.h>       // for poll()
 #include <sstream>      //for istringstream
 #include <string.h>
+#include <string>
 #include <sys/socket.h> // for socket liberary
 #include <unistd.h>
 #include <vector>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
+#define IRC_OPER_NAME "root"
+#define IRC_OPER_PASS "secretpass"
 #endif
 
 #include "User.hpp"
@@ -82,6 +85,12 @@ class Server {
         void sendWronPassword(User& user);
         void sendCapabilities(User& user);
 		void sendPong(User *user, std::string ping);
+
+		// Commands
+		void cmdNick(User *user, std::string line);
+		void cmdWhois(User *user, std::string line);
+		void cmdOper(User *user, std::string line);
+
 
     public:
         Server();
