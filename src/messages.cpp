@@ -1,13 +1,13 @@
 #include "../include/Server.hpp"
 
-void Server::broadcast_message(const std::string &message, User user) {
+void Server::broadcast_message(const std::string &message, User& user) {
   for (size_t i = 0; i < poll_fds.size(); i++) {
     if (poll_fds[i].fd != listening && poll_fds[i].fd != user.getPoll().fd)
       send(poll_fds[i].fd, message.c_str(), message.length(), 0);
   }
 }
 
-void Server::sendWelcome(User user) {
+void Server::sendWelcome(User& user) {
   std::string nick = user.getNickname();
   std::vector<std::string> replies;
 
@@ -22,7 +22,7 @@ void Server::sendWelcome(User user) {
   }
 }
 
-void Server::sendWronPassword(User user) {
+void Server::sendWronPassword(User& user) {
   std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
   std::string err =
       ":" + serverName + " 464 " + nick + " :Password incorrect\r\n";
@@ -33,7 +33,7 @@ void Server::sendWronPassword(User user) {
   send(user.getPoll().fd, closing.c_str(), closing.size(), 0);
 }
 
-void Server::sendCapabilities(User user) {
+void Server::sendCapabilities(User& user) {
   std::string capReply = ":" + serverName + " CAP * LS :\r\n";
   std::cout << "===>Sending capabilities" << std::endl;
   

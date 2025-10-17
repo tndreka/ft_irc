@@ -18,13 +18,11 @@ User::User(const std::string un, const std::string nn, const std::string rn, con
 {};
 
 User::User(int connection, const std::string hostname) {
-	std::cout << "con: " << connection << std::endl;
 	_poll.fd = connection;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
 	_hostname = hostname;
 	_state = WAITING_AUTH;
-	std::cout << "poll fd: " << _poll.fd << std::endl;
 };
 
 User::User(const User& other) :
@@ -101,6 +99,6 @@ void	User::setState(ClientState state) {
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()
-		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << std::endl;
+		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << "State: " << obj.getState();
 	return (out);
 };
