@@ -32,6 +32,7 @@
 
 #include "User.hpp"
 #include "Channel.hpp"
+#include "ServerUtils.hpp"
 
 class Server {
     private:
@@ -72,7 +73,7 @@ class Server {
         void handle_new_host();
         void handle_messages(size_t index);
         void handle_disconn_err_hungup(size_t index);
-        int parser_irc(User& user);
+        int authenticateParser(User& user);
         void remove_from_vector(size_t index);
         
         // Messages
@@ -80,6 +81,9 @@ class Server {
         void sendWelcome(User& user);
         void sendWronPassword(User& user);
         void sendCapabilities(User& user);
+		void sendPong(User *user, std::string ping);
+		void parse(User& user, std::string buff);
+
 
     public:
         Server();
@@ -88,14 +92,15 @@ class Server {
         
         Server &operator=(const Server &other);
 
-        bool set_Port(const std::string &port);
-        bool set_Pass(const std::string &pass);
-        int get_Port() const;
-        int init_Server();
-        void run_Server();
-        std::string getServerName() const;
+        bool					set_Port(const std::string &port);
+        bool					set_Pass(const std::string &pass);
+        int						get_Port() const;
+        int 					init_Server();
+        void 					run_Server();
+        std::string 			getServerName() const;
         const  std::string		getPass(void) const;
         std::map<int, User*>	getActiveMembers(void) const;
+		std::vector<Channel>	getChannels(void) const;
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

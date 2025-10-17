@@ -48,6 +48,10 @@ User&	User::operator=(const User& other) {
 	return (*this);
 };
 
+bool	User::operator==(const User& other) const {
+	return (_poll.fd == other._poll.fd);
+};
+
 const std::string	User::getUsername(void) const {
 	return (_username);
 };

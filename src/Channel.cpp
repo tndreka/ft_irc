@@ -30,11 +30,11 @@ Channel&	Channel::operator=(const Channel& other) {
 	return (*this);
 };
 
-std::string	Channel::getName(void) const {
+const std::string	Channel::getName(void) const {
 	return (_name);
 };
 
-User	Channel::getAdmin(void) const {
+User&	Channel::getAdmin(void) const {
 	return (*_admin);
 };
 

@@ -30,6 +30,7 @@ class User {
 		~User();
 
 		User&	operator=(const User& other);
+		bool	operator==(const User& other) const;
 
 		const std::string	getUsername(void) const;
 		const std::string	getNickname(void) const;

@@ -25,6 +25,6 @@ int main(int ac, char *av[]) {
 		return 1;
 	if (server.init_Server() == 1)
 		return 1;
-	std::cout << server << std::endl << std::endl;
+	// std::cout << server << std::endl << std::endl;
 	server.run_Server();
 }

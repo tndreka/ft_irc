@@ -36,8 +36,16 @@ void Server::sendWronPassword(User& user) {
 void Server::sendCapabilities(User& user) {
   std::string capReply = ":" + _serverName + " CAP * LS :\r\n";
   // std::cout << "===>Sending capabilities" << std::endl;
-  
+
   // std::cout << "fd: " << user.getPoll().fd << std::endl;
   send(user.getPoll().fd, capReply.c_str(), capReply.size(), 0);
   // std::cout << capReply << std::endl;
+}
+
+void Server::sendPong(User *user, std::string ping) {
+
+	std::string pong = "PONG " + ping.substr(5) + "\r\n";
+	// std::cout << pong << std::endl;
+	// std::cout << "===>Send PONG" << std::endl;
+	send(user->getPoll().fd, pong.c_str(), pong.size(), 0);
 }

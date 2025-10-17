@@ -32,6 +32,41 @@ Server &Server::operator=(const Server &other) {
 
 Server::~Server() {}
 
+std::string Server::getServerName() const {
+    return _serverName;
+}
+
+const std::string Server::getPass() const {
+    return _password;
+}
+
+std::map<int, User*>	Server::getActiveMembers(void) const {
+	return (_activeUsers);
+}
+
+std::vector<Channel>	Server::getChannels(void) const {
+	return (_channels);
+}
+
+std::ostream& operator<<(std::ostream& out, const Server& obj) {
+    const std::map<int, User*>& activeMembers = obj.getActiveMembers();
+    typedef std::map<int, User*>::const_iterator iter; 
+
+    out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
+    out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
+    if (activeMembers.empty())
+        out << "\tNo members in the server!\n";
+    else {
+        for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
+            if (it->second != NULL)
+                out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
+            else
+                out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
+        }
+    }
+    return out;
+}
+
 /*
             ====== Socket_creation ======
   we use socket() function.
@@ -52,19 +87,6 @@ Server::~Server() {}
       being returned.
     ERROR: -1
 */
-
-std::string Server::getServerName() const {
-    return _serverName;
-}
-
-const std::string Server::getPass() const {
-    return _password;
-}
-
-std::map<int, User*>	Server::getActiveMembers(void) const {
-	return (_activeUsers);
-}
-
 bool Server::createSocket() {
   listening = socket(AF_INET, SOCK_STREAM, 0);
   if (listening == -1) {
@@ -97,8 +119,6 @@ bool Server::createSocket() {
                 ERROR => -1
 
 */
-
-
 bool Server::bindSocket() {
   // socket non-block
   fcntl(listening, F_SETFL, O_NONBLOCK);
@@ -115,19 +135,19 @@ bool Server::bindSocket() {
 }
 
 /*
-                        ==================== LISTEN ====================
+==================== LISTEN ====================
 listen() -> this function marks the socket referred by sockedfd as a
 passivesocket that will be used to accept incoming connection requests.
 
-    int listen(int sockfd, int backlog)
-    Parameters:
-        sockfd - the socket file descriptor (in my case listening vriable)
-        backlog - the maximum number of pending connections that can be queued
+int listen(int sockfd, int backlog)
+Parameters:
+sockfd - the socket file descriptor (in my case listening vriable)
+backlog - the maximum number of pending connections that can be queued
 
-        RETURN:
-                success => 0
-                ERROR => -1
-        */
+RETURN:
+		success => 0
+		ERROR => -1
+*/
 bool Server::listenSocket() {
   if (listen(listening, SOMAXCONN) == -1) {
     std::cerr << "Can't listen the socket" << std::endl;
@@ -144,14 +164,14 @@ connection request on the queue of pending connections for the listening
 socket, creates a new connected socket, and returns the new fd referring to
 that socket.
 
-  int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); Parameters:
-       1) sockfd - listening socket file descriptor 2) addr -pointer to sockaddr
-       struct to store client info 3) addrlen - pointer to size of addr struct
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); Parameters:
+	1) sockfd - listening socket file descriptor 2) addr -pointer to sockaddr
+	struct to store client info 3) addrlen - pointer to size of addr struct
 
-        RETURN:
-                        success => New socket file descriptor for the connection
-                        ERROR => -1
-        */
+	RETURN:
+					success => New socket file descriptor for the connection
+					ERROR => -1
+*/
 
 void Server::accept_connection() {
   clientSize = sizeof(client);
@@ -162,32 +182,32 @@ void Server::accept_connection() {
 }
 
 /*
-            ==================== POLL ======================
-    poll() function allows monitoring multiple file descriptors to see if I/O is
-    possible on any of them. It's essential for handling multiple clients
-   simultaneously. int poll(struct pollfd *fds, nfds_t nfds, int timeout);
-    poll() function allows monitoring multiple file descriptors to see if I/O is
-    possible on any of them. It's essential for handling multiple clients
-   simultaneously. int poll(struct pollfd *fds, nfds_t nfds, int timeout);
-    struct pollfd {
-       int   fd;         // file descriptor to monitor
-       hort events;     // events to monitor (POLLIN, POLLOUT, etc.)
-       hort revents;    // events that actually occurred
-       };
-    Parameters:
-        1) fds -> array of pollfd structures (file descriptors to monitor)
-        2) nfds -> number of file descriptors in the array
-        3) timeout -> timeout in milliseconds (-1 = infinite, 0 = don't block)
-    Events:
-       - POLLIN: Data available for reading
-       - POLLIN: Data available for reading
-       - POLLOUT: Ready for writing
-       - POLLHUP: Hang up (connection closed)
-       - POLLERR: Error condition
-    RETURN:
-        SUCCESS: Number of file descriptors with events
-        TIMEOUT: 0 (if timeout occurred)
-        ERROR: -1
+==================== POLL ======================
+poll() function allows monitoring multiple file descriptors to see if I/O is
+possible on any of them. It's essential for handling multiple clients
+simultaneously. int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+poll() function allows monitoring multiple file descriptors to see if I/O is
+possible on any of them. It's essential for handling multiple clients
+simultaneously. int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+struct pollfd {
+int   fd;         // file descriptor to monitor
+hort events;     // events to monitor (POLLIN, POLLOUT, etc.)
+hort revents;    // events that actually occurred
+};
+Parameters:
+1) fds -> array of pollfd structures (file descriptors to monitor)
+2) nfds -> number of file descriptors in the array
+3) timeout -> timeout in milliseconds (-1 = infinite, 0 = don't block)
+Events:
+- POLLIN: Data available for reading
+- POLLIN: Data available for reading
+- POLLOUT: Ready for writing
+- POLLHUP: Hang up (connection closed)
+- POLLERR: Error condition
+RETURN:
+SUCCESS: Number of file descriptors with events
+TIMEOUT: 0 (if timeout occurred)
+ERROR: -1
 */
 bool Server::init_poll() {
   if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
@@ -208,7 +228,6 @@ void Server::event_state() {
 }
 
 void Server::event_check(size_t index) {
-  // flags
   event_state();
 
   if (poll_fds[index].revents & POLLIN)
@@ -221,51 +240,6 @@ void Server::event_check(size_t index) {
     is_listening = true;
 }
 
-int Server::parser_irc(User& user) {
-
-	char buffer[MAX_BUFF];
-	memset(buffer, 0, MAX_BUFF);
-	int bytes_received = recv(user.getPoll().fd, buffer, MAX_BUFF - 1, 0);
-	if (bytes_received <= 0)
-	return -1;
-
-	buffer[bytes_received] = '\0';
-
-	std::string msg(buffer);
-	std::istringstream iss(msg);
-	std::string line;
-	std::string pass;
-
-	// std::cout << "Received from " << user.getPoll().fd << ": " << msg << std::endl;
-
-	while (std::getline(iss, line)) {
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
-		if (line.rfind("PASS ") == 0) {
-			pass = line.substr(5);
-			if (pass != _password) {
-				Server::sendWronPassword(user);
-				return -1;
-			}
-		} else if (line.rfind("NICK ", 0) == 0) {
-			user.setNickname(line.substr(5));
-			// std::cout << "===>Grabed Nickname" << std::endl;
-		} else if (line.rfind("USER ", 0) == 0) {
-			user.setUsername(line.substr(5));
-			// std::cout << "===>Grabed USer" << std::endl;
-		} else if (line.rfind("PING ", 0) == 0) {
-			std::string pong = "PONG " + line.substr(5) + "\r\n";
-			std::cout << pong << std::endl;
-			std::cout << "===>Send PONG" << std::endl;
-			send(user.getPoll().fd, pong.c_str(), pong.size(), 0);
-		}
-	}
-	if (pass.empty() || user.getNickname().empty() || user.getUsername().empty())
-		return -1;
-	user.setState(REGISTERED);
-	return 0;
-}
-
 void Server::handle_new_host() {
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
 	if (new_connection != -1) {
@@ -274,19 +248,14 @@ void Server::handle_new_host() {
 			_activeUsers[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
-			if (Server::parser_irc(*user) == -1) {
+			if (Server::authenticateParser(*user) == -1) {
 				poll_fds.pop_back();
 				return;
 			}
 			user->setState(VERIFIED);
 			Server::sendWelcome(*user);
-
-			std::cout << "User\n" << *user << std::endl << std::endl;
-			std::cout << "\nServer\n" << *this << std::endl;
-
 		} else
-			std::cerr << "handle_new_host() making new_connection non-blocking failed"
-					<< std::endl;
+			std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
 	} else {
 		std::cerr << "Failed accepting new connections" << std::endl;
 		close(new_connection);
@@ -297,21 +266,16 @@ void Server::handle_messages(size_t index) {
 	User *user = _activeUsers[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
-	if (bytes_recived > 0) {
-		std::cout << "Recived from " << user->getHostname() << ": " << buff;
-		buff[bytes_recived] = '\0';
-		// send(poll_fds[index].fd, buff, bytes_recived, 0);
-		std::string message = user->getHostname() + ": " + std::string(buff);
-		std::cout << message << std::endl;
-		// broadcast_message(message, poll_fds[index].fd);
-	} else if (bytes_recived <= 0) {
-		std::cout << "Client " << user->getPoll().fd << "("
-					<< user->getHostname() << ") disconnected" << std::endl;
+	if (bytes_recived <= 0) {
+		std::cout << "Client " << user->getPoll().fd << "(" << user->getHostname() << ") disconnected" << std::endl;
 		close(user->getPoll().fd);
 		poll_fds.erase(poll_fds.begin() + index);
 		user->setHostname("_DISCONNECTED_");
 		remove_from_vector(index);
 	}
+	buff[bytes_recived] = '\0';
+	std::cout << "Buff: '" << buff << "'" << std::endl;
+	Server::parse(*user, buff);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
@@ -362,21 +326,3 @@ void Server::run_Server() {
   }
 }
 
-std::ostream& operator<<(std::ostream& out, const Server& obj) {
-    const std::map<int, User*>& activeMembers = obj.getActiveMembers();
-    typedef std::map<int, User*>::const_iterator iter; 
-
-    out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
-    out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
-    if (activeMembers.empty())
-        out << "\tNo members in the server!\n";
-    else {
-        for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
-            if (it->second != NULL)
-                out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
-            else
-                out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
-        }
-    }
-    return out;
-}
