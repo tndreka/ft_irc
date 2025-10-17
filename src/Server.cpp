@@ -11,13 +11,15 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <unistd.h>
 #include "../include/Server.hpp"
 #include <string>
 #include <unistd.h>
 
-Server::Server() : serverName("MalakaIRC") {}
+Server::Server() : serverName("MalakaIRC"), _activeUsers() {}
 
 Server::Server(const Server &other) {
   (void)other;
@@ -213,60 +215,15 @@ void Server::event_check(size_t index) {
     is_listening = true;
 }
 
-int Server::parser_irc(User& user) {
-
-	char buffer[MAX_BUFF];
-	memset(buffer, 0, MAX_BUFF);
-	int bytes_received = recv(user.getPoll().fd, buffer, MAX_BUFF - 1, 0);
-	if (bytes_received <= 0)
-	return -1;
-
-	buffer[bytes_received] = '\0';
-
-	std::string msg(buffer);
-	std::istringstream iss(msg);
-	std::string line;
-	std::string pass;
-
-	// std::cout << "Received from " << user.getPoll().fd << ": " << msg << std::endl;
-
-	while (std::getline(iss, line)) {
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
-		if (line.rfind("PASS ") == 0) {
-			pass = line.substr(5);
-			if (pass != password) {
-				Server::sendWronPassword(user);
-				return -1;
-			}
-		} else if (line.rfind("NICK ", 0) == 0) {
-			user.setNickname(line.substr(5));
-			std::cout << "===>Grabed Nickname" << std::endl;
-		} else if (line.rfind("USER ", 0) == 0) {
-			user.setUsername(line.substr(5));
-			std::cout << "===>Grabed USer" << std::endl;
-		} else if (line.rfind("PING ", 0) == 0) {
-			std::string pong = "PONG " + line.substr(5) + "\r\n";
-			std::cout << pong << std::endl;
-			std::cout << "===>Send PONG" << std::endl;
-			send(user.getPoll().fd, pong.c_str(), pong.size(), 0);
-		}
-	}
-	if (pass.empty() || user.getNickname().empty() || user.getUsername().empty())
-		return -1;
-	user.setState(REGISTERED);
-	return 0;
-}
-
 void Server::handle_new_host() {
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
 	if (new_connection != -1) {
 		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
 			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-			_activeUsers[new_connection] = *user;
+			_activeUsers[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
-			if (Server::parser_irc(*user) == -1) {
+			if (Server::authenticateParser(*user) == -1) {
 				poll_fds.pop_back();
 				return;
 			}
@@ -282,31 +239,31 @@ void Server::handle_new_host() {
 }
 
 void Server::handle_messages(size_t index) {
-	User user = _activeUsers[index];
+	User *user = _activeUsers[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
-	if (bytes_recived > 0) {
-		std::cout << "Recived from " << user.getHostname() << ": " << buff;
-		buff[bytes_recived] = '\0';
-		// send(poll_fds[index].fd, buff, bytes_recived, 0);
-		std::string message = user.getHostname() + ": " + std::string(buff);
-		std::cout << message << std::endl;
-		// broadcast_message(message, poll_fds[index].fd);
-	} else if (bytes_recived <= 0) {
-		std::cout << "Client " << user.getPoll().fd << "("
-					<< user.getHostname() << ") disconnected" << std::endl;
-		close(user.getPoll().fd);
+	if (bytes_recived <= 0) {
+		std::cout << "Client " << user->getPoll().fd << "("
+					<< user->getHostname() << ") disconnected" << std::endl;
+		close(user->getPoll().fd);
 		poll_fds.erase(poll_fds.begin() + index);
-		user.setHostname("_DISCONNECTED_");
+		user->setHostname("_DISCONNECTED_");
 		remove_from_vector(index);
 	}
+
+	buff[bytes_recived] = '\0';
+	Server::parse(*user, buff);
+	// send(poll_fds[index].fd, buff, bytes_recived, 0);
+	// std::string message = user.getHostname() + ": " + std::string(buff);
+	// std::cout << message << std::endl;
+	// broadcast_message(message, poll_fds[index].fd);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
-	User user = _activeUsers[index];
-	std::cout << "Client " << poll_fds[index].fd << "(" << user.getHostname() << ") error/hungup " << std::endl;
+	User *user = _activeUsers[index];
+	std::cout << "Client " << poll_fds[index].fd << "(" << user->getHostname() << ") error/hungup " << std::endl;
 	close(poll_fds[index].fd);
-	user.setHostname("_DISCONNECTED_");
+	user->setHostname("_DISCONNECTED_");
 	remove_from_vector(index);
 }
 

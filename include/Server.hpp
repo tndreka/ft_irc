@@ -36,7 +36,7 @@ class Server {
     private:
         std::string serverName;
         std::string password;
-        std::map<int, User> _activeUsers;
+        std::map<int, User*> _activeUsers;
 
         int port;
         int listening;
@@ -70,14 +70,18 @@ class Server {
         void handle_new_host();
         void handle_messages(size_t index);
         void handle_disconn_err_hungup(size_t index);
-        int parser_irc(User& user);
         void remove_from_vector(size_t index);
-        
+
+		// Parsing
+		int authenticateParser(User& user);
+		void parse(User& user, std::string buff);
+ 
         // Messages
         void broadcast_message(const std::string &message, User& user);
         void sendWelcome(User& user);
         void sendWronPassword(User& user);
         void sendCapabilities(User& user);
+		void sendPong(User *user, std::string ping);
 
     public:
         Server();
