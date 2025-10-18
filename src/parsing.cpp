@@ -1,4 +1,7 @@
 #include "../include/Server.hpp"
+#include <iostream>
+#include <sstream>
+#include <string>
 
 void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
@@ -23,6 +26,41 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdOper(&user, line);
 		}
 	}
+}
+
+std::string Server::authenticateNickname(User &user, std::string line) {
+
+	std::istringstream iss(line);
+	std::string arg, nickname;
+	iss >> arg >> nickname;
+
+
+	std::cout << arg << nickname << std::endl;
+	if (nickname.empty() || nickname.length() > 32) {
+		// Error msg
+		return "";
+	}
+
+	if (nickname[0] > '}' || nickname[0] < 'A') {
+		//Error
+		return "";
+	}
+
+	for (size_t i = 1; nickname[i]; ++i) {
+		if ((nickname[i] > '}' || nickname[i] < 'A') && (nickname[i] > '9' || nickname[i] < '0')) {
+			//Error 
+			return "";
+		}
+	}
+
+	for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+		if (it->second->getNickname() == nickname) {
+			Errors::NICKNAMEINUSE(serverName, user.getPoll().fd, nickname);
+			return "";
+		}
+	}
+
+	return nickname;
 }
 
 int Server::authenticateParser(User& user) {
@@ -51,7 +89,7 @@ int Server::authenticateParser(User& user) {
 				return -1;
 			}
 		} else if (line.rfind("NICK ", 0) == 0) {
-			user.setNickname(line.substr(5));
+			user.setNickname(authenticateNickname(user, line));
 		} else if (line.rfind("USER ", 0) == 0) {
 			std::istringstream issUser(line.substr(5));
 			std::string username, hostname, reallarg, firstName, lastName;

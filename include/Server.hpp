@@ -34,6 +34,7 @@
 #endif
 
 #include "User.hpp"
+#include "../include/error.hpp"
 
 class Server {
     private:
@@ -73,10 +74,14 @@ class Server {
         void handle_new_host();
         void handle_messages(size_t index);
         void handle_disconn_err_hungup(size_t index);
+
+		// Helpers
         void remove_from_vector(size_t index);
+		void closeConnection(int fd);
 
 		// Parsing
 		int authenticateParser(User& user);
+		std::string authenticateNickname(User& user, std::string line);
 		void parse(User& user, std::string buff);
  
         // Messages

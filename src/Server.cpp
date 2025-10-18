@@ -148,11 +148,11 @@ that socket.
         */
 
 void Server::accept_connection() {
-  clientSize = sizeof(client);
-  listening_fd.fd = listening;
-  listening_fd.events = POLLIN;
-  listening_fd.revents = 0;
-  poll_fds.push_back(listening_fd);
+	clientSize = sizeof(client);
+	listening_fd.fd = listening;
+	listening_fd.events = POLLIN;
+	listening_fd.revents = 0;
+	poll_fds.push_back(listening_fd);
 }
 
 /*
@@ -184,35 +184,35 @@ void Server::accept_connection() {
         ERROR: -1
 */
 bool Server::init_poll() {
-  if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
-    std::cerr << "" << std::endl;
-    return false;
-  }
-  return true;
+	if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
+		std::cerr << "" << std::endl;
+		return false;
+	}
+	return true;
 }
 
 /*
     === EVENTS ===
 */
 void Server::event_state() {
-  incoming_data = false;
-  client_hungup = false;
-  err = false;
-  is_listening = false;
+	incoming_data = false;
+	client_hungup = false;
+	err = false;
+	is_listening = false;
 }
 
 void Server::event_check(size_t index) {
   // flags
-  event_state();
+  	event_state();
 
-  if (poll_fds[index].revents & POLLIN)
-    incoming_data = true;
-  if (poll_fds[index].revents & POLLHUP)
-    client_hungup = true;
-  if (poll_fds[index].revents & POLLERR)
-    err = true;
-  if (poll_fds[index].fd == listening)
-    is_listening = true;
+	if (poll_fds[index].revents & POLLIN)
+		incoming_data = true;
+	if (poll_fds[index].revents & POLLHUP)
+		client_hungup = true;
+	if (poll_fds[index].revents & POLLERR)
+    	err = true;
+	if (poll_fds[index].fd == listening)
+		is_listening = true;
 }
 
 void Server::handle_new_host() {
@@ -224,7 +224,8 @@ void Server::handle_new_host() {
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
 			if (Server::authenticateParser(*user) == -1) {
-				poll_fds.pop_back();
+				// poll_fds.pop_back();
+				Server::closeConnection(user->getPoll().fd);
 				return;
 			}
 			user->setState(VERIFIED);
@@ -264,20 +265,20 @@ void Server::handle_disconn_err_hungup(size_t index) {
 }
 
 int Server::init_Server() {
-  if (createSocket() == false) {
-    std::cerr << "Failed to create socket\n";
-    return 1;
-  }
-  if (bindSocket() == false) {
-    std::cerr << "Failed to bind socket\n";
-    return 1;
-  }
-  if (listenSocket() == false) {
-    std::cerr << "Failed to listen socket\n";
-    return 1;
-  }
-  accept_connection();
-  return 0;
+	if (createSocket() == false) {
+		std::cerr << "Failed to create socket\n";
+    	return 1;
+	}
+	if (bindSocket() == false) {
+		std::cerr << "Failed to bind socket\n";
+    	return 1;
+	}
+	if (listenSocket() == false) {
+    	std::cerr << "Failed to listen socket\n";
+    	return 1;
+	}
+	accept_connection();
+	return 0;
 }
 
 void Server::run_Server() {
