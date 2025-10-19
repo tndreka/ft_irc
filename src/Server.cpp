@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/02 17:53:56 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/19 22:02:53 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,11 +215,6 @@ void Server::event_check(size_t index)
         err = true;
     if (poll_fds[index].fd == listening)
         is_listening = true;
-}
-
-void Server::parser_irc(int clients_fd, const std::string& messg)
-{
-    if ()
 }
 
 void Server::handle_new_host()
