@@ -96,6 +96,10 @@ void	User::setState(ClientState state) {
 	_state = state;
 }
 
+void	User::setAdmin(bool isAdmin) {
+	_isAdmin = isAdmin;
+}
+
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()

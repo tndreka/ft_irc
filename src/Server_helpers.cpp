@@ -12,6 +12,29 @@
 
 #include "../include/Server.hpp"
 
+void Server::closeConnection(int fd) {
+	std::map<int, User*>::iterator it = _activeUsers.find(fd);
+	if (it != _activeUsers.end()) {
+		User *user = it->second;
+		std::cout << "Closing connection for " << user->getNickname()
+					<< " (" << user->getHostname() << ")\n";
+
+		user->setHostname("_DISCONNECTED_");
+
+		for (size_t i = 0; i < poll_fds.size(); ++i) {
+			if (poll_fds[i].fd == fd) {
+				poll_fds.erase(poll_fds.begin() + i);
+				break;
+			}
+		}
+		close(fd);
+		delete user;
+		_activeUsers.erase(it);
+	} else {
+		close(fd);
+	}
+}
+
 void Server::remove_from_vector(size_t index) {
   if (index >= poll_fds.size())
     return;

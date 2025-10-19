@@ -2,7 +2,7 @@ NAME = IRC
 
 CPP = c++
 
-CPPFLAGS = -Wall -Wextra -Werror -g -fsanitize=address -fno-omit-frame-pointer -std=c++98 -I$(INC_DIR)
+CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -fsanitize=address -fno-omit-frame-pointer -std=c++98 -I$(INC_DIR)
 
 MAKEFLAGS += -s
 
@@ -25,6 +25,8 @@ $(NAME) : $(OBJS)
 	$(CPP) $(CPPFLAGS) $(OBJS) -o $(NAME)
 	@echo "🚀 '\033[33m$(NAME)\033[0m' compiled \033[32msuccessfully\033[0m!"
 
+-include $(OBJS:.o=.d)
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR) 
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
@@ -32,8 +34,9 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -f $(OBJDIR)/*.o
-	rm -rf $(OBJDIR)
+	rm -f $(OBJ_DIR)/*.o
+	rm -f $(OBJ_DIR)/*.d
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	@printf "[.]   🧹 Removing '\033[33m$(NAME)\033[0m' build...\r"

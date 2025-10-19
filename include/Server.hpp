@@ -22,21 +22,25 @@
 #include <poll.h>       // for poll()
 #include <sstream>      //for istringstream
 #include <string.h>
+#include <string>
 #include <sys/socket.h> // for socket liberary
 #include <unistd.h>
 #include <vector>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
+#define IRC_OPER_NAME "root"
+#define IRC_OPER_PASS "secretpass"
 #endif
 
 #include "User.hpp"
+#include "../include/error.hpp"
 
 class Server {
     private:
         std::string serverName;
         std::string password;
-        std::map<int, User> _activeUsers;
+        std::map<int, User*> _activeUsers;
 
         int port;
         int listening;
@@ -70,14 +74,28 @@ class Server {
         void handle_new_host();
         void handle_messages(size_t index);
         void handle_disconn_err_hungup(size_t index);
-        int parser_irc(User& user);
+
+		// Helpers
         void remove_from_vector(size_t index);
-        
+		void closeConnection(int fd);
+
+		// Parsing
+		int authenticateParser(User& user);
+		std::string authenticateNickname(User& user, std::string line);
+		void parse(User& user, std::string buff);
+ 
         // Messages
         void broadcast_message(const std::string &message, User& user);
         void sendWelcome(User& user);
         void sendWronPassword(User& user);
         void sendCapabilities(User& user);
+		void sendPong(User *user, std::string ping);
+
+		// Commands
+		void cmdNick(User *user, std::string line);
+		void cmdWhois(User *user, std::string line);
+		void cmdOper(User *user, std::string line);
+
 
     public:
         Server();
