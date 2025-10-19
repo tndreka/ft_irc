@@ -20,24 +20,24 @@
 Server::Server() : _serverName("MalakaIRC"), _activeUsers() {}
 
 Server::Server(const Server &other) {
-  (void)other;
-  std::cout << "Copy server not allowed !  !  !\n";
+	(void)other;
+	std::cout << "Copy server not allowed !  !  !\n";
 }
 
 Server &Server::operator=(const Server &other) {
-  (void)other;
-  std::cout << "= operator_server not allowed !  !  !\n";
-  return *this;
+	(void)other;
+	std::cout << "= operator_server not allowed !  !  !\n";
+	return *this;
 }
 
 Server::~Server() {}
 
 std::string Server::getServerName() const {
-    return _serverName;
+		return _serverName;
 }
 
 const std::string Server::getPass() const {
-    return _password;
+		return _password;
 }
 
 std::map<int, User*>	Server::getActiveMembers(void) const {
@@ -49,89 +49,89 @@ std::vector<Channel>	Server::getChannels(void) const {
 }
 
 std::ostream& operator<<(std::ostream& out, const Server& obj) {
-    const std::map<int, User*>& activeMembers = obj.getActiveMembers();
-    typedef std::map<int, User*>::const_iterator iter; 
+	const std::map<int, User*>& activeMembers = obj.getActiveMembers();
+	typedef std::map<int, User*>::const_iterator iter; 
 
-    out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
-    out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
-    if (activeMembers.empty())
-        out << "\tNo members in the server!\n";
-    else {
-        for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
-            if (it->second != NULL)
-                out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
-            else
-                out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
-        }
-    }
-    return out;
+	out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
+	out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
+	if (activeMembers.empty())
+			out << "\tNo members in the server!\n";
+	else {
+			for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
+					if (it->second != NULL)
+							out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
+					else
+							out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
+			}
+	}
+	return out;
 }
 
 /*
-            ====== Socket_creation ======
-  we use socket() function.
-    socket(int Domain, int type, int protocol);
-  1)First Param:
-    -int Domain -> use AF_INET -> {is an addres family,
-      that is used to designate the type of address that your socket
-      can communicate in this case IPV4(internet protocol V4)}
-  2)Second Param: -int
-    -type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection
-  based byte streams. it make sure that the data is not dublicated, it doesnt
-  get lost and its delivered on correct order} 3) Third param: -int protocol ->
-  0 -Protocol specifies a particular protocol to be used with the socke.
-      Normally a single protocol exit to support the socket type
-      within the given protocol family wich most of the times is 0}
-  RETURN:
-    SUCCESS: A file descriptor for the new socket created is
-      being returned.
-    ERROR: -1
+						====== Socket_creation ======
+	we use socket() function.
+		socket(int Domain, int type, int protocol);
+	1)First Param:
+		-int Domain -> use AF_INET -> {is an addres family,
+			that is used to designate the type of address that your socket
+			can communicate in this case IPV4(internet protocol V4)}
+	2)Second Param: -int
+		-type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection
+	based byte streams. it make sure that the data is not dublicated, it doesnt
+	get lost and its delivered on correct order} 3) Third param: -int protocol ->
+	0 -Protocol specifies a particular protocol to be used with the socke.
+			Normally a single protocol exit to support the socket type
+			within the given protocol family wich most of the times is 0}
+	RETURN:
+		SUCCESS: A file descriptor for the new socket created is
+			being returned.
+		ERROR: -1
 */
 bool Server::createSocket() {
-  listening = socket(AF_INET, SOCK_STREAM, 0);
-  if (listening == -1) {
-    std::cerr << " Create Socket() failed " << std::endl;
-    return false;
-  } else
-    return true;
+	listening = socket(AF_INET, SOCK_STREAM, 0);
+	if (listening == -1) {
+		std::cerr << " Create Socket() failed " << std::endl;
+		return false;
+	} else
+		return true;
 }
 
 /*
 
-                                ================== BIND_SOCKET
-   =================== sockaddr_in this is a structure used  to represent IPv4
-   internet domain socket address. it is designed for IPv4 only and it contains
-   mambers for the family addres as:
-        ->address_family(sin_family) = should be set as AF_INET to use the IPv4
-        ->port_number(sin_port) = holdsthe portnumber in the network byte order
-   requiring conversion from the host byte order using fucntion hstons().
-        ->and IPv4 adress = this is the 32 bit IPv4 addres which it can be
-   assigned manually or by using functions like inet_addr()
-        ====>htons(uint16_t hostshort);
-                ->this function converts the unsigned short int hostshort from
-   host byte order to network byte order.
-    ===>bind() function assigns the address specified by the hinf to the socked
-   referred to by the file descriptor listening. bind(int sockfd, const struct
-   sockaddr *addr, socklen_t addrlen) Parameter: 1) sockfd - socket file
-   descriptor (listening) 2) addr - pointer to sockaddr structure (cast hint to
-   sockaddr *) 3) addrlen - size of the address structure (sizeof(hint)) RETURN:
-                Success => 0
-                ERROR => -1
+																================== BIND_SOCKET
+	 =================== sockaddr_in this is a structure used  to represent IPv4
+	 internet domain socket address. it is designed for IPv4 only and it contains
+	 mambers for the family addres as:
+				->address_family(sin_family) = should be set as AF_INET to use the IPv4
+				->port_number(sin_port) = holdsthe portnumber in the network byte order
+	 requiring conversion from the host byte order using fucntion hstons().
+				->and IPv4 adress = this is the 32 bit IPv4 addres which it can be
+	 assigned manually or by using functions like inet_addr()
+				====>htons(uint16_t hostshort);
+								->this function converts the unsigned short int hostshort from
+	 host byte order to network byte order.
+		===>bind() function assigns the address specified by the hinf to the socked
+	 referred to by the file descriptor listening. bind(int sockfd, const struct
+	 sockaddr *addr, socklen_t addrlen) Parameter: 1) sockfd - socket file
+	 descriptor (listening) 2) addr - pointer to sockaddr structure (cast hint to
+	 sockaddr *) 3) addrlen - size of the address structure (sizeof(hint)) RETURN:
+								Success => 0
+								ERROR => -1
 
 */
 bool Server::bindSocket() {
-  // socket non-block
-  fcntl(listening, F_SETFL, O_NONBLOCK);
-  // bind socket to IP
-  hint.sin_family = AF_INET;
-  hint.sin_port = htons(port);
-  hint.sin_addr.s_addr = INADDR_ANY;
-  if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
-    std::cerr << "Port failed to bind with an IP !" << std::endl;
-    close(listening);
-    return false;
-  }
-  return true;
+	// socket non-block
+	fcntl(listening, F_SETFL, O_NONBLOCK);
+	// bind socket to IP
+	hint.sin_family = AF_INET;
+	hint.sin_port = htons(port);
+	hint.sin_addr.s_addr = INADDR_ANY;
+	if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
+		std::cerr << "Port failed to bind with an IP !" << std::endl;
+		close(listening);
+		return false;
+	}
+	return true;
 }
 
 /*
@@ -149,12 +149,12 @@ RETURN:
 		ERROR => -1
 */
 bool Server::listenSocket() {
-  if (listen(listening, SOMAXCONN) == -1) {
-    std::cerr << "Can't listen the socket" << std::endl;
-    close(listening);
-    return false;
-  } else
-    return true;
+	if (listen(listening, SOMAXCONN) == -1) {
+		std::cerr << "Can't listen the socket" << std::endl;
+		close(listening);
+		return false;
+	} else
+		return true;
 }
 
 /*
@@ -174,11 +174,11 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); Parameters:
 */
 
 void Server::accept_connection() {
-  clientSize = sizeof(client);
-  listening_fd.fd = listening;
-  listening_fd.events = POLLIN;
-  listening_fd.revents = 0;
-  poll_fds.push_back(listening_fd);
+	clientSize = sizeof(client);
+	listening_fd.fd = listening;
+	listening_fd.events = POLLIN;
+	listening_fd.revents = 0;
+	poll_fds.push_back(listening_fd);
 }
 
 /*
@@ -210,34 +210,34 @@ TIMEOUT: 0 (if timeout occurred)
 ERROR: -1
 */
 bool Server::init_poll() {
-  if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
-    std::cerr << "" << std::endl;
-    return false;
-  }
-  return true;
+	if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
+		std::cerr << "" << std::endl;
+		return false;
+	}
+	return true;
 }
 
 /*
-    === EVENTS ===
+		=== EVENTS ===
 */
 void Server::event_state() {
-  incoming_data = false;
-  client_hungup = false;
-  err = false;
-  is_listening = false;
+	incoming_data = false;
+	client_hungup = false;
+	err = false;
+	is_listening = false;
 }
 
 void Server::event_check(size_t index) {
-  event_state();
+	event_state();
 
-  if (poll_fds[index].revents & POLLIN)
-    incoming_data = true;
-  if (poll_fds[index].revents & POLLHUP)
-    client_hungup = true;
-  if (poll_fds[index].revents & POLLERR)
-    err = true;
-  if (poll_fds[index].fd == listening)
-    is_listening = true;
+	if (poll_fds[index].revents & POLLIN)
+		incoming_data = true;
+	if (poll_fds[index].revents & POLLHUP)
+		client_hungup = true;
+	if (poll_fds[index].revents & POLLERR)
+		err = true;
+	if (poll_fds[index].fd == listening)
+		is_listening = true;
 }
 
 void Server::handle_new_host() {
@@ -246,6 +246,7 @@ void Server::handle_new_host() {
 		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
 			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
 			_activeUsers[new_connection] = user;
+			std::cout << *user << std::endl;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
 			if (Server::authenticateParser(*user) == -1) {
@@ -254,6 +255,7 @@ void Server::handle_new_host() {
 			}
 			user->setState(VERIFIED);
 			Server::sendWelcome(*user);
+			std::cout << *user << std::endl;
 		} else
 			std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
 	} else {
@@ -287,42 +289,42 @@ void Server::handle_disconn_err_hungup(size_t index) {
 }
 
 int Server::init_Server() {
-  if (createSocket() == false) {
-    std::cerr << "Failed to create socket\n";
-    return 1;
-  }
-  if (bindSocket() == false) {
-    std::cerr << "Failed to bind socket\n";
-    return 1;
-  }
-  if (listenSocket() == false) {
-    std::cerr << "Failed to listen socket\n";
-    return 1;
-  }
-  accept_connection();
-  return 0;
+	if (createSocket() == false) {
+		std::cerr << "Failed to create socket\n";
+		return 1;
+	}
+	if (bindSocket() == false) {
+		std::cerr << "Failed to bind socket\n";
+		return 1;
+	}
+	if (listenSocket() == false) {
+		std::cerr << "Failed to listen socket\n";
+		return 1;
+	}
+	accept_connection();
+	return 0;
 }
 
 void Server::run_Server() {
-  while (true) {
-    if (init_poll() == false)
-      break;
-    for (size_t i = 0; i < poll_fds.size(); i++) {
-      event_check(i);
-      if (incoming_data) {
-        if (is_listening)
-          handle_new_host();
-        else {
-          handle_messages(i);
-          poll_fds[i].revents = 0;
-          i--;
-        }
-      }
-      if ((client_hungup || err) && !is_listening) {
-        handle_disconn_err_hungup(i);
-        i--;
-      }
-    }
-  }
+	while (true) {
+		if (init_poll() == false)
+			break;
+		for (size_t i = 0; i < poll_fds.size(); i++) {
+			event_check(i);
+			if (incoming_data) {
+				if (is_listening)
+					handle_new_host();
+				else {
+					handle_messages(i);
+					poll_fds[i].revents = 0;
+					i--;
+				}
+			}
+			if ((client_hungup || err) && !is_listening) {
+				handle_disconn_err_hungup(i);
+				i--;
+			}
+		}
+	}
 }
 

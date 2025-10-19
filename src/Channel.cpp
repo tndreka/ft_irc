@@ -7,9 +7,9 @@ Channel::Channel() :
 	_members()
 {};
 
-Channel::Channel(std::string name, User admin) :
+Channel::Channel(User* admin, std::string name) :
 	_name(name),
-	_admin(&admin),
+	_admin(admin),
 	_members()
 {};
 

@@ -19,7 +19,7 @@ class Channel {
 
 	public:
 		Channel();
-		Channel(const std::string name, User admin);
+		Channel(User* admin, std::string name);
 		Channel(const Channel& othher);
 		~Channel();
 

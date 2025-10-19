@@ -8,15 +8,16 @@ void Server::parse(User& user, std::string buff) {
 
 	while (std::getline(iss, line)) {
 		if (line.rfind("PING ", 0) == 0)
-		Server::sendPong(&user, line);
+			Server::sendPong(&user, line);
 		else if (line.rfind("NICK #") == 0) {
 			// Server::cmdNick(&user, line);
 			std::cout << "Nickname TODO" << std::endl;
 			return;
 		}
-		else if (line.rfind("JOIN #") == 0)
-			channels::handleJoin(_channels, &user, line);
+		else if (line.rfind("JOIN #") == 0) {
+			server::handleJoin(_channels, &user, line);
 			return;
+		}
 	}
 }
 
