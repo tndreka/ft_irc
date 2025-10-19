@@ -2,7 +2,9 @@ NAME = IRC
 
 CPP = c++
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
+CPPFLAGS = -Wall -Wextra -Werror -g -fsanitize=address -fno-omit-frame-pointer -std=c++98 -I$(INC_DIR)
+
+MAKEFLAGS += -s
 
 #Folders
 SRC_DIR = src
@@ -19,7 +21,9 @@ OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 all: $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CPP) $(CPPFLAGS) -o $@ $^
+	@printf "[.]   📦 Compiling '\033[33m$(NAME)\033[0m'...\r"
+	$(CPP) $(CPPFLAGS) $(OBJS) -o $(NAME)
+	@echo "🚀 '\033[33m$(NAME)\033[0m' compiled \033[32msuccessfully\033[0m!"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR) 
 	$(CPP) $(CPPFLAGS) -c $< -o $@
@@ -28,10 +32,13 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	@rm -rf $(OBJ_DIR)
+	rm -f $(OBJDIR)/*.o
+	rm -rf $(OBJDIR)
 
 fclean: clean
-	@rm -rf $(NAME)
+	@printf "[.]   🧹 Removing '\033[33m$(NAME)\033[0m' build...\r"
+	rm -f $(NAME)
+	printf "[✅]  🧹 Removed '\033[33m$(NAME)\033[0m' build...  \n"
 
 re: fclean all
 
