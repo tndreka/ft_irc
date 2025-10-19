@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/19 22:23:26 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/19 22:41:05 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -262,7 +262,7 @@ void Server::handle_new_host() {
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
 	if (new_connection != -1) {
 		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
-			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
+			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr))); //allocation
 			_activeUsers[new_connection] = *user;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
@@ -282,8 +282,9 @@ void Server::handle_new_host() {
 }
 
 void Server::handle_messages(size_t index) {
-	User user = _activeUsers[index];
-	memset(buff, 0, MAX_BUFF);
+	//User user = _activeUsers[index];
+	User user = _activeUsers[poll_fds[index].fd]; // line above accessing wrong user
+  memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
 	if (bytes_recived > 0) {
 		std::cout << "Recived from " << user.getHostname() << ": " << buff;
@@ -303,7 +304,8 @@ void Server::handle_messages(size_t index) {
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
-	User user = _activeUsers[index];
+	//User user = _activeUsers[index];
+  User user = _activeUsers[poll_fds[index].fd];
 	std::cout << "Client " << poll_fds[index].fd << "(" << user.getHostname() << ") error/hungup " << std::endl;
 	close(poll_fds[index].fd);
 	user.setHostname("_DISCONNECTED_");
