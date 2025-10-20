@@ -32,8 +32,8 @@ $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -f $(OBJDIR)/*.o
-	rm -rf $(OBJDIR)
+	rm -f $(OBJ_DIR)/*.o
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	@printf "[.]   🧹 Removing '\033[33m$(NAME)\033[0m' build...\r"

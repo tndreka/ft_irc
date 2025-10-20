@@ -11,7 +11,9 @@ Channel::Channel(User* admin, std::string name) :
 	_name(name),
 	_admin(admin),
 	_members()
-{};
+{
+	std::cout << "New channel created named " << _name << std::endl;
+};
 
 Channel::Channel(const Channel& other) :
 	_name(other._name),
@@ -51,6 +53,6 @@ void	Channel::removeMember(User& member) {
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj) {
-	out << "Channel name: " << obj.getName() << "\nChannel Admin: " << obj.getAdmin().getUsername();
+	out << "Channel name: '" << obj.getName() << "'\nChannel Admin: '" << obj.getAdmin().getUsername() << "'" << std::endl;
 	return (out);
 };

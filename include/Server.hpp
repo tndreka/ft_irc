@@ -36,10 +36,10 @@
 
 class Server {
     private:
-        std::string             _serverName;
+        std::string             _name;
         std::string             _password;
-        std::map<int, User*>    _activeUsers;
-        std::vector<Channel>    _channels;    
+        std::map<int, User*>    _users;
+        std::vector<Channel*>   _channels;
 
         int port;
         int listening;
@@ -97,10 +97,10 @@ class Server {
         int						get_Port() const;
         int 					init_Server();
         void 					run_Server();
-        std::string 			getServerName() const;
+        std::string 			getName() const;
         const  std::string		getPass(void) const;
         std::map<int, User*>	getActiveMembers(void) const;
-		std::vector<Channel>	getChannels(void) const;
+		std::vector<Channel*>	getChannels(void) const;
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

@@ -5,50 +5,55 @@
 /**
  * @brief Handles all the different cases for the /join command
  */
-void	server::handleJoin(std::vector<Channel>& channels, User* user, std::string line) {
-    const std::string	channel_name = line.substr(6);
-	bool				isExistingChannel = channel::isAlreadyExisting(channels, channel_name);
+void	server::handleJoin(std::vector<Channel*>& channels, User* user, std::string line) {
+    std::string	channel_name;
+	bool		isExistingChannel;
 	// Channel*			connected_channel = user::getConnectedChannel(channels, user);
 
+	if (!line.empty() && line[line.length() - 1] == '\r')
+		line.erase(line.length() - 1);
+	std::cout << "Line: '" + line + "'" << std::endl;
+    channel_name = line.substr(6);
+	isExistingChannel = channel::isAlreadyExisting(channels, channel_name);
 	if (isExistingChannel) {
-		std::cout << "New channel: '" << channel_name << "'" << std::endl;
-		std::cout << "Channel list: ";
-		printChannels(channels);
-		std::cout << std::endl;
-		return;
+		std::cout << "Requested channel: " << channel_name << std::endl;
+		// printChannels(channels);
 		// if new channel == connected channel -> nothing
 		// else join()
 	}
 	else {
 		Channel* new_channel = channel::create(user, channel_name);
-		channels.push_back(*new_channel);
-		//add to the list with the others
+		channels.push_back(new_channel);
 	}
+	// server::printChannels(channels);
 }
 
-void	server::printChannels(std::vector<Channel>& channels) {
-	size_t	size = channels.size();
+void    server::printChannels(std::vector<Channel*>& channels) {
+    typedef std::vector<Channel*>::iterator ChannelIterator;
 
-	for (size_t i = 0; i < size; i++) {
-		std::cout << "'" << channels[i].getName() << "'";
-		if (i < size - 1)
-			std::cout <<", ";
-	}
-	std::cout << std::endl;
+    if (channels.empty())
+		return ((void)(std::cout << "No active channels!" << std::endl));
+	std::cout << "Channel list: ";
+	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
+    for (ChannelIterator it = channels.begin(); it != channels.end(); ++it) {
+        if (it != channels.begin())
+            std::cout << ", ";
+        std::cout << "'" << (*it)->getName() << "'";
+    }
+    std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
 }
 
-bool	channel::isAlreadyExisting(std::vector<Channel>& channels, const std::string name) {
-    std::vector<Channel>::const_iterator it;
+bool	channel::isAlreadyExisting(std::vector<Channel*>& channels, const std::string name) {
+    std::vector<Channel*>::const_iterator it;
 
 	for (it = channels.begin(); it != channels.end(); ++it)
-		if (it->getName() == name)
+		if ((*it)->getName() == name)
 			return (true);
 	return (false);
 }
 
 Channel*	channel::create(User* admin, const std::string channel_name) {
 	Channel*	channel = new Channel(admin, channel_name);
-	std::cout << "New channel created named '" << channel->getName() << "', with admin named '" << channel->getAdmin().getUsername() << "'" << std::endl;
 	return (channel);
 }
 

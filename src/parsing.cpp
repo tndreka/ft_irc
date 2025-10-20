@@ -7,6 +7,7 @@ void Server::parse(User& user, std::string buff) {
 	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 
 	while (std::getline(iss, line)) {
+		//erase the \r before passing it as parameter to any function ???
 		if (line.rfind("PING ", 0) == 0)
 			Server::sendPong(&user, line);
 		else if (line.rfind("NICK #") == 0) {
@@ -14,10 +15,9 @@ void Server::parse(User& user, std::string buff) {
 			std::cout << "Nickname TODO" << std::endl;
 			return;
 		}
-		else if (line.rfind("JOIN #") == 0) {
+		else if (line.rfind("JOIN #") == 0)
 			server::handleJoin(_channels, &user, line);
-			return;
-		}
+		// else if (line.rfind("PART #"))
 	}
 }
 

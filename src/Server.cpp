@@ -17,7 +17,7 @@
 #include <string>
 #include <unistd.h>
 
-Server::Server() : _serverName("MalakaIRC"), _activeUsers() {}
+Server::Server() : _name("MalakaIRC"), _users() {}
 
 Server::Server(const Server &other) {
 	(void)other;
@@ -32,8 +32,8 @@ Server &Server::operator=(const Server &other) {
 
 Server::~Server() {}
 
-std::string Server::getServerName() const {
-		return _serverName;
+std::string Server::getName() const {
+		return _name;
 }
 
 const std::string Server::getPass() const {
@@ -41,10 +41,10 @@ const std::string Server::getPass() const {
 }
 
 std::map<int, User*>	Server::getActiveMembers(void) const {
-	return (_activeUsers);
+	return (_users);
 }
 
-std::vector<Channel>	Server::getChannels(void) const {
+std::vector<Channel*>	Server::getChannels(void) const {
 	return (_channels);
 }
 
@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream& out, const Server& obj) {
 	const std::map<int, User*>& activeMembers = obj.getActiveMembers();
 	typedef std::map<int, User*>::const_iterator iter; 
 
-	out << "Server name: " << obj.getServerName() << "\nServer password: " << obj.getPass();
+	out << "Server name: " << obj.getName() << "\nServer password: " << obj.getPass();
 	out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
 	if (activeMembers.empty())
 			out << "\tNo members in the server!\n";
@@ -245,8 +245,7 @@ void Server::handle_new_host() {
 	if (new_connection != -1) {
 		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
 			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-			_activeUsers[new_connection] = user;
-			std::cout << *user << std::endl;
+			_users[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			Server::sendCapabilities(*user);
 			if (Server::authenticateParser(*user) == -1) {
@@ -255,17 +254,17 @@ void Server::handle_new_host() {
 			}
 			user->setState(VERIFIED);
 			Server::sendWelcome(*user);
-			std::cout << *user << std::endl;
 		} else
 			std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
 	} else {
 		std::cerr << "Failed accepting new connections" << std::endl;
 		close(new_connection);
 	}
+	std::cout << "New user connected: '" << _users[new_connection]->getUsername() << "'" << std::endl;
 }
 
 void Server::handle_messages(size_t index) {
-	User *user = _activeUsers[poll_fds[index].fd];
+	User *user = _users[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
 	if (bytes_recived <= 0) {
@@ -276,12 +275,13 @@ void Server::handle_messages(size_t index) {
 		remove_from_vector(index);
 	}
 	buff[bytes_recived] = '\0';
-	std::cout << "Buff: '" << buff << "'" << std::endl;
+	// std::cout << "Buff: '" << buff << "'" << std::endl;
 	Server::parse(*user, buff);
+	server::printChannels(_channels);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
-	User user = *_activeUsers[index];
+	User user = *_users[index];
 	std::cout << "Client " << poll_fds[index].fd << "(" << user.getHostname() << ") error/hungup " << std::endl;
 	close(poll_fds[index].fd);
 	user.setHostname("_DISCONNECTED_");
@@ -318,6 +318,7 @@ void Server::run_Server() {
 					handle_messages(i);
 					poll_fds[i].revents = 0;
 					i--;
+					// server::printChannels(_channels);
 				}
 			}
 			if ((client_hungup || err) && !is_listening) {

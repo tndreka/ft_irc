@@ -11,11 +11,11 @@ void Server::sendWelcome(User& user) {
   std::string nick = user.getNickname();
   std::vector<std::string> replies;
 
-  replies.push_back(":" + _serverName + " 001 " + nick + " :Welcome to the " +
-                    _serverName + " IRC Server!\r\n");
-  replies.push_back(":" + _serverName + " 002 " + nick + " :Your host is " +
-                    _serverName + "\r\n");
-  replies.push_back(":" + _serverName + " 376 " + nick + " :End of MOTD\r\n");
+  replies.push_back(":" + _name + " 001 " + nick + " :Welcome to the " +
+                    _name + " IRC Server!\r\n");
+  replies.push_back(":" + _name + " 002 " + nick + " :Your host is " +
+                    _name + "\r\n");
+  replies.push_back(":" + _name + " 376 " + nick + " :End of MOTD\r\n");
 
   for (size_t i = 0; i < replies.size(); ++i) {
     send(user.getPoll().fd, replies[i].c_str(), replies[i].size(), 0);
@@ -25,7 +25,7 @@ void Server::sendWelcome(User& user) {
 void Server::sendWronPassword(User& user) {
   std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
   std::string err =
-      ":" + _serverName + " 464 " + nick + " :Password incorrect\r\n";
+      ":" + _name + " 464 " + nick + " :Password incorrect\r\n";
   send(user.getPoll().fd, err.c_str(), err.size(), 0);
 
   std::string closing =
@@ -34,7 +34,7 @@ void Server::sendWronPassword(User& user) {
 }
 
 void Server::sendCapabilities(User& user) {
-  std::string capReply = ":" + _serverName + " CAP * LS :\r\n";
+  std::string capReply = ":" + _name + " CAP * LS :\r\n";
   // std::cout << "===>Sending capabilities" << std::endl;
 
   // std::cout << "fd: " << user.getPoll().fd << std::endl;
