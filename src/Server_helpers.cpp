@@ -6,11 +6,12 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/01 16:28:32 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:46:07 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/20 23:34:04 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/Server.hpp"
+#include "Server.hpp"
+#include <cerrno>
 
 void Server::closeConnection(int fd) {
 	std::map<int, User*>::iterator it = _activeUsers.find(fd);
@@ -43,17 +44,26 @@ void Server::remove_from_vector(size_t index) {
   poll_fds.pop_back();
 }
 
-bool Server::set_Port(const std::string &port) {
+bool Server::set_Port(const std::string &port)
+{
   int portNum;
-
-  portNum = atoi(port.c_str());
-  if (portNum < 1024 || portNum > 65535) {
+  char *end = 0;
+  errno = 0;
+  
+  portNum = std::strtol(port.c_str(), &end, 10);
+  //portNum = atoi(port.c_str());
+  if(*end != '\0')
+  {
+    std::cerr << "Invalid port: contains non digit charcters\n";
+    return false;
+  }
+  if (errno == ERANGE || portNum < 1024 || portNum > 65535)
+  {
     std::cerr << "Invalid range!! Port number must be between 1024 - 65535\n";
     return false;
-  } else {
-    this->port = portNum;
-    return true;
   }
+  this->port = portNum;
+  return true;
 }
 
 bool Server::set_Pass(const std::string &pass) {
