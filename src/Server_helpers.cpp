@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/01 16:28:32 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/20 23:34:04 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/21 00:26:35 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,8 @@ void Server::closeConnection(int fd) {
 void Server::remove_from_vector(size_t index) {
   if (index >= poll_fds.size())
     return;
-  if (index < poll_fds.size() - 1)
-    poll_fds[index] = poll_fds[poll_fds.size() - 1];
+  if (index != poll_fds.size() - 1)
+    poll_fds[index] = poll_fds.back();
   poll_fds.pop_back();
 }
 
