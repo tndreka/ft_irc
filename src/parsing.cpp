@@ -69,10 +69,11 @@ int Server::authenticateParser(User& user) {
 	memset(buffer, 0, MAX_BUFF);
 	int bytes_received = recv(user.getPoll().fd, buffer, MAX_BUFF - 1, 0);
 	if (bytes_received <= 0)
-	return -1;
-
+		return -1;
+	if(bytes_received == 0){
+		return -1;
+	}
 	buffer[bytes_received] = '\0';
-
 	std::string msg(buffer);
 	std::istringstream iss(msg);
 	std::string line;
