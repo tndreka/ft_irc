@@ -277,7 +277,7 @@ void Server::handle_messages(size_t index) {
 	buff[bytes_recived] = '\0';
 	// std::cout << "Buff: '" << buff << "'" << std::endl;
 	Server::parse(*user, buff);
-	server::printChannels(_channels);
+	// server::printChannels(_channels);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

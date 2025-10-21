@@ -9,7 +9,6 @@ class User;
 class Channel {
 	private:
 		std::string				_name;
-		User*					_admin;
 		std::map<int, User*>	_members;
 		unsigned int			_maxMembers;
 		std::string				_password;
@@ -19,14 +18,13 @@ class Channel {
 
 	public:
 		Channel();
-		Channel(User* admin, std::string name);
+		Channel(std::string name);
 		Channel(const Channel& othher);
 		~Channel();
 
 		Channel&	operator=(const Channel& other);
 
 		const std::string		getName(void) const;
-		User&					getAdmin(void) const;
 		std::map<int, User*>	getMembers(void) const;
 		void					addMember(User& user);
 		void					removeMember(User& user);

@@ -17,7 +17,8 @@ void Server::parse(User& user, std::string buff) {
 		}
 		else if (line.rfind("JOIN #") == 0)
 			server::handleJoin(_channels, &user, line);
-		// else if (line.rfind("PART #"))
+		// else if (line.rfind("PART ") == 0)
+		// 	server::handlePart(_channels, &user, line);
 	}
 }
 
