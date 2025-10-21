@@ -77,6 +77,10 @@ class Server {
 
 		// Helpers
         void remove_from_vector(size_t index);
+		bool isNickInUse (std::string& attemptedNick);
+		bool isValidNick(std::string& attemptedNick);
+		void removeUser(int fd);
+		bool isUserAlreadySigned(User& user);
 		void closeConnection(int fd);
 
 		// Parsing
@@ -87,9 +91,10 @@ class Server {
         // Messages
         void broadcast_message(const std::string &message, User& user);
         void sendWelcome(User& user);
-        void sendWronPassword(User& user);
+        void sendWrongPassword(User& user);
         void sendCapabilities(User& user);
 		void sendPong(User *user, std::string ping);
+		void sendQuitMsg(User *user);
 
 		// Commands
 		void cmdNick(User *user, std::string line);

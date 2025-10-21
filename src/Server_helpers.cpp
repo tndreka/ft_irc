@@ -12,27 +12,61 @@
 
 #include "../include/Server.hpp"
 
-void Server::closeConnection(int fd) {
+void Server::removeUser(int fd) {
+
+	shutdown(fd, SHUT_WR);
+
+	for (size_t i = 0; i < poll_fds.size(); ++i) {
+		if (poll_fds[i].fd == fd) {
+			poll_fds.erase(poll_fds.begin() + i);
+			break;
+		}
+	}
+
 	std::map<int, User*>::iterator it = _activeUsers.find(fd);
 	if (it != _activeUsers.end()) {
-		User *user = it->second;
-		std::cout << "Closing connection for " << user->getNickname()
-					<< " (" << user->getHostname() << ")\n";
-
-		user->setHostname("_DISCONNECTED_");
-
-		for (size_t i = 0; i < poll_fds.size(); ++i) {
-			if (poll_fds[i].fd == fd) {
-				poll_fds.erase(poll_fds.begin() + i);
-				break;
-			}
-		}
-		close(fd);
-		delete user;
+		delete it->second;
 		_activeUsers.erase(it);
-	} else {
-		close(fd);
 	}
+
+	close(fd);
+}
+
+bool Server::isValidNick(std::string& attemptedNick) {
+
+	if (attemptedNick.empty() || attemptedNick.length() > 32) {
+		return false;
+	}
+	for (size_t i = 1; attemptedNick[i]; ++i) {
+		if ((attemptedNick[i] > '}' || attemptedNick[i] < 'A') && (attemptedNick[i] > '9' || attemptedNick[i] < '0')) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Server::isUserAlreadySigned(User& user) {
+	for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+    	User* u = it->second;
+    	if (!u) continue;
+    	if (u->getUsername() == user.getUsername() && u->getHostname() == user.getHostname())
+			return true;
+	}
+	return false;
+}
+
+bool Server::isNickInUse (std::string& attemptedNick) {
+
+    for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+        User *existing = it->second;
+        if (!existing)
+            continue;
+
+        if (existing->getNickname() == attemptedNick) {
+			return true;
+        }
+    }
+	return false;
 }
 
 void Server::remove_from_vector(size_t index) {

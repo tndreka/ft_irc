@@ -2,8 +2,7 @@ NAME = IRC
 
 CPP = c++
 
-CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -std=c++98 -I$(INC_DIR)
-
+CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -std=c++98 -I$(INC_DIR) #-fsanitize=address -fno-omit-frame-pointer 
 MAKEFLAGS += -s
 
 #Folders

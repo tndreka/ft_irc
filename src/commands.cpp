@@ -30,7 +30,7 @@ void Server::cmdOper(User *user, std::string line) {
 	std::string msg = ":" + serverName + " 381 " + user->getNickname() + " :You are now an IRC operator\r\n";
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
-	std::string notice = ":irc.local NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
+	std::string notice = ":" + serverName + " NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
 	broadcast_message(notice, *user);
 }
 
