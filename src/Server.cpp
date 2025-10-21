@@ -237,6 +237,7 @@ void Server::handle_new_host() {
 
 	Server::sendCapabilities(*user);
 	if (Server::authenticateParser(*user) == -1) {
+		Server::sendQuitMsg(user);
 		Server::removeUser(user->getPoll().fd);
 		return;
 	}

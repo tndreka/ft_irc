@@ -47,3 +47,9 @@ void Server::sendPong(User *user, std::string ping) {
 	std::string pong = "PONG " + ping.substr(5) + "\r\n";
 	send(user->getPoll().fd, pong.c_str(), pong.size(), 0);
 }
+
+void Server::sendQuitMsg(User *user) {
+	std::string quitMsg = ":" + user->getNickname() + "!" + user->getUsername() +
+    	"@localhost QUIT :Client exited\r\n";
+	send(user->getPoll().fd, quitMsg.c_str(), quitMsg.size(), 0);
+}

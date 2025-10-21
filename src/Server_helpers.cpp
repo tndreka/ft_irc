@@ -16,7 +16,6 @@ void Server::removeUser(int fd) {
 
 	shutdown(fd, SHUT_WR);
 
-
 	for (size_t i = 0; i < poll_fds.size(); ++i) {
 		if (poll_fds[i].fd == fd) {
 			poll_fds.erase(poll_fds.begin() + i);

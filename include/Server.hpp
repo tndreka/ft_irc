@@ -94,6 +94,7 @@ class Server {
         void sendWrongPassword(User& user);
         void sendCapabilities(User& user);
 		void sendPong(User *user, std::string ping);
+		void sendQuitMsg(User *user);
 
 		// Commands
 		void cmdNick(User *user, std::string line);
