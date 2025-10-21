@@ -14,7 +14,9 @@ void Server::parse(User& user, std::string buff) {
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #")) {
-			return; // Create Channel
+			server::handleJoin(_name, _channels, &user, line);
+		// else if (line.rfind("PART ") == 0)
+		// 	server::handlePart(_channels, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
 		} else if (!line.rfind("userhost ")) {
@@ -51,7 +53,7 @@ int Server::authenticateParser(User &user) {
 
         if (!line.rfind("PASS ", 0)) {
             pass = line.substr(5);
-            if (pass != password) {
+            if (pass != _password) {
 				Server::sendWrongPassword(user);
                 return -1;
             }

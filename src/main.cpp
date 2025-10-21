@@ -13,17 +13,18 @@
 #include "../include/Server.hpp"
 
 int main(int ac, char *av[]) {
-  Server server;
+	Server server;
 
-  if (ac != 3) {
-    std::cerr << "Wrong Arguments! Usage:" << av[0] << " <port> <password>\n";
-    return 1;
-  }
-  if (!server.set_Port(av[1]))
-    return 1;
-  if (!server.set_Pass(av[2]))
-    return 1;
-  if (server.init_Server() == 1)
-    return 1;
-  server.run_Server();
+	if (ac != 3) {
+		std::cerr << "Wrong Arguments! Usage:" << av[0] << " <port> <password>\n";
+		return 1;
+	}
+	if (!server.set_Port(av[1]))
+		return 1;
+	if (!server.set_Pass(av[2]))
+		return 1;
+	if (server.init_Server() == 1)
+		return 1;
+	std::cout << "Connected to the server: '" << server.getName() << "'" << std::endl;
+	server.run_Server();
 }

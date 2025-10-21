@@ -5,20 +5,20 @@
 namespace Error {
 
 	//===============================REGISTRATION ERRORS====================================================
-	inline void NICKNAMEINUSE(User& user, std::string serverName, std::string& atemptedNick) {
+	inline void NICKNAMEINUSE(User& user, std::string _name, std::string& atemptedNick) {
 		
 		std::cout << atemptedNick << std::endl;
 		std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
-		// std::string msg = ":" + serverName + " 433 * " + ":Nickname is already in use\r\n";
-		std::string msg = ":" + serverName + " 433 " + nick + " " + atemptedNick
+		// std::string msg = ":" + _name + " 433 * " + ":Nickname is already in use\r\n";
+		std::string msg = ":" + _name + " 433 " + nick + " " + atemptedNick
 			+ " :Nickname is already in use\r\n";
 
 		std::cout << msg << std::endl;;
     	send(user.getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
 
-	inline void ERRONEUSNICKNAME(std::string serverName, int fd, std::string nickname) {
-		std::string msg = ":" + serverName + " 432 * " + nickname + " :Erroneous nickname\r\n";
+	inline void ERRONEUSNICKNAME(std::string _name, int fd, std::string nickname) {
+		std::string msg = ":" + _name + " 432 * " + nickname + " :Erroneous nickname\r\n";
     	send(fd, msg.c_str(), msg.length(), 0);
 	}
 

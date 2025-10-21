@@ -23,10 +23,10 @@ void Server::removeUser(int fd) {
 		}
 	}
 
-	std::map<int, User*>::iterator it = _activeUsers.find(fd);
-	if (it != _activeUsers.end()) {
+	std::map<int, User*>::iterator it = _users.find(fd);
+	if (it != _users.end()) {
 		delete it->second;
-		_activeUsers.erase(it);
+		_users.erase(it);
 	}
 
 	close(fd);
@@ -46,7 +46,7 @@ bool Server::isValidNick(std::string& attemptedNick) {
 }
 
 bool Server::isUserAlreadySigned(User& user) {
-	for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
     	User* u = it->second;
     	if (!u) continue;
     	if (u->getUsername() == user.getUsername() && u->getHostname() == user.getHostname())
@@ -57,7 +57,7 @@ bool Server::isUserAlreadySigned(User& user) {
 
 bool Server::isNickInUse (std::string& attemptedNick) {
 
-    for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
         User *existing = it->second;
         if (!existing)
             continue;
@@ -95,7 +95,7 @@ bool Server::set_Pass(const std::string &pass) {
     std::cerr << "Password can not be empty\n";
     return false;
   } else {
-    this->password = pass;
+    this->_password = pass;
     return true;
   }
 }
