@@ -22,7 +22,7 @@ void Server::sendWelcome(User& user) {
   }
 }
 
-void Server::sendWronPassword(User& user) {
+void Server::sendWrongPassword(User& user) {
   std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
   std::string err =
       ":" + serverName + " 464 " + nick + " :Password incorrect\r\n";

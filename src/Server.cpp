@@ -216,26 +216,29 @@ void Server::event_check(size_t index) {
 }
 
 void Server::handle_new_host() {
+
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
-	if (new_connection != -1) {
-		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
-			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-			_activeUsers[new_connection] = user;
-			poll_fds.push_back(user->getPoll());
-			Server::sendCapabilities(*user);
-			if (Server::authenticateParser(*user) == -1) {
-				// poll_fds.pop_back();
-				Server::closeConnection(user->getPoll().fd);
-				return;
-			}
-			user->setState(VERIFIED);
-			Server::sendWelcome(*user);
-		} else
-			std::cerr << "handle_new_host() making new_connection non-blocking failed"
-					<< std::endl;
-	} else {
+	if (new_connection == -1) {
 		std::cerr << "Failed accepting new connections" << std::endl;
 		close(new_connection);
+		return;
+	}
+
+	if (fcntl(new_connection, F_SETFL, O_NONBLOCK) == -1) {
+		std::cerr << "handle_new_host() making new_connection non-blocking failed"
+			<< std::endl;
+		close(new_connection);
+		return;
+	}
+
+	User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
+	_activeUsers[new_connection] = user;
+	poll_fds.push_back(user->getPoll());
+
+	Server::sendCapabilities(*user);
+	if (Server::authenticateParser(*user) == -1) {
+		Server::removeUser(user->getPoll().fd);
+		return;
 	}
 }
 
