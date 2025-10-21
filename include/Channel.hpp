@@ -18,15 +18,16 @@ class Channel {
 
 	public:
 		Channel();
-		Channel(std::string name);
+		Channel(std::string name, std::string pass);
 		Channel(const Channel& othher);
 		~Channel();
 
 		Channel&	operator=(const Channel& other);
 
-		const std::string		getName(void) const;
-		std::map<int, User*>	getMembers(void) const;
-		void					addMember(User& user);
+		const std::string			getName(void) const;
+		const std::map<int, User*>&	getMembers(void) const;
+		std::string				getPassword(void) const;
+		void					addMember(User* user);
 		void					removeMember(User& user);
 };
 
