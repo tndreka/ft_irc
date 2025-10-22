@@ -37,7 +37,7 @@ User::~User() {
 	close(_poll.fd);
 };
 
-User	User::operator=(const User& other) {
+User&	User::operator=(const User& other) {
 	if (this != &other) {
 		_username = other._username;
 		_nickname = other._nickname;
@@ -46,6 +46,10 @@ User	User::operator=(const User& other) {
 		_isAdmin = other._isAdmin;
 	}
 	return (*this);
+};
+
+bool	User::operator==(const User& other) const {
+	return (_poll.fd == other._poll.fd);
 };
 
 const std::string	User::getUsername(void) const {
@@ -103,6 +107,6 @@ void	User::setAdmin(bool isAdmin) {
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()
-		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << "State: " << obj.getState();
+		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << "\nState: " << obj.getState();
 	return (out);
 };

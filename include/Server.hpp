@@ -34,13 +34,16 @@
 #endif
 
 #include "User.hpp"
-#include "../include/error.hpp"
+#include "Channel.hpp"
+#include "ServerUtils.hpp"
+#include "error.hpp"
 
 class Server {
     private:
-        std::string serverName;
-        std::string password;
-        std::map<int, User*> _activeUsers;
+        std::string             _name;
+        std::string             _password;
+        std::map<int, User*>    _users;
+        std::vector<Channel*>   _channels;
 
         int port;
         int listening;
@@ -77,6 +80,10 @@ class Server {
 
 		// Helpers
         void remove_from_vector(size_t index);
+		bool isNickInUse (std::string& attemptedNick);
+		bool isValidNick(std::string& attemptedNick);
+		void removeUser(int fd);
+		bool isUserAlreadySigned(User& user);
 		void closeConnection(int fd);
 
 		// Parsing
@@ -87,9 +94,10 @@ class Server {
         // Messages
         void broadcast_message(const std::string &message, User& user);
         void sendWelcome(User& user);
-        void sendWronPassword(User& user);
+        void sendWrongPassword(User& user);
         void sendCapabilities(User& user);
 		void sendPong(User *user, std::string ping);
+		void sendQuitMsg(User *user);
 
 		// Commands
 		void cmdNick(User *user, std::string line);
@@ -100,12 +108,19 @@ class Server {
     public:
         Server();
         Server(const Server &other);
-        Server &operator=(const Server &other);
         ~Server();
-        bool set_Port(const std::string &port);
-        bool set_Pass(const std::string &pass);
-        int get_Port() const;
-        int init_Server();
-        void run_Server();
-        std::string getServerName() const;
+        
+        Server &operator=(const Server &other);
+
+        bool					set_Port(const std::string &port);
+        bool					set_Pass(const std::string &pass);
+        int						get_Port() const;
+        int 					init_Server();
+        void 					run_Server();
+        std::string 			getName() const;
+        const  std::string		getPass(void) const;
+        std::map<int, User*>	getActiveMembers(void) const;
+		std::vector<Channel*>	getChannels(void) const;
 };
+
+std::ostream&   operator<<(std::ostream& out, const Server& obj);

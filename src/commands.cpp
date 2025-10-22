@@ -10,27 +10,27 @@
 void Server::cmdOper(User *user, std::string line) {
 
 	std::istringstream iss(line);
-    std::string cmd, name, password;
-    iss >> cmd >> name >> password;
+    std::string cmd, name, _password;
+    iss >> cmd >> name >> _password;
 
-    if (name.empty() || password.empty()) {
-        std::string err = ":" + serverName + " 461 " + user->getNickname() + " OPER :Not enough parameters\r\n";
+    if (name.empty() || _password.empty()) {
+        std::string err = ":" + _name + " 461 " + user->getNickname() + " OPER :Not enough parameters\r\n";
         send(user->getPoll().fd, err.c_str(), err.size(), 0);
         return;
     }
 
-	if (name != IRC_OPER_NAME || password != IRC_OPER_PASS) {
-		std::string err = ":" + serverName + " 464 " + user->getNickname() + " :Incorrect credentials\r\n";
+	if (name != IRC_OPER_NAME || _password != IRC_OPER_PASS) {
+		std::string err = ":" + _name + " 464 " + user->getNickname() + " :Incorrect credentials\r\n";
         send(user->getPoll().fd, err.c_str(), err.size(), 0);
 		return;
 	}
 
 	user->setAdmin(true);
 
-	std::string msg = ":" + serverName + " 381 " + user->getNickname() + " :You are now an IRC operator\r\n";
+	std::string msg = ":" + _name + " 381 " + user->getNickname() + " :You are now an IRC operator\r\n";
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
-	std::string notice = ":irc.local NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
+	std::string notice = ":" + _name + " NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
 	broadcast_message(notice, *user);
 }
 
@@ -41,30 +41,30 @@ void Server::cmdWhois(User *user, std::string line) {
     iss >> cmd >> targetNick;
 
     if (targetNick.empty()) {
-        std::string err = ":" + serverName + " 431 " + user->getNickname() + " :No nickname given\r\n"; // ERR_NONICKNAMEGIVEN
+        std::string err = ":" + _name + " 431 " + user->getNickname() + " :No nickname given\r\n"; // ERR_NONICKNAMEGIVEN
         send(user->getPoll().fd, err.c_str(), err.size(), 0);
         return;
     }
 
     // Find target user
-    for (std::map<int, User*>::iterator it = _activeUsers.begin(); it != _activeUsers.end(); ++it) {
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
         User *target = it->second;
         if (target->getNickname() == targetNick) {
             std::string msg;
 
             // 311 - WHOISUSER
-            msg = ":" + serverName + " 311 " + user->getNickname() + " " + targetNick + " "
+            msg = ":" + _name + " 311 " + user->getNickname() + " " + targetNick + " "
                 + target->getUsername() + " " + target->getHostname() + " * :"
                 + target->getRealname() + "\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
             // 312 - WHOISSERVER
-            msg = ":" + serverName + " 312 " + user->getNickname() + " " + targetNick + " " + serverName + " :The BIGGEST MALAKA Server\r\n";
+            msg = ":" + _name + " 312 " + user->getNickname() + " " + targetNick + " " + _name + " :The BIGGEST MALAKA Server\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
 
             // 318 - ENDOFWHOIS
-            msg = ":" + serverName + " 318 " + user->getNickname() + " " + targetNick + " :End of /WHOIS list\r\n";
+            msg = ":" + _name + " 318 " + user->getNickname() + " " + targetNick + " :End of /WHOIS list\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
             return;
@@ -72,7 +72,7 @@ void Server::cmdWhois(User *user, std::string line) {
     }
 
     // ERR_NOSUCHNICK if not found
-    std::string err = ":" + serverName + " 401 " + user->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+    std::string err = ":" + _name + " 401 " + user->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
     send(user->getPoll().fd, err.c_str(), err.size(), 0);
 }
 

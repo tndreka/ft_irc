@@ -13,27 +13,61 @@
 #include "Server.hpp"
 #include <cerrno>
 
-void Server::closeConnection(int fd) {
-	std::map<int, User*>::iterator it = _activeUsers.find(fd);
-	if (it != _activeUsers.end()) {
-		User *user = it->second;
-		std::cout << "Closing connection for " << user->getNickname()
-					<< " (" << user->getHostname() << ")\n";
+void Server::removeUser(int fd) {
 
-		user->setHostname("_DISCONNECTED_");
+	shutdown(fd, SHUT_WR);
 
-		for (size_t i = 0; i < poll_fds.size(); ++i) {
-			if (poll_fds[i].fd == fd) {
-				poll_fds.erase(poll_fds.begin() + i);
-				break;
-			}
+	for (size_t i = 0; i < poll_fds.size(); ++i) {
+		if (poll_fds[i].fd == fd) {
+			poll_fds.erase(poll_fds.begin() + i);
+			break;
 		}
-		close(fd);
-		delete user;
-		_activeUsers.erase(it);
-	} else {
-		close(fd);
 	}
+
+	std::map<int, User*>::iterator it = _users.find(fd);
+	if (it != _users.end()) {
+		delete it->second;
+		_users.erase(it);
+	}
+
+	close(fd);
+}
+
+bool Server::isValidNick(std::string& attemptedNick) {
+
+	if (attemptedNick.empty() || attemptedNick.length() > 32) {
+		return false;
+	}
+	for (size_t i = 1; attemptedNick[i]; ++i) {
+		if ((attemptedNick[i] > '}' || attemptedNick[i] < 'A') && (attemptedNick[i] > '9' || attemptedNick[i] < '0')) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Server::isUserAlreadySigned(User& user) {
+	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+    	User* u = it->second;
+    	if (!u) continue;
+    	if (u->getUsername() == user.getUsername() && u->getHostname() == user.getHostname())
+			return true;
+	}
+	return false;
+}
+
+bool Server::isNickInUse (std::string& attemptedNick) {
+
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        User *existing = it->second;
+        if (!existing)
+            continue;
+
+        if (existing->getNickname() == attemptedNick) {
+			return true;
+        }
+    }
+	return false;
 }
 
 void Server::remove_from_vector(size_t index) {
@@ -71,7 +105,7 @@ bool Server::set_Pass(const std::string &pass) {
     std::cerr << "Password can not be empty\n";
     return false;
   } else {
-    this->password = pass;
+    this->_password = pass;
     return true;
   }
 }
