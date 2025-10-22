@@ -15,8 +15,8 @@ void Server::parse(User& user, std::string buff) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #")) {
 			server::handleJoin(_name, _channels, &user, line);
-		// else if (line.rfind("PART ") == 0)
-		// 	server::handlePart(_channels, &user, line);
+        } else if (line.rfind("PART ") == 0) {
+			server::handlePart(_name, _channels, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
 		} else if (!line.rfind("userhost ")) {
@@ -48,9 +48,6 @@ int Server::authenticateParser(User &user) {
     while (std::getline(iss, line)) {
         if (!line.empty() && line[line.size() - 1] == '\r')
             line.erase(line.size() - 1, 1);
-
-        // std::cout << "Line sent by client: " << line << std::endl;
-
         if (!line.rfind("PASS ", 0)) {
             pass = line.substr(5);
             if (pass != _password) {

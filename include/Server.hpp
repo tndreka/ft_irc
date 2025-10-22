@@ -35,7 +35,7 @@
 
 #include "User.hpp"
 #include "Channel.hpp"
-#include "ServerUtils.hpp"
+#include "Utils.hpp"
 #include "error.hpp"
 
 class Server {

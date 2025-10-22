@@ -10,7 +10,7 @@ class Channel {
 	private:
 		std::string				_name;
 		std::map<int, User*>	_members;
-		unsigned int			_maxMembers;
+		unsigned int			_maxMembers;		// TODO check for user joining
 		std::string				_password;
 		std::string				_topic;
 		bool					_isInviteOnly;
