@@ -34,7 +34,7 @@ User::User(const User& other) :
 {};
 
 User::~User() {
-	close(_poll.fd);
+	// close(_poll.fd);
 };
 
 User&	User::operator=(const User& other) {
@@ -44,6 +44,8 @@ User&	User::operator=(const User& other) {
 		_realname = other._realname;
 		_hostname = other._hostname;
 		_isAdmin = other._isAdmin;
+		_state = other._state;
+		_poll = other._poll;
 	}
 	return (*this);
 };
@@ -104,6 +106,15 @@ void	User::setAdmin(bool isAdmin) {
 	_isAdmin = isAdmin;
 }
 
+bool	User::isPassVerified() const
+{
+	return _ispasswordverified;
+}
+
+void	User::setPassVerified(bool isverified)
+{
+	_ispasswordverified = isverified;
+}
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()

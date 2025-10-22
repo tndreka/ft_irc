@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/20 17:53:43 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/01 16:56:28 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/22 13:02:56 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ int main(int ac, char *av[]) {
 		return 1;
 	if (!server.set_Pass(av[2]))
 		return 1;
-	if (server.init_Server() == 1)
+	if (server.init_Server() == false)
 		return 1;
 	std::cout << "Connected to the server: '" << server.getName() << "'" << std::endl;
 	server.run_Server();

@@ -21,6 +21,7 @@ class User {
 		ClientState	_state;
 		pollfd		_poll;
 		bool		_isAdmin;
+		bool		_ispasswordverified;
 		
 	public:
 		User();
@@ -45,6 +46,8 @@ class User {
 		void				setHostname(std::string str);
 		void				setState(ClientState state);
 		void				setAdmin(bool isAdmin);
+		void				setPassVerified(bool isVerified);
+		bool				isPassVerified() const;
 };
 
 std::ostream&	operator<<(std::ostream& out, const User& other);

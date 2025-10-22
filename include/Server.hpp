@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:31 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/02 17:34:19 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/22 12:52:49 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,10 +84,10 @@ class Server {
 		bool isValidNick(std::string& attemptedNick);
 		void removeUser(int fd);
 		bool isUserAlreadySigned(User& user);
-		void closeConnection(int fd);
+		//void closeConnection(int fd);
 
 		// Parsing
-		int authenticateParser(User& user);
+		int authenticateParser(User& user, std::string buff);
 		std::string authenticateNickname(User& user, std::string line);
 		void parse(User& user, std::string buff);
  
@@ -115,12 +115,13 @@ class Server {
         bool					set_Port(const std::string &port);
         bool					set_Pass(const std::string &pass);
         int						get_Port() const;
-        int 					init_Server();
-        void 					run_Server();
         std::string 			getName() const;
         const  std::string		getPass(void) const;
         std::map<int, User*>	getActiveMembers(void) const;
 		std::vector<Channel*>	getChannels(void) const;
+        bool init_Server();
+        void run_Server();
+        std::string getServerName() const;
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

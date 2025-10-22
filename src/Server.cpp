@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/19 22:48:59 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/22 12:52:22 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,19 +121,33 @@ bool Server::createSocket() {
 								ERROR => -1
 
 */
-bool Server::bindSocket() {
-	// socket non-block
-	fcntl(listening, F_SETFL, O_NONBLOCK);
-	// bind socket to IP
-	hint.sin_family = AF_INET;
-	hint.sin_port = htons(port);
-	hint.sin_addr.s_addr = INADDR_ANY;
-	if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
-		std::cerr << "Port failed to bind with an IP !" << std::endl;
-		close(listening);
-		return false;
-	}
-	return true;
+
+
+bool Server::bindSocket()
+{
+  //quick restarts
+  int opt = 1;
+  if(setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+  {
+   std::cerr << "setsockopt reuseaddr failed\n"; 
+  }
+  // socket non-block
+  if(fcntl(listening, F_SETFL, O_NONBLOCK) == -1)
+  {
+    std::cerr << "fcntl failed \n";
+    close(listening);
+    return false;
+  }
+  // bind socket to IP
+  hint.sin_family = AF_INET;
+  hint.sin_port = htons(port);
+  hint.sin_addr.s_addr = INADDR_ANY;
+  if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
+    std::cerr << "Port failed to bind with an IP !" << std::endl;
+    close(listening);
+    return false;
+  }
+  return true;
 }
 
 /*
@@ -243,34 +257,47 @@ void Server::event_check(size_t index) {
     is_listening = true;
 }
 
-void Server::handle_new_host() {
-new_connection = accept(listening, (sockaddr *)&client, &clientSize);
-	if (new_connection == -1) {
+void Server::handle_new_host()
+{
+  clientSize = sizeof(client);
+	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
+	if (new_connection != -1)
+  {
+		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1)
+    {
+			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
+			_users[new_connection] = user;
+			poll_fds.push_back(user->getPoll());
+			user->setState(WAITING_AUTH); // waiting state
+      Server::sendCapabilities(*user);
+    //  int auth_res = Server::authenticateParser(*user);
+			//if (Server::authenticateParser(*user) == -1)
+      // if(auth_res == -1)
+      // {
+			// 	// poll_fds.pop_back();
+			// 	Server::closeConnection(user->getPoll().fd);
+			// 	return;
+			// }
+      // else if(auth_res == 1){
+      //   return; //need more data client didnt send everything yet we keep connection open
+      // }
+			// user->setState(VERIFIED);
+			// Server::sendWelcome(*user);
+		}
+    else{
+      std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
+      close(new_connection);
+    }
+	}
+  else
+  {
 		std::cerr << "Failed accepting new connections" << std::endl;
-		close(new_connection);
-		return;
-	}
-
-	if (fcntl(new_connection, F_SETFL, O_NONBLOCK) == -1) {
-		std::cerr << "handle_new_host() making new_connection non-blocking failed"
-			<< std::endl;
-		close(new_connection);
-		return;
-	}
-
-	User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-	_users[new_connection] = user;
-	poll_fds.push_back(user->getPoll());
-
-	Server::sendCapabilities(*user);
-	if (Server::authenticateParser(*user) == -1) {
-		Server::sendQuitMsg(user);
-		Server::removeUser(user->getPoll().fd);
-		return;
+		//close(new_connection);
 	}
 }
 
-void Server::handle_messages(size_t index) {
+void Server::handle_messages(size_t index)
+{ 
 	User *user = _users[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
@@ -279,6 +306,7 @@ void Server::handle_messages(size_t index) {
 		close(user->getPoll().fd);
 		poll_fds.erase(poll_fds.begin() + index);
 		user->setHostname("_DISCONNECTED_");
+    _users.erase(user->getPoll().fd);
 		remove_from_vector(index);
 	}
 	buff[bytes_recived] = '\0';
@@ -295,21 +323,21 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	remove_from_vector(index);
 }
 
-int Server::init_Server() {
-  if (createSocket() == false) {
-    std::cerr << "Failed to create socket\n";
-    return 1;
-  }
-  if (bindSocket() == false) {
-    std::cerr << "Failed to bind socket\n";
-    return 1;
-  }
-  if (listenSocket() == false) {
-    std::cerr << "Failed to listen socket\n";
-    return 1;
-  }
-  accept_connection();
-  return 0;
+bool Server::init_Server() {
+	if (createSocket() == false) {
+		std::cerr << "Failed to create socket\n";
+    	return false;
+	}
+	if (bindSocket() == false) {
+		std::cerr << "Failed to bind socket\n";
+    	return false;
+	}
+	if (listenSocket() == false) {
+    	std::cerr << "Failed to listen socket\n";
+    	return false;
+	}
+	accept_connection();
+	return true;
 }
 
 void Server::run_Server() {
