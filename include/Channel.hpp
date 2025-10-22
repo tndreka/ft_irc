@@ -26,9 +26,9 @@ class Channel {
 
 		const std::string			getName(void) const;
 		const std::map<int, User*>&	getMembers(void) const;
-		std::string				getPassword(void) const;
-		void					addMember(User* user);
-		void					removeMember(User& user);
+		std::string					getPassword(void) const;
+		void						addMember(User* user);
+		void						removeMember(User& user);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

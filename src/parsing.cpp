@@ -7,8 +7,8 @@ void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
 
-	std::cout << user << std::endl;
-	std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
+	// std::cout << user << std::endl;
+	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 
 	while (std::getline(iss, line)) {
 		if (!line.rfind("PING ", 0)) {
@@ -49,7 +49,7 @@ int Server::authenticateParser(User &user) {
         if (!line.empty() && line[line.size() - 1] == '\r')
             line.erase(line.size() - 1, 1);
 
-        std::cout << "Line sent by client: " << line << std::endl;
+        // std::cout << "Line sent by client: " << line << std::endl;
 
         if (!line.rfind("PASS ", 0)) {
             pass = line.substr(5);

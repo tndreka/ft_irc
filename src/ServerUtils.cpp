@@ -7,13 +7,17 @@
 ****************************************************/
 
 static std::vector<std::string> split_comma_list(const std::string& list_str) {
-    std::vector<std::string> tokens;
-    std::stringstream ss(list_str);
-    std::string token;
+    std::stringstream			ss(list_str);
+    std::vector<std::string>	result;
+    std::string					token;
 
-    while (std::getline(ss, token, ','))
-        tokens.push_back(token);
-    return (tokens);
+    while (std::getline(ss, token, ',')) {
+		if (token == "x")
+			result.push_back("");
+		else
+        	result.push_back(token);
+	}
+    return (result);
 }
 
 /**
@@ -64,6 +68,8 @@ void	server::handleJoin(std::string server_name, std::vector<Channel*>& channels
 
 	channel_map = server::parseJoin(line);
 	for (iter it = channel_map.begin(); it != channel_map.end(); ++it) {
+		// std::cout << "First: '" << it->first << "'" << std::endl;
+		// std::cout << "Second: '" << it->second << "'" << std::endl;
 		if (channel::isAlreadyExisting(channels, (*it).first)) {
 			std::cout << "Requested channel: " << (*it).first << std::endl;
 			// printChannels(channels);
@@ -114,14 +120,12 @@ void	server::handlePart(std::vector<Channel*>& channels, User* user, std::string
 }
 
 void    server::printChannels(std::vector<Channel*>& channels) {
-    typedef std::vector<Channel*>::iterator channelIterator;
-
     if (channels.empty())
 		return ((void)(std::cout << "No active channels!" << std::endl));
 	std::cout << "Channel list: ";
 	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
-    for (channelIterator it = channels.begin(); it != channels.end(); ++it) {
-        std::cout << **it << std::endl;
+    for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+		std::cout << **it << std::endl;
 		channel::printMembers(**it);
 		if (it + 1 != channels.end())
 			std::cout << std::endl;
@@ -171,13 +175,12 @@ Channel*	channel::create(User* user, std::pair<std::string, std::string> pair) {
  * @brief Print a channel's members' username.
  */
 void	channel::printMembers(Channel& channel) {
-	typedef std::map<int, User*>::const_iterator	iter;
 	std::map<int, User*> map = channel.getMembers();
 	
 	if (map.empty())
 		return ((void)(std::cout << "No members in this channel!" << std::endl));
 	std::cout << "Members:";
-	for (iter it = map.begin(); it != map.end(); ++it) {
+	for (std::map<int, User*>::const_iterator it = map.begin(); it != map.end(); ++it) {
 		if (it != map.begin())
 			std::cout << ", ";
 		std::cout << "'" << (*it).second->getUsername() << "'";
@@ -186,29 +189,25 @@ void	channel::printMembers(Channel& channel) {
 }
 
 void	channel::welcomeMessage(std::string server_name, Channel& channel, User& user) {
-	std::string				prefix = ":" + server_name + " PRIVMSG " + channel.getName() + " :";
-	std::string				postfix = "\r\n";
+	const std::string		prefix = ":" + server_name + " PRIVMSG #" + channel.getName() + " :";
+	const std::string		postfix = "\r\n";
 	std::string				msg;
 	std::map<int, User*>	members = channel.getMembers();
 
 	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
-		std::cout << "FD: " << it->first << std::endl;
 		msg = prefix;
 		msg += "[" + user.getUsername() + "@" + user.getHostname() + "] has joined #" + channel.getName();
 		msg += postfix;
-		std::cout << "'" << msg << "'" << std::endl;
 		send(it->first, msg.c_str(), msg.size(), 0);
 		msg = prefix;
 		msg += "[Users #" + channel.getName() + "]";
 		msg += postfix;
-		std::cout << "'" << msg << "'" << std::endl;
 		send(it->first, msg.c_str(), msg.size(), 0);
 		msg = prefix;
 		for (std::map<int, User*>::iterator it = members.begin(); it != members.end();++it) {
 			msg += "[" + it->second->getUsername() + "] ";
 		}
 		msg += postfix;
-		std::cout << "'" << msg << "'" << std::endl;
 		send(it->first, msg.c_str(), msg.size(), 0);
 	}
 }
