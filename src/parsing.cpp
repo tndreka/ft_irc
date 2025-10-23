@@ -3,6 +3,9 @@
 #include <sstream>
 #include <string>
 
+/**
+ * @note why rfind and not find: /join '#ch1' ????
+ */
 void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
@@ -15,9 +18,9 @@ void Server::parse(User& user, std::string buff) {
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #")) {
-			server::handleJoin(_name, _channels, &user, line);
+			server::handleJoin(*this, &user, line);
         } else if (!line.rfind("PART ")) {
-			server::handlePart(_name, _channels, &user, line);
+			server::handlePart(*this, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
 		} else if (!line.rfind("userhost ")) {
@@ -28,7 +31,7 @@ void Server::parse(User& user, std::string buff) {
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
 		} else if (!line.rfind("PRIVMSG ")) {
-            server::handlePrivMsg(_channels, _users);
+            server::handlePrivMsg(_name, _channels, _users, line);
         }
 	}
 }

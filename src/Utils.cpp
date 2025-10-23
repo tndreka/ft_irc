@@ -1,8 +1,7 @@
 #include "../include/Utils.hpp"
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
-
-#include <algorithm>
+#include "../include/Server.hpp"
 
 /****************************************************
 *						SERVER						*
@@ -38,6 +37,35 @@ static std::vector<std::string> split_comma_list(const std::string& list_str, bo
 }
 
 /**
+ * @brief Extracts all the channel names as parameters of the /part command.
+ * 
+ * @param line The entire user input.
+ * 
+ * @note line = "PART <channel1_name>,<channel2_name>".
+ * @note line = "PART #<active_channel> :<channel1_name>,<channel2_name>".
+ * 
+ * @return A vector with all the channel names.
+ * 
+ */
+static std::vector<std::string>	parsePart(const std::string& line) {
+	std::vector<std::string> result;
+	std::istringstream iss(line);
+	std::string command;
+	std::string channel_list_str;
+
+	if (!(iss >> command) || command != "PART")
+		return (result);
+	if (!(iss >> channel_list_str))
+		return (result);
+	if (channel_list_str[0] == '#') {
+		iss >> channel_list_str;
+		channel_list_str.erase(0, 1);
+	}
+	result = split_comma_list(channel_list_str, false);
+	return (result);
+}
+
+/**
  * @brief Extracts all the channel names as parameters of the /join command.
  * 
  * @param line The entire user input.
@@ -46,7 +74,7 @@ static std::vector<std::string> split_comma_list(const std::string& list_str, bo
  * 
  * @return A vector with all the channel names. 
  */
-std::map<std::string, std::string> server::parseJoin(const std::string& line) {
+static std::map<std::string, std::string> parseJoin(const std::string& line) {
 	std::map<std::string, std::string> result;
 	std::istringstream iss(line);
 	std::string command;
@@ -77,90 +105,58 @@ std::map<std::string, std::string> server::parseJoin(const std::string& line) {
 /**
  * @brief Handles the way a user joins a channel.
  * 
- * @param server_name The server's name, necessary for sending confirmation messages
- * back to the client.
- * @param channels The list of channels in the server.
+ * @param server The server's instance
  * @param user The active user.
  * @param user_input The user input to be parsed.
  * 
  * @note channel_map[<channel_name]>=<channel_pass>.
  * 
  */
-void	server::handleJoin(std::string server_name, std::vector<Channel*>& channels, User* user, std::string user_input) {
+void	server::handleJoin(Server& server, User* user, std::string user_input) {
     std::map<std::string, std::string>	channel_map = server::parseJoin(user_input);
 
 	for (std::map<std::string, std::string>::const_iterator it = channel_map.begin(); it != channel_map.end(); ++it) {
-		Channel* channel = server::getChannelFromList(channels, it->first);
-		if (channel::isAlreadyExisting(channels, (*it).first)) {
+		Channel* channel = server::getChannelFromList(server.getChannels(), it->first);
+		if (server::isAlreadyExisting(server.getChannels(), (*it).first)) {
 			if (!user::isAlreadyConnected(*channel, *user)) {
 				channel->addMember(user);
-				channel::welcomeUser(server_name, *channel, *user);
+				channel::welcomeUser(server.getName(), *channel, *user);
 				// channel::joinMessage(server_name, *channel, *user);
 			}
 			// else send a message "already connected!" ????
 		} 
 		else {
 			Channel* new_channel = channel::create(user, *it);
-			channels.push_back(new_channel);
-			channel::welcomeUser(server_name, *new_channel, *user);
+			server.addChannel(new_channel);
+			channel::welcomeUser(server.getName(), *new_channel, *user);
 		}
 	}
 }
 
 /**
- * @brief Extracts all the channel names as parameters of the /part command.
- * 
- * @param line The entire user input.
- * 
- * @note line = "PART <channel1_name>,<channel2_name>".
- * @note line = "PART #<active_channel> :<channel1_name>,<channel2_name>".
- * 
- * @return A vector with all the channel names.
- * 
- */
-std::vector<std::string>	server::parsePart(const std::string& line) {
-	std::vector<std::string> result;
-	std::istringstream iss(line);
-	std::string command;
-	std::string channel_list_str;
-
-	if (!(iss >> command) || command != "PART")
-		return (result);
-	if (!(iss >> channel_list_str))
-		return (result);
-	if (channel_list_str[0] == '#') {
-		iss >> channel_list_str;
-		channel_list_str.erase(0, 1);
-	}
-	result = split_comma_list(channel_list_str, false);
-	return (result);
-}
-
-/**
  * @brief Handles the way a user leaves a channel.
  * 
- * @param server_name The server's name, necessary for sending confirmation messages
- * back to the client.
+ * @param server The server's instance
  * @param channels The list of channels in the server.
  * @param user The active user.
  * @param user_input The user input to be parsed.
  */
-void	server::handlePart(std::string server_name, std::vector<Channel*>& channels, User* user, std::string user_input) {
-	std::vector<std::string> channels_to_delete = server::parsePart(user_input);
+void	server::handlePart(Server& server, User* user, std::string user_input) {
+	std::vector<std::string> channels_to_delete = parsePart(user_input);
 	
-	std::cout << user->getNickname() << "deleted the channel(s): ";
+	std::cout << user->getNickname() << " deleted the channel(s): ";
 	for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it)
 		std::cout << "'" << *it << "' ";
 	std::cout << std::endl;
 	for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it) {
 		// std::cout << "Channel name: '" << *it << "'" << std::endl;
-		Channel* channel = server::getChannelFromList(channels, *it);
-		if (channel::isAlreadyExisting(channels, *it)) {
+		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
+		if (server::isAlreadyExisting(server.getChannels(), *it)) {
 			if (user::isAlreadyConnected(*channel, *user)) {
 				channel::goodbyeUser(*channel, *user);
 				channel->removeMember(*user);
 				if (channel->getMembers().empty())
-					server::deleteChannel(server_name, channels, user, *it);
+					server.deleteChannel(user, *it);
 			}
 			// else send a message "not connected to that channel" ????
 		}
@@ -196,7 +192,7 @@ void    server::printChannels(std::vector<Channel*>& channels) {
  * 
  * @return The channel's address if found, NULL otherwise.
  */
-Channel*	server::getChannelFromList(std::vector<Channel*>& channels, std::string name) {
+Channel*	server::getChannelFromList(const std::vector<Channel*>& channels, std::string name) {
 	typedef std::vector<Channel*>::const_iterator ChannelIterator;
 
 	for (ChannelIterator it = channels.begin(); it != channels.end(); ++it) {
@@ -206,29 +202,23 @@ Channel*	server::getChannelFromList(std::vector<Channel*>& channels, std::string
 	return (NULL);
 }
 
-void	server::deleteChannel(std::string server_name, std::vector<Channel*>& channels, User* user, const std::string& name) {
-	Channel*			channel_to_delete;
-	const std::string	prefix = ":" + server_name + " NOTICE " + user->getNickname() + ":";
-	const std::string	postfix = "\r\n";
-	std::string 		msg;
+/**
+ * @note line = 'PRIVMSG <user_nickname> :<msg>'
+ * @note line = 'PRIVMSG #<channel_name> :<msg>'
+ */
+void	server::handlePrivMsg(Server& server, const std::string user_input) {
+	const std::string 							prefix = ":" + server.getName();
+	const std::string							postfix = "\r\n";
+	const std::pair<std::string, std::string>	msg;
 
-	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
-		if ((*it)->getName() == name)
-			channel_to_delete = *it;
-	}
-	std::vector<Channel*>::iterator new_end = std::remove(channels.begin(), channels.end(), channel_to_delete);
-    channels.erase(new_end, channels.end());
-	msg = prefix + " Channel '" + channel_to_delete->getName() + "' deleted successfully!" + postfix; 
-	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
-	delete channel_to_delete;
-
+	// sendMsgToChannel
 }
 
 /****************************************************
 *						CHANNEL						*
 ****************************************************/
 
-bool	channel::isAlreadyExisting(std::vector<Channel*>& channels, const std::string name) {
+bool	server::isAlreadyExisting(const std::vector<Channel*>& channels, const std::string name) {
     std::vector<Channel*>::const_iterator it;
 
 	for (it = channels.begin(); it != channels.end(); ++it)

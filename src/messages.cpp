@@ -24,12 +24,10 @@ void Server::sendWelcome(User& user) {
 
 void Server::sendWrongPassword(User& user) {
   std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
-  std::string err =
-      ":" + _name + " 464 " + nick + " :Password incorrect\r\n";
+  std::string err = ":" + _name + " 464 " + nick + " :Password incorrect\r\n";
   send(user.getPoll().fd, err.c_str(), err.size(), 0);
 
-  std::string closing =
-      "ERROR :Closing link: " + nick + " (Password required)\r\n";
+  std::string closing = "ERROR :Closing link: " + nick + " (Password required)\r\n";
   send(user.getPoll().fd, closing.c_str(), closing.size(), 0);
 }
 
@@ -51,7 +49,6 @@ void Server::sendPong(User *user, std::string ping) {
 }
 
 void Server::sendQuitMsg(User *user) {
-	std::string quitMsg = ":" + user->getNickname() + "!" + user->getUsername() +
-    	"@localhost QUIT :Client exited\r\n";
+	std::string quitMsg = ":" + user->getNickname() + "!" + user->getUsername() + "@localhost QUIT :Client exited\r\n";
 	send(user->getPoll().fd, quitMsg.c_str(), quitMsg.size(), 0);
 }

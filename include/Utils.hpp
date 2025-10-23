@@ -13,23 +13,19 @@ class Channel;
 class Server;
 
 namespace server {
-	void								handleJoin(std::string server_name, std::vector<Channel*>& channels, User* user, std::string line);
-	void								handlePart(std::string server_name, std::vector<Channel*>& channels, User* user, std::string line);
-	void								printChannels(std::vector<Channel*>& channels);
-	void								deleteChannel(std::string server_name, std::vector<Channel*>& channels, User* user, const std::string& name);
-	Channel*							getChannelFromList(std::vector<Channel*>& channels, std::string name);
-	std::map<std::string, std::string>	parseJoin(const std::string& line);
-	std::vector<std::string>			parsePart(const std::string& line);
-	void								handlePrivMsg(std::vector<Channel*> channels, std::map<int, User*> users);
+	void		handleJoin(Server& server, User* user, std::string user_input);
+	void		handlePart(Server& server, User* user, std::string user_input);
+	void		handlePrivMsg(Server& server, const std::string user_input);
+	void		printChannels(std::vector<Channel*>& channels);
+	Channel*	getChannelFromList(const std::vector<Channel*>& channels, std::string name);
+	bool		isAlreadyExisting(const std::vector<Channel*>& channels, const std::string name);
 	// handleNick()
 };
 
 namespace channel {
-	bool		isAlreadyExisting(std::vector<Channel*>& channels, const std::string name);
 	Channel*	create(User* user, std::pair<std::string, std::string> pair);
 	void		printMembers(Channel& channel);
 	void		welcomeUser(std::string server_name, Channel& channel, User& user);
-	// void		joinMessage(std::string server_name, Channel& channel, User& user);
 	void		goodbyeUser(Channel& channel, User& user);
 };
 

@@ -26,6 +26,7 @@
 #include <sys/socket.h> // for socket liberary
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
@@ -39,7 +40,7 @@
 #include "error.hpp"
 
 class Server {
-    private:
+    protected:
         std::string             _name;
         std::string             _password;
         std::map<int, User*>    _users;
@@ -104,7 +105,6 @@ class Server {
 		void cmdWhois(User *user, std::string line);
 		void cmdOper(User *user, std::string line);
 
-
     public:
         Server();
         Server(const Server &other);
@@ -117,10 +117,13 @@ class Server {
         int						get_Port() const;
         int 					init_Server();
         void 					run_Server();
-        std::string 			getName() const;
-        const  std::string		getPass(void) const;
-        std::map<int, User*>	getActiveMembers(void) const;
-		std::vector<Channel*>	getChannels(void) const;
+        void                            addChannel(Channel* new_channel);
+        void                            deleteChannel(User* user, const std::string& name);
+        const std::string&   			getName() const;
+        const std::string&		        getPass(void) const;
+        const std::map<int, User*>&     getUsers(void) const;
+		const std::vector<Channel*>&	getChannels(void) const;
+
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);
