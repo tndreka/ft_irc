@@ -16,10 +16,11 @@ namespace server {
 	void								handleJoin(std::string server_name, std::vector<Channel*>& channels, User* user, std::string line);
 	void								handlePart(std::string server_name, std::vector<Channel*>& channels, User* user, std::string line);
 	void								printChannels(std::vector<Channel*>& channels);
-	void								deleteChannel(std::vector<Channel*>& channels);
+	void								deleteChannel(std::string server_name, std::vector<Channel*>& channels, User* user, const std::string& name);
 	Channel*							getChannelFromList(std::vector<Channel*>& channels, std::string name);
 	std::map<std::string, std::string>	parseJoin(const std::string& line);
 	std::vector<std::string>			parsePart(const std::string& line);
+	void								handlePrivMsg(std::vector<Channel*> channels, std::map<int, User*> users);
 	// handleNick()
 };
 

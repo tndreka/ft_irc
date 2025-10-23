@@ -11,11 +11,12 @@ void Server::parse(User& user, std::string buff) {
 	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 
 	while (std::getline(iss, line)) {
+        std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #")) {
 			server::handleJoin(_name, _channels, &user, line);
-        } else if (line.rfind("PART ") == 0) {
+        } else if (!line.rfind("PART ")) {
 			server::handlePart(_name, _channels, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
@@ -26,7 +27,9 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdWhois(&user, line);
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
-		}
+		} else if (!line.rfind("PRIVMSG ")) {
+            server::handlePrivMsg(_channels, _users);
+        }
 	}
 }
 
