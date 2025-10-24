@@ -5,6 +5,9 @@
 #include <string>
 #include <unistd.h>
 
+/**
+ * @note why rfind and not find: /join '#ch1' ????
+ */
 void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
@@ -42,12 +45,13 @@ void Server::parse(User& user, std::string buff) {
 		return;
 	
 	while (std::getline(iss, line)) {
+        // std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
-		} else if (!line.rfind("JOIN #", 0)) {
-			server::handleJoin(_name, _channels, &user, line);
-		// else if (line.rfind("PART ") == 0)
-		// 	server::handlePart(_channels, &user, line);
+		} else if (!line.rfind("JOIN #")) {
+			server::handleJoin(*this, &user, line);
+        } else if (!line.rfind("PART ")) {
+			server::handlePart(*this, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
 		} else if (!line.rfind("userhost ")) {
@@ -57,7 +61,9 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdWhois(&user, line);
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
-		}
+		} else if (!line.rfind("PRIVMSG ")) {
+            server::handlePrivMsg(*this, user, line);
+        }
 	}
 }
 
