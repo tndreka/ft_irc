@@ -3,8 +3,8 @@
 void Server::channelKick(const User* u, const std::string& line) {
 
 	std::istringstream iss(line);
-	std::string channel, target, msg;
-	iss >> channel >> target >> msg;
+	std::string channel, target;
+	iss >> channel >> target;
 
 	if (!u->getIsAdmin()) {
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
@@ -21,10 +21,10 @@ void Server::channelKick(const User* u, const std::string& line) {
 	}
 
 	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
-		+ u->getHostname() + " KICK #" + channel + " " + target + " " + msg;
+		+ u->getHostname() + " KICK #" + channel + " " + target + " :Bye bye Malaka\r\n";
 	Server::broadcastChannel(*c, message);
 
-	c->removeMember(*t);
+	// channel::goodbyeUser(*c, *t);
 }
 
 void Server::cmdOper(User *user, std::string line) {
