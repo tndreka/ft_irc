@@ -14,7 +14,7 @@ void Server::parse(User& user, std::string buff) {
 	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 
 	while (std::getline(iss, line)) {
-        std::cout << "Line: '" << line << "'" << std::endl;
+        // std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #")) {
@@ -31,7 +31,7 @@ void Server::parse(User& user, std::string buff) {
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
 		} else if (!line.rfind("PRIVMSG ")) {
-            server::handlePrivMsg(*this, line);
+            server::handlePrivMsg(*this, user, line);
         }
 	}
 }

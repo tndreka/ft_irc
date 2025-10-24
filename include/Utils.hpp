@@ -15,7 +15,7 @@ class Server;
 namespace server {
 	void		handleJoin(Server& server, User* user, std::string user_input);
 	void		handlePart(Server& server, User* user, std::string user_input);
-	void		handlePrivMsg(Server& server, const std::string& user_input);
+	void		handlePrivMsg(Server& server, User& user, const std::string& user_input);
 	void		printChannels(std::vector<Channel*>& channels);
 	Channel*	getChannelFromList(const std::vector<Channel*>& channels, std::string name);
 	User*		getUserFromList(const std::map<int, User*>& users, const std::string& name);
@@ -28,12 +28,12 @@ namespace channel {
 	void		printMembers(Channel& channel);
 	void		welcomeUser(std::string server_name, Channel& channel, User& user);
 	void		goodbyeUser(Channel& channel, User& user);
-	void		sendMsg(Channel& channel, const std::string& msg, const std::string& server_name);
+	void		sendMsg(Channel& channel, User& user, const std::string& msg);
 };
 
 namespace user {
 	bool	isAlreadyConnected(Channel& channel, User& user);
-	void	sendMsg(User& user, const std::string& msg, const std::string& server_name);
+	void	sendMsg(User& sender, User& recepient, const std::string& msg);
 };
 
 #endif

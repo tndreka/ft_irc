@@ -143,7 +143,7 @@ static std::map<std::string, std::string> parseJoin(const std::string& line) {
  * @brief Handles the way a user joins a channel.
  * 
  * @param server The server's instance.
- * @param user The active user.
+ * @param user The joining user.
  * @param user_input The user input to be parsed.
  * 
  * @note channel_map[<channel_name]>=<channel_pass>.
@@ -172,7 +172,8 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 /**
  * @brief Handles the way a user leaves a channel.
  * 
- * @param server The server's instance
+ * @param server The server's instance.
+ * @param user The leaving user.
  * @param user_input The user input to be parsed.
  */
 void	server::handlePart(Server& server, User* user, std::string user_input) {
@@ -203,24 +204,22 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
  * @brief Sends either a channel or a private message.
  * 
  * @param server The server's instance.
- * @param usert_input The user input to be parsed.  
+ * @param sender The user that sends the message.
+ * @param user_input The user input to be parsed.  
  * 
  * @note pair = <recepient>,<message>.
  */
-void	server::handlePrivMsg(Server& server, const std::string& user_input) {
+void	server::handlePrivMsg(Server& server, User& sender, const std::string& user_input) {
 	const std::pair<std::string, std::string>	pair = parsePrivMsg(user_input);
 	Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
 
-	std::cout << "Recep: '" << pair.first << "', msg: '" << pair.second << "'" << std::endl;
-	//	<-------- correct parsing up to here
-	if (channel) {
-		channel::sendMsg(*channel, pair.second, server.getName());
-	}
+	if (channel)
+		channel::sendMsg(*channel, sender, pair.second);
 	else {
-		User* user = server::getUserFromList(server.getUsers(), pair.first);
-		if (user)
-			user::sendMsg(*user, pair.second, server.getName());
-		//else error
+		User* recepient = server::getUserFromList(server.getUsers(), pair.first);
+		if (recepient)
+			user::sendMsg(sender, *recepient, pair.second);
+		//else error: invalid user
 	}
 }
 
@@ -266,7 +265,7 @@ Channel*	server::getChannelFromList(const std::vector<Channel*>& channels, std::
 /**
  * @brief Searches for a user in a list and returns it.
  * 
- * @param The user map to search in.
+ * @param users The user map to search in.
  * @param name The user's name to search for in the list.
  * 
  * @return The user's address if found, NULL otherwise.
@@ -392,18 +391,19 @@ void	channel::goodbyeUser(Channel& channel, User& user) {
  * @brief Send a message to all members in the channel.
  * 
  * @param channel The channel to receive the messages.
+ * @param sender The user that sends the message.
  * @param msg The message to be sent.
- * @param server_name The server's name, necessary to send the message.
  * 
  */
-void	channel::sendMsg(Channel& channel, const std::string& msg, const std::string& server_name) {
-	const std::string			prefix = ":" + server_name + " PRIVMSG #" + channel.getName() + " :";
+void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
+	const std::string			prefix = ":" + sender.getNickname() + " PRIVMSG #" + channel.getName() + " :";
 	const std::string			postfix = "\r\n";
 	const std::string			full_msg = prefix + msg + postfix;
 	const std::map<int, User*>	members = channel.getMembers();
 
 	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-		send(it->second->getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
+		if (it->second->getPoll().fd != sender.getPoll().fd)
+			send(it->second->getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
 	}
 }
 
@@ -429,10 +429,10 @@ bool	user::isAlreadyConnected(Channel& channel, User& user) {
 	return (false);
 }
 
-void	user::sendMsg(User& user, const std::string& msg, const std::string& server_name) {
-	const std::string	prefix = ":" + server_name + " PRIVMSG " + user.getNickname() + " :";
+void	user::sendMsg(User& sender, User& recepient, const std::string& msg) {
+	const std::string	prefix = ":" + sender.getNickname() + " PRIVMSG " + recepient.getNickname() + " :";
 	const std::string	postfix = "\r\n";
 	const std::string	full_msg = prefix + msg + postfix;
 
-	send(user.getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
+	send(recepient.getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
 }
