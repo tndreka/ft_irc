@@ -23,6 +23,7 @@ User::User(int connection, const std::string hostname) {
 	_poll.revents = 0;
 	_hostname = hostname;
 	_state = WAITING_AUTH;
+	_isAdmin = false;
 };
 
 User::User(const User& other) :

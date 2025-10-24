@@ -1,9 +1,4 @@
 #include "../include/Server.hpp"
-#include "../include/error.hpp"
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <unistd.h>
 
 void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
@@ -45,9 +40,9 @@ void Server::parse(User& user, std::string buff) {
 		if (!line.rfind("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.rfind("JOIN #", 0)) {
-			server::handleJoin(_name, _channels, &user, line);
-		// else if (line.rfind("PART ") == 0)
-		// 	server::handlePart(_channels, &user, line);
+			server::handleJoin(*this, &user, line);
+		} else if (!line.rfind("PART ")) {
+			server::handlePart(*this, &user, line);
 		} else if (!line.rfind("NICK ")) {
 			Server::cmdNick(&user, line);
 		} else if (!line.rfind("userhost ")) {
@@ -57,6 +52,8 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdWhois(&user, line);
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
+		} else if (!line.rfind("KICK ")) {
+			Server::channelKick(&user, line.substr(5));
 		}
 	}
 }

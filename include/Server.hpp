@@ -26,6 +26,7 @@
 #include <sys/socket.h> // for socket liberary
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
@@ -35,7 +36,7 @@
 
 #include "User.hpp"
 #include "Channel.hpp"
-#include "ServerUtils.hpp"
+#include "Utils.hpp"
 #include "error.hpp"
 
 class Server {
@@ -45,83 +46,87 @@ class Server {
         std::map<int, User*>    _users;
         std::vector<Channel*>   _channels;
 
-        int port;
-        int listening;
-        sockaddr_in hint;
-        sockaddr_in client;
-        socklen_t clientSize;
-        char host[NI_MAXHOST];    // 1025 max num of hosts
-        char service[NI_MAXSERV]; // 32 max num of serv
-        std::vector<pollfd> poll_fds;
+        int						port;
+        int						listening;
+        sockaddr_in				hint;
+        sockaddr_in				client;
+        socklen_t				clientSize;
+        char					host[NI_MAXHOST];    // 1025 max num of hosts
+        char					service[NI_MAXSERV]; // 32 max num of serv
+        std::vector<pollfd>		poll_fds;
 
-        pollfd listening_fd;
-        int poll_count;
-        int new_connection;
+        pollfd					listening_fd;
+        int						poll_count;
+        int						new_connection;
 
-        bool incoming_data;
-        bool client_hungup;
-        bool is_listening;
-        bool err;
+        bool					incoming_data;
+        bool					client_hungup;
+        bool					is_listening;
+        bool					err;
 
-        char buff[MAX_BUFF];
-        int bytes_recived;
+        char					buff[MAX_BUFF];
+        int						bytes_recived;
 
         // Server
-        bool createSocket();
-        bool bindSocket();
-        bool listenSocket();
-        void accept_connection();
-        bool init_poll();
-        void event_check(size_t index);
-        void event_state();
-        void handle_new_host();
-        void handle_messages(size_t index);
-        void handle_disconn_err_hungup(size_t index);
+        bool					createSocket();
+        bool					bindSocket();
+        bool					listenSocket();
+        void					accept_connection();
+        bool					init_poll();
+        void					event_check(size_t index);
+        void					event_state();
+        void					handle_new_host();
+        void					handle_messages(size_t index);
+        void					handle_disconn_err_hungup(size_t index);
 
 		// Helpers
-        void remove_from_vector(size_t index);
-		bool isNickInUse (std::string& attemptedNick);
-		bool isValidNick(std::string& attemptedNick);
-		void removeUser(int fd);
-		bool isUserAlreadySigned(User& user);
+        void					remove_from_vector(size_t index);
+		bool					isNickInUse (std::string& attemptedNick);
+		bool					isValidNick(std::string& attemptedNick);
+		void					removeUser(int fd);
+		bool					isUserAlreadySigned(User& user);
 		//void closeConnection(int fd);
 
 		// Parsing
-		int authenticateParser(User& user, std::string buff);
-		std::string authenticateNickname(User& user, std::string line);
-		void parse(User& user, std::string buff);
+		int						authenticateParser(User& user, std::string buff);
+		std::string				authenticateNickname(User& user, std::string line);
+		void					parse(User& user, std::string buff);
  
         // Messages
-        void broadcast_message(const std::string &message, User& user);
-        void sendWelcome(User& user);
-        void sendWrongPassword(User& user);
-        void sendCapabilities(User& user);
-		void sendPong(User *user, std::string ping);
-		void sendQuitMsg(User *user);
+        void					broadcast_message(const std::string &message, User& user);
+        void					sendWelcome(User& user);
+        void					sendWrongPassword(User& user);
+        void					sendCapabilities(User& user);
+		void					sendPong(User *user, std::string ping);
+		void					sendQuitMsg(User *user);
+		void					broadcastChannel(Channel& channel, const std::string& msg);
 
 		// Commands
-		void cmdNick(User *user, std::string line);
-		void cmdWhois(User *user, std::string line);
-		void cmdOper(User *user, std::string line);
+		void					cmdNick(User *user, std::string line);
+		void					cmdWhois(User *user, std::string line);
+		void					cmdOper(User *user, std::string line);
+		void					channelKick(const User* u, const std::string& line);
 
 
     public:
         Server();
         Server(const Server &other);
         ~Server();
-        
-        Server &operator=(const Server &other);
+ 
+        Server 					&operator=(const Server &other);
 
         bool					set_Port(const std::string &port);
         bool					set_Pass(const std::string &pass);
         int						get_Port() const;
         std::string 			getName() const;
         const  std::string		getPass(void) const;
-        std::map<int, User*>	getActiveMembers(void) const;
+		const std::map<int, User*>&	getUsers(void) const;
 		std::vector<Channel*>	getChannels(void) const;
-        bool init_Server();
-        void run_Server();
-        std::string getServerName() const;
+        bool					init_Server();
+        void					run_Server();
+        std::string				getServerName() const;
+		void					addChannel(Channel* new_channel);
+		void					deleteChannel(User* user, const std::string& name);
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

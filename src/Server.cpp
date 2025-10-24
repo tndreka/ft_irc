@@ -42,7 +42,7 @@ const std::string Server::getPass() const {
 		return _password;
 }
 
-std::map<int, User*>	Server::getActiveMembers(void) const {
+const std::map<int, User*>&	Server::getUsers(void) const {
 	return (_users);
 }
 
@@ -50,8 +50,30 @@ std::vector<Channel*>	Server::getChannels(void) const {
 	return (_channels);
 }
 
+void	Server::addChannel(Channel* new_channel) {
+	_channels.push_back(new_channel);
+}
+
+void	Server::deleteChannel(User* user, const std::string& name) {
+	Channel*			channel_to_delete;
+	const std::string	prefix = ":" + _name + " NOTICE " + user->getNickname() + ":";
+	const std::string	postfix = "\r\n";
+	std::string 		msg;
+
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		if ((*it)->getName() == name)
+			channel_to_delete = *it;
+	}
+	std::vector<Channel*>::iterator new_end = std::remove(_channels.begin(), _channels.end(), channel_to_delete);
+    _channels.erase(new_end, _channels.end());
+	msg = prefix + " Channel '" + channel_to_delete->getName() + "' deleted successfully!" + postfix; 
+	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
+	delete channel_to_delete;
+
+}
+
 std::ostream& operator<<(std::ostream& out, const Server& obj) {
-	const std::map<int, User*>& activeMembers = obj.getActiveMembers();
+	const std::map<int, User*>& activeMembers = obj.getUsers();
 	typedef std::map<int, User*>::const_iterator iter; 
 
 	out << "Server name: " << obj.getName() << "\nServer password: " << obj.getPass();
