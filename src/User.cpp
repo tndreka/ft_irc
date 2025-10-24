@@ -106,13 +106,11 @@ void	User::setAdmin(bool isAdmin) {
 	_isAdmin = isAdmin;
 }
 
-bool	User::isPassVerified() const
-{
+bool	User::isPassVerified() const {
 	return _ispasswordverified;
 }
 
-void	User::setPassVerified(bool isverified)
-{
+void	User::setPassVerified(bool isverified) {
 	_ispasswordverified = isverified;
 }
 

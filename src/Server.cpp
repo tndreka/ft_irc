@@ -19,7 +19,7 @@
 #include <string>
 #include <unistd.h>
 
-Server::Server() : _name("MalakaIRC"), _users() {}
+Server::Server() : _name("MalakaIRC"), _users(), _channels() {}
 
 Server::Server(const Server &other) {
 	(void)other;
@@ -343,6 +343,7 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	close(poll_fds[index].fd);
 	user.setHostname("_DISCONNECTED_");
 	remove_from_vector(index);
+	// delete user;
 }
 
 bool Server::init_Server() {

@@ -9,7 +9,7 @@ enum ClientState {
 	REGISTERED,
 	WAITING_NICKNAME,
 	WAITING_USER,
-	VERIFIED,
+	VERIFIED
 };
 
 class User {

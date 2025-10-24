@@ -86,8 +86,8 @@ class Server {
 		void removeUser(int fd);
 		bool isUserAlreadySigned(User& user);
 		//void closeConnection(int fd);
-
-		// Parsing
+		
+        // Parsing
 		int authenticateParser(User& user, std::string buff);
 		std::string authenticateNickname(User& user, std::string line);
 		void parse(User& user, std::string buff);
@@ -115,7 +115,7 @@ class Server {
         bool					set_Port(const std::string &port);
         bool					set_Pass(const std::string &pass);
         int						get_Port() const;
-        int 					init_Server();
+        bool 					init_Server();
         void 					run_Server();
         void                            addChannel(Channel* new_channel);
         void                            deleteChannel(User* user, const std::string& name);
