@@ -31,7 +31,7 @@ void Server::parse(User& user, std::string buff) {
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
 		} else if (!line.rfind("PRIVMSG ")) {
-            server::handlePrivMsg(_name, _channels, _users, line);
+            server::handlePrivMsg(*this, line);
         }
 	}
 }
