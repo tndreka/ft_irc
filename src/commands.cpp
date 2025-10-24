@@ -1,11 +1,31 @@
 #include "../include/Server.hpp"
-#include <iostream>
-#include <string>
 
-// void Server::cmdUser(&user, line) {
-//
-// 	std
-// }
+void Server::channelKick(const User* u, const std::string& line) {
+
+	std::istringstream iss(line);
+	std::string channel, target, msg;
+	iss >> channel >> target >> msg;
+
+	if (!u->getIsAdmin()) {
+		Error::CHANOPRIVSNEEDED(u, _name, channel);
+		return;
+	}
+
+	channel.erase(0,1);
+	Channel *c = server::getChannelFromList(_channels,  channel);
+	User *t = server::getUserFromList(_users, target);
+
+	if (!user::isAlreadyConnected(*c, *t)) {
+		Error::USERNOTINCHANNEL(u, _name, target, channel);
+		return;
+	}
+
+	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
+		+ u->getHostname() + " KICK #" + channel + " " + target + " " + msg;
+	Server::broadcastChannel(*c, message);
+
+	c->removeMember(*t);
+}
 
 void Server::cmdOper(User *user, std::string line) {
 

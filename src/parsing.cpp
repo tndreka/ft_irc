@@ -1,5 +1,4 @@
 #include "../include/Server.hpp"
-#include "../include/error.hpp"
 
 /**
  * @note why rfind and not find: /join '#ch1' ????
@@ -57,6 +56,8 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdWhois(&user, line);
 		} else if (!line.rfind("OPER ")) {
 			Server::cmdOper(&user, line);
+		} else if (!line.rfind("KICK ")) {
+			Server::channelKick(&user, line.substr(5));
 		} else if (!line.rfind("PRIVMSG ")) {
             server::handlePrivMsg(*this, user, line);
         }

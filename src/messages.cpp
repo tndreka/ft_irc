@@ -1,5 +1,14 @@
 #include "../include/Server.hpp"
 
+void	Server::broadcastChannel(Channel& channel, const std::string& msg) {
+	std::map<int, User*> usersInChannel = channel.getMembers();
+
+	for (std::map<int, User*>::iterator it = usersInChannel.begin(); it != usersInChannel.end(); ++it) {
+		send(it->first, msg.c_str(), msg.length(), 0);
+	}
+}
+
+
 void Server::broadcast_message(const std::string &message, User& user) {
   for (size_t i = 0; i < poll_fds.size(); i++) {
     if (poll_fds[i].fd != listening && poll_fds[i].fd != user.getPoll().fd)
