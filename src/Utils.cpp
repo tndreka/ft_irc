@@ -421,7 +421,7 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
  * 
  * @return True/False.
  */
-bool	user::isAlreadyConnected(Channel& channel, User& user) {
+bool	user::isAlreadyConnected(Channel& channel, const User& user) {
 	for (std::map<int, User*>::const_iterator m_it = channel.getMembers().begin(); m_it != channel.getMembers().end(); ++m_it) {
 		if (user.getPoll().fd == m_it->second->getPoll().fd)
 			return (true);

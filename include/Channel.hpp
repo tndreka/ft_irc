@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <map>
+#include <set>
+#include <string>
 
 class User;
 
@@ -14,6 +16,7 @@ class Channel {
 		std::string				_password;
 		std::string				_topic;
 		bool					_isInviteOnly;
+		std::set<char>			_modes;
 
 
 	public:
@@ -31,6 +34,11 @@ class Channel {
 		void						removeMember(User& user);
 
 		void						setTopic(const std::string& topic);
+
+		bool						hasMode(char m);
+		void						addMode(char m);
+		void						removeMode(char m);
+		std::string					getModes() const;
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

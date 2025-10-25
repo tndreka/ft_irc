@@ -11,13 +11,6 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <unistd.h>
-#include "../include/Server.hpp"
-#include <string>
-#include <unistd.h>
 
 Server::Server() : _name("MalakaIRC"), _users(), _channels() {}
 
@@ -386,4 +379,3 @@ void Server::run_Server() {
 		}
 	}
 }
-

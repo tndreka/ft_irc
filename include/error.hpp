@@ -107,4 +107,10 @@ namespace Error {
 		std::string msg = ":" + server + " 482 " + nick + " " + channel + " :You're not channel operator\r\n";
 		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
+
+	inline void NOCREDENTIALS(const User *user, const std::string &server) {
+		std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+		std::string err = ":" + server + " 464 " + nick + " :Incorrect credentials\r\n";
+        send(user->getPoll().fd, err.c_str(), err.size(), 0);
+	}
 }

@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
-#include <algorithm>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
@@ -100,7 +99,8 @@ class Server {
         void					sendCapabilities(User& user);
 		void					sendPong(User *user, std::string ping);
 		void					sendQuitMsg(User *user);
-		void					broadcastChannel(Channel& channel, const std::string& msg);
+		void					broadcastChannel(const Channel& channel, const std::string& msg);
+		void					sendKick(const User* u, const Channel* c, const std::string target, std::string msg);
 
 		// Commands
 		void					cmdNick(User *user, std::string line);
@@ -108,6 +108,7 @@ class Server {
 		void					cmdOper(User *user, std::string line);
 		void					channelKick(const User* u, const std::string& line);
 		void					channelTopic(const User* u, const std::string& line);
+		void					channelMode(const User *user, const std::string line);
 
 
     public:
@@ -115,18 +116,18 @@ class Server {
         Server(const Server &other);
         ~Server();
  
-        Server 					&operator=(const Server &other);
+        Server							&operator=(const Server &other);
 
-        bool					set_Port(const std::string &port);
-        bool					set_Pass(const std::string &pass);
-        int						get_Port() const;
-        bool 					init_Server();
-        void 					run_Server();
+        bool							set_Port(const std::string &port);
+        bool							set_Pass(const std::string &pass);
+        int								get_Port() const;
+        bool							init_Server();
+        void							run_Server();
         void                            addChannel(Channel* new_channel);
         void                            deleteChannel(User* user, const std::string& name);
         const std::string&   			getName() const;
         const std::string&		        getPass(void) const;
-        const std::map<int, User*>&     getUsers(void) const;
+        const std::map<int, User*>&		getUsers(void) const;
 		const std::vector<Channel*>&	getChannels(void) const;
 
 };

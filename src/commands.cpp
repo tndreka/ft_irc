@@ -1,5 +1,29 @@
 #include "../include/Server.hpp"
-#include <iostream>
+
+void Server::channelMode(const User *user, const std::string line) {
+
+	std::istringstream iss(line);
+	std::string channel, modes;
+
+	iss >> channel >> modes;
+	std::string parameters;
+	std::getline(iss,parameters);
+	
+	Channel* c = server::getChannelFromList(_channels, channel);
+	if (!c) {
+		Error::NOSUCHCHANNEL(user, _name, "#" + channel);
+		return;
+	}
+
+	bool isPossitive;
+	if (modes[0] == '+') {
+		isPossitive = true;
+	} else {
+		isPossitive = false;
+	}
+
+	modes.erase(0,1);
+}
 
 void Server::channelTopic(const User* u, const std::string& line) {
 
@@ -15,8 +39,13 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		return;
 	}
 
-	// TODO Check if user is in the channell
-	// TODO GET Channel mode to check for permissions
+	if (!user::isAlreadyConnected(*c, *u)) {
+		Error::NOTONCHANNEL(u, _name, channel);
+	}
+
+	if (c->hasMode('t') && !u->getIsAdmin()) {
+		Error::CHANOPRIVSNEEDED(u, _name, channel);
+	}
 
 	if (!topic.empty() && topic[0] == ' ') {
 		topic.erase(0 , 1);
@@ -29,7 +58,6 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		c->setTopic(topic);
 		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
 			+ u->getHostname() + " TOPIC #" + channel + " :" + topic + "\n";
-		std::cout << msg;
 		Server::broadcastChannel(*c, msg);
 	}
 }
@@ -37,8 +65,9 @@ void Server::channelTopic(const User* u, const std::string& line) {
 void Server::channelKick(const User* u, const std::string& line) {
 
 	std::istringstream iss(line);
-	std::string channel, target;
+	std::string channel, target, msg;
 	iss >> channel >> target;
+	std::getline(iss, msg);
 
 	if (!u->getIsAdmin()) {
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
@@ -54,9 +83,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 		return;
 	}
 
-	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
-		+ u->getHostname() + " KICK #" + channel + " " + target + " :Bye bye Malaka\r\n";
-	Server::broadcastChannel(*c, message);
+	Server::sendKick(u, c, target, msg);
 }
 
 void Server::cmdOper(User *user, std::string line) {
@@ -71,8 +98,7 @@ void Server::cmdOper(User *user, std::string line) {
     }
 
 	if (name != IRC_OPER_NAME || _password != IRC_OPER_PASS) {
-		std::string err = ":" + _name + " 464 " + user->getNickname() + " :Incorrect credentials\r\n";
-        send(user->getPoll().fd, err.c_str(), err.size(), 0);
+		Error::NOCREDENTIALS(user, _name);
 		return;
 	}
 

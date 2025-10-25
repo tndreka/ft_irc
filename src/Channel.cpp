@@ -1,5 +1,6 @@
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
+#include <set>
 
 Channel::Channel() :
 	_name("default"),
@@ -54,6 +55,26 @@ void	Channel::removeMember(User& member) {
 
 void	Channel::setTopic(const std::string& topic) {
 	_topic = topic;
+}
+
+bool Channel::hasMode(char m) {
+	return _modes.count(m);
+}
+
+void	Channel::addMode(char m) {
+	_modes.insert(m);
+}
+
+void	Channel::removeMode(char m) {
+	_modes.erase(m);
+}
+
+std::string Channel::getModes() const {
+	std::string res("+");
+	for (std::set<char>::const_iterator it = _modes.begin(); it != _modes.end(); ++it) {
+		res += *it;
+	}
+	return res;
 }
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj) {
