@@ -52,6 +52,10 @@ void	Channel::removeMember(User& member) {
 	_members.erase(member.getPoll().fd);
 };
 
+void	Channel::setTopic(const std::string& topic) {
+	_topic = topic;
+}
+
 std::ostream&	operator<<(std::ostream& out, const Channel& obj) {
 	out << "Channel name: '" << obj.getName() << "', Password: '" << obj.getPassword() << "'";
 	return (out);

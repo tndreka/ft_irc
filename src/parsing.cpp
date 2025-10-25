@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include <iostream>
 
 /**
  * @note why rfind and not find: /join '#ch1' ????
@@ -60,7 +61,9 @@ void Server::parse(User& user, std::string buff) {
 			Server::channelKick(&user, line.substr(5));
 		} else if (!line.rfind("PRIVMSG ")) {
             server::handlePrivMsg(*this, user, line);
-        }
+        } else if (!line.rfind("TOPIC #")) {
+			Server::channelTopic(&user, line.substr(7));
+		}
 	}
 }
 

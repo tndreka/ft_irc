@@ -29,6 +29,8 @@ class Channel {
 		std::string					getPassword(void) const;
 		void						addMember(User* user);
 		void						removeMember(User& user);
+
+		void						setTopic(const std::string& topic);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

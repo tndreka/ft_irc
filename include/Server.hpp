@@ -107,6 +107,7 @@ class Server {
 		void					cmdWhois(User *user, std::string line);
 		void					cmdOper(User *user, std::string line);
 		void					channelKick(const User* u, const std::string& line);
+		void					channelTopic(const User* u, const std::string& line);
 
 
     public:

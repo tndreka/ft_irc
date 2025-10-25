@@ -1,4 +1,38 @@
 #include "../include/Server.hpp"
+#include <iostream>
+
+void Server::channelTopic(const User* u, const std::string& line) {
+
+	std::istringstream iss(line);
+	std::string channel, topic;
+
+	iss >> channel;
+	std::getline(iss, topic);
+
+	Channel* c = server::getChannelFromList(_channels, channel);
+	if (!c) {
+		Error::NOSUCHCHANNEL(u, _name, "#" + channel);
+		return;
+	}
+
+	// TODO Check if user is in the channell
+	// TODO GET Channel mode to check for permissions
+
+	if (!topic.empty() && topic[0] == ' ') {
+		topic.erase(0 , 1);
+	}
+	if (!topic.empty() && topic[0] == ':') {
+		topic.erase(0 , 1);
+	}
+
+	if (!topic.empty()) {
+		c->setTopic(topic);
+		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
+			+ u->getHostname() + " TOPIC #" + channel + " :" + topic + "\n";
+		std::cout << msg;
+		Server::broadcastChannel(*c, msg);
+	}
+}
 
 void Server::channelKick(const User* u, const std::string& line) {
 
@@ -23,8 +57,6 @@ void Server::channelKick(const User* u, const std::string& line) {
 	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
 		+ u->getHostname() + " KICK #" + channel + " " + target + " :Bye bye Malaka\r\n";
 	Server::broadcastChannel(*c, message);
-
-	// channel::goodbyeUser(*c, *t);
 }
 
 void Server::cmdOper(User *user, std::string line) {
@@ -34,8 +66,7 @@ void Server::cmdOper(User *user, std::string line) {
     iss >> cmd >> name >> _password;
 
     if (name.empty() || _password.empty()) {
-        std::string err = ":" + _name + " 461 " + user->getNickname() + " OPER :Not enough parameters\r\n";
-        send(user->getPoll().fd, err.c_str(), err.size(), 0);
+		Error::NEEDMOREPARAMS(user, _name, cmd);
         return;
     }
 
@@ -116,6 +147,6 @@ void Server::cmdNick(User *user, std::string line) {
 	std::string msg = ":" + oldNick + "!" + user->getUsername() + "@" + user->getHostname()
 		+ " NICK :" + newNick + "\r\n";
 
-	std::cout <<msg.c_str() << std::endl;
+	std::cout << msg.c_str() << std::endl;
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 }

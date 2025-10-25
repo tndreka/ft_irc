@@ -9,7 +9,6 @@ namespace Error {
 		
 		std::cout << atemptedNick << std::endl;
 		std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
-		// std::string msg = ":" + _name + " 433 * " + ":Nickname is already in use\r\n";
 		std::string msg = ":" + _name + " 433 " + nick + " " + atemptedNick
 			+ " :Nickname is already in use\r\n";
 
@@ -22,10 +21,6 @@ namespace Error {
     	send(fd, msg.c_str(), msg.length(), 0);
 	}
 
-	// inline void USERALREADYEXISTS(const User& user) {
-	// 	send(user.getPoll().fd, "Error: You are already connected\r\n", 27, 0);
-	// }
-	//
 	inline void USERALREADYEXISTS(const User* user) {
 		std::string msg = ":MalakaIRC 462 " + (user->getNickname().empty() ? "*" : user->getNickname())
 			+ " :Unauthorized command (already registered)\r\n";
