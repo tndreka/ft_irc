@@ -56,7 +56,7 @@ void	Server::addChannel(Channel* new_channel) {
 
 void	Server::deleteChannel(User* user, const std::string& name) {
 	Channel*			channel_to_delete;
-	const std::string	prefix = ":" + _name + " NOTICE " + user->getNickname() + ":";
+	const std::string	prefix = ":" + _name + " NOTICE " + user->getNickname();
 	const std::string	postfix = "\r\n";
 	std::string 		msg;
 
@@ -66,10 +66,9 @@ void	Server::deleteChannel(User* user, const std::string& name) {
 	}
 	std::vector<Channel*>::iterator new_end = std::remove(_channels.begin(), _channels.end(), channel_to_delete);
     _channels.erase(new_end, _channels.end());
-	msg = prefix + " Channel '" + channel_to_delete->getName() + "' deleted successfully!" + postfix; 
+	msg = prefix + ": Channel '" + channel_to_delete->getName() + "' deleted successfully!" + postfix; 
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 	delete channel_to_delete;
-
 }
 
 std::ostream& operator<<(std::ostream& out, const Server& obj) {
@@ -79,14 +78,14 @@ std::ostream& operator<<(std::ostream& out, const Server& obj) {
 	out << "Server name: " << obj.getName() << "\nServer password: " << obj.getPass();
 	out << "\nServer members: 'member_fd': 'member_username'" << std::endl;
 	if (activeMembers.empty())
-			out << "\tNo members in the server!\n";
+		out << "\tNo members in the server!\n";
 	else {
-			for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
-					if (it->second != NULL)
-							out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
-					else
-							out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
-			}
+		for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
+			if (it->second != NULL)
+					out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
+			else
+					out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
+		}
 	}
 	return out;
 }
@@ -281,17 +280,15 @@ void Server::event_check(size_t index) {
 
 void Server::handle_new_host()
 {
-  clientSize = sizeof(client);
+	clientSize = sizeof(client);
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
-	if (new_connection != -1)
-  {
-		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1)
-    {
+	if (new_connection != -1) {
+		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
 			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
 			_users[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			user->setState(WAITING_AUTH); // waiting state
-      		Server::sendCapabilities(*user);
+			Server::sendCapabilities(*user);
 			//  int auth_res = Server::authenticateParser(*user);
 					//if (Server::authenticateParser(*user) == -1)
 			// if(auth_res == -1)
@@ -306,13 +303,12 @@ void Server::handle_new_host()
 			// user->setState(VERIFIED);
 			// Server::sendWelcome(*user);
 		}
-    else{
-      std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
-      close(new_connection);
-    }
+		else {
+			std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
+			close(new_connection);
+		}
 	}
-  else
-  {
+	else {
 		std::cerr << "Failed accepting new connections" << std::endl;
 		//close(new_connection);
 	}
@@ -333,7 +329,7 @@ void Server::handle_messages(size_t index)
 	buff[bytes_received] = '\0';
 	// std::cout << "Buff: '" << buff << "'" << std::endl;
 	Server::parse(*user, buff);
-	// server::printChannels(_channels);
+	// server::printUsers(_users);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

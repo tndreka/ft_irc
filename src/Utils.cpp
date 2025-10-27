@@ -158,8 +158,10 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			if (!user::isAlreadyConnected(*channel, *user)) {
 				channel->addMember(user);
 				channel::welcomeUser(server.getName(), *channel, *user);
+				std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 			}
-			// else send a message "already connected!" ????
+			else
+				std::cout << "'" << user->getNickname() << "' already connected to " << channel->getName() << std::endl;
 		} 
 		else {
 			Channel* new_channel = channel::create(user, *it);
@@ -167,6 +169,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			channel::welcomeUser(server.getName(), *new_channel, *user);
 		}
 	}
+	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -177,15 +180,16 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
  * @param user_input The user input to be parsed.
  */
 void	server::handlePart(Server& server, User* user, std::string user_input) {
-	std::vector<std::string> channels_to_delete = parsePart(user_input);
+	std::vector<std::string> channels_to_leave = parsePart(user_input);
 	
-	// std::cout << user->getNickname() << " deleted the channel(s): ";
-	// for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it)
-	// 	std::cout << "'" << *it << "' ";
-	// std::cout << std::endl;
-	for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it) {
-		// std::cout << "Channel name: '" << *it << "'" << std::endl;
+	std::cout << "'" << user->getNickname() << "' leaving the channel(s): ";
+	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it)
+		std::cout << "'" << *it << "' ";
+	std::cout << std::endl;
+
+	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
+		// std::cout << "Channel name: '" << *it << "'" << std::endl;
 		if (channel::isAlreadyExisting(server.getChannels(), *it)) {
 			if (user::isAlreadyConnected(*channel, *user)) {
 				channel::goodbyeUser(*channel, *user);
@@ -193,11 +197,13 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 				if (channel->getMembers().empty())
 					server.deleteChannel(user, *it);
 			}
-			// else send a message "not connected to that channel" ????
+			else
+				std::cout << "'" << user->getNickname() << "' is not connected to any channels named '" << *it << "'!" << std::endl; 
 		}
 		else
 			std::cout << "The channel doesn't exist!" << std::endl;
 	}
+	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -223,7 +229,6 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 	}
 }
 
-
 /**
  * @brief Notifies the remaining clients when another user disconnects.
  * 
@@ -247,12 +252,12 @@ void	server::handleQuit(Server& server, User& user) {
  * 
  * @note Output: <channel_name>, <channel_password>, {<channel_members>}.
  */
-void    server::printChannels(std::vector<Channel*>& channels) {
+void    server::printChannels(const std::vector<Channel*>& channels) {
     if (channels.empty())
 		return ((void)(std::cout << "No active channels!" << std::endl));
 	std::cout << "Channel list: ";
 	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
-    for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+    for (std::vector<Channel*>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
 		std::cout << **it << std::endl;
 		channel::printMembers(**it);
 		if (it + 1 != channels.end())
@@ -355,12 +360,12 @@ void	channel::printMembers(Channel& channel) {
 	std::map<int, User*> map = channel.getMembers();
 	
 	if (map.empty())
-		return ((void)(std::cout << "No members in this channel!" << std::endl));
-	std::cout << "Members: ";
+		return ((void)(std::cout << "No members in channel '" << channel.getName() << "'!" << std::endl));
+	std::cout << "'" << channel.getName() << "' members: ";
 	for (std::map<int, User*>::const_iterator it = map.begin(); it != map.end(); ++it) {
 		if (it != map.begin())
 			std::cout << ", ";
-		std::cout << "'" << (*it).second->getNickname() << "'";
+		std::cout << "'" << (*it).second->getNickname() << "' (" << (*it).second->getPoll().fd << ")";
 	}
 	std::cout << std::endl;
 }
@@ -373,25 +378,19 @@ void	channel::printMembers(Channel& channel) {
  * @param user The user entered the new channel.
  */
 void	channel::welcomeUser(std::string server_name, Channel& channel, User& user) {
-	const std::string		prefix = ":" + server_name + " PRIVMSG #" + channel.getName() + " :";
+	std::string				prefix = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname() + " JOIN :#" + channel.getName();
 	const std::string		postfix = "\r\n";
-	std::string				msg;
 	std::map<int, User*>	members = channel.getMembers();
 
 	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
+		send(it->first, (prefix + postfix).c_str(), (prefix + postfix).size(), 0);
 		if (it->second->getPoll().fd == user.getPoll().fd) {
-			msg = prefix + "[Users #" + channel.getName() + "]" + postfix;
-			send(it->first, msg.c_str(), msg.size(), 0);
-			msg = prefix;
-			for (std::map<int, User*>::iterator it = members.begin(); it != members.end();++it) {
+			prefix = ":" + server_name + " PRIVMSG #" + channel.getName() + " :";
+			std::string msg = prefix + ": [Users #" + channel.getName() + "] ";
+			for (std::map<int, User*>::iterator it = members.begin(); it != members.end();++it)
 				msg += "[" + it->second->getNickname() + "] ";
-			}
 			msg += postfix;
 			send(it->first, msg.c_str(), msg.size(), 0);
-		}
-		else {
-			msg = "[" + user.getNickname() + "@" + user.getHostname() + "] joined the channel!";
-			send(it->second->getPoll().fd, (prefix + msg + postfix).c_str(), (prefix + msg + postfix).size(), 0);
 		}
 	}
 }
@@ -399,26 +398,18 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
 /**
  * @brief Sends a leaving message to all members of the channel, except for the new user.
  * 
- * @param server_name The server's name, necessary to send the message back to the client.
- * @param channel The joined channel.
- * @param user The user just joined, excluded from receiving the joining message.
+ * @param channel The leaving channel.
+ * @param user The user to leave the channel.
  */
 void	channel::goodbyeUser(Channel& channel, User& user) {
-	std::string				prefix = ":" + user.getNickname() + " PART #" + channel.getName() + " :";
+	const std::string		prefix = ":" + user.getNickname() + " PART #" + channel.getName();
 	const std::string		postfix = "\r\n";
 	std::string				msg;
 	std::map<int, User*>	members = channel.getMembers();
 
-	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
-		if (it->second->getPoll().fd != user.getPoll().fd) {
-			msg = prefix + postfix;
-			send(it->first, msg.c_str(), msg.size(), 0);
-		}
-		else {
-			msg = ":" + user.getNickname() + " PART #" + channel.getName() + postfix;
-			send(it->second->getPoll().fd, msg.c_str(), msg.size(), 0);
-		}
-	}
+	msg = prefix + postfix;
+	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it)
+		send(it->first, msg.c_str(), msg.size(), 0);
 }
 
 /**
@@ -436,8 +427,8 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
 	const std::map<int, User*>	members = channel.getMembers();
 
 	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-		if (it->second->getPoll().fd != sender.getPoll().fd)
-			send(it->second->getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
+		if (it->first != sender.getPoll().fd)
+			send(it->first, full_msg.c_str(), full_msg.size(), 0);
 	}
 }
 
@@ -456,8 +447,10 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
  * @return True/False.
  */
 bool	user::isAlreadyConnected(Channel& channel, User& user) {
-	for (std::map<int, User*>::const_iterator m_it = channel.getMembers().begin(); m_it != channel.getMembers().end(); ++m_it) {
-		if (user.getPoll().fd == m_it->second->getPoll().fd)
+	std::map<int, User*>	members = channel.getMembers();
+
+	for (std::map<int, User*>::const_iterator m_it = members.begin(); m_it != members.end(); ++m_it) {
+		if (user.getPoll().fd == m_it->first)
 			return (true);
 	}
 	return (false);

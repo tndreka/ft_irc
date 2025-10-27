@@ -17,7 +17,7 @@ namespace server {
 	void		handlePart(Server& server, User* user, std::string user_input);
 	void		handlePrivMsg(Server& server, User& user, const std::string& user_input);
 	void		handleQuit(Server& server, User& user);
-	void		printChannels(std::vector<Channel*>& channels);
+	void		printChannels(const std::vector<Channel*>& channels);
 	void		printUsers(std::map<int, User*>& users);
 	Channel*	getChannelFromList(const std::vector<Channel*>& channels, std::string name);
 	User*		getUserFromList(const std::map<int, User*>& users, const std::string& name);

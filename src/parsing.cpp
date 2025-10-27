@@ -64,6 +64,10 @@ void Server::parse(User& user, std::string buff) {
             server::handleQuit(*this, user);
         }
 	}
+	for (std::vector<Channel*>::const_iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		channel::printMembers(**it);
+	}
+	std::cout << std::endl;
 }
 
 std::string Server::authenticateNickname(User &user, std::string line) {
