@@ -66,6 +66,7 @@ void	Server::deleteChannel(User* user, const std::string& name) {
 
 void	Server::clearChannels(void) {
 	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		// TODO close window when user disconnect AND when server closes
 		delete *it;
 		*it = NULL;
 	}
