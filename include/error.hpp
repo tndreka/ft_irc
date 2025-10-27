@@ -80,6 +80,14 @@ namespace Error {
 		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
 
+	inline void WRONGMODE(const User* user, const std::string &server, char flag) {
+		std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+		std::string f;
+		f.append(0, flag);
+		std::string msg = ":" + server + " 472 " + nick + " :Unknown MODE flag: " + f +"\r\n";
+		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
+	}
+
 
 
 	//================================COMMON ERRORS=======================================

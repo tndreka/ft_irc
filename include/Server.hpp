@@ -93,7 +93,7 @@ class Server {
 		void					parse(User& user, std::string buff);
  
         // Messages
-        void					broadcast_message(const std::string &message, User& user);
+        void					broadcast_message(const std::string &message, const User& user);
         void					sendWelcome(User& user);
         void					sendWrongPassword(User& user);
         void					sendCapabilities(User& user);
@@ -101,6 +101,8 @@ class Server {
 		void					sendQuitMsg(User *user);
 		void					broadcastChannel(const Channel& channel, const std::string& msg);
 		void					sendKick(const User* u, const Channel* c, const std::string target, std::string msg);
+		void					sendPermisions(const User* user);
+		void					sendMode(const User* user, const Channel* c, bool isPossitive, const char m);
 
 		// Commands
 		void					cmdNick(User *user, std::string line);
@@ -108,7 +110,7 @@ class Server {
 		void					cmdOper(User *user, std::string line);
 		void					channelKick(const User* u, const std::string& line);
 		void					channelTopic(const User* u, const std::string& line);
-		void					channelMode(const User *user, const std::string line);
+		void					channelMode(const User *user, const std::string& line);
 
 
     public:

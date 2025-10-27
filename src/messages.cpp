@@ -8,7 +8,7 @@ void Server::broadcastChannel(const Channel& channel, const std::string& msg) {
 	}
 }
 
-void Server::broadcast_message(const std::string &message, User& user) {
+void Server::broadcast_message(const std::string &message, const User& user) {
   for (size_t i = 0; i < poll_fds.size(); i++) {
     if (poll_fds[i].fd != listening && poll_fds[i].fd != user.getPoll().fd)
       send(poll_fds[i].fd, message.c_str(), message.length(), 0);
@@ -41,18 +41,12 @@ void Server::sendWrongPassword(User& user) {
 
 void Server::sendCapabilities(User& user) {
   std::string capReply = ":" + _name + " CAP * LS :\r\n";
-  // std::cout << "===>Sending capabilities" << std::endl;
-
-  // std::cout << "fd: " << user.getPoll().fd << std::endl;
   send(user.getPoll().fd, capReply.c_str(), capReply.size(), 0);
-  // std::cout << capReply << std::endl;
 }
 
-void Server::sendPong(User *user, std::string ping) {
+void Server::sendPong(User* user, std::string ping) {
 
 	std::string pong = "PONG " + ping.substr(5) + "\r\n";
-	// std::cout << pong << std::endl;
-	// std::cout << "===>Send PONG" << std::endl;
 	send(user->getPoll().fd, pong.c_str(), pong.size(), 0);
 }
 
@@ -74,4 +68,20 @@ void Server::sendKick(const User* u, const Channel* c, const std::string target,
 	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
 			+ u->getHostname() + " KICK #" + c->getName() + " " + target + " " + msg + "\r\n";
 	Server::broadcastChannel(*c, message);
+}
+
+void Server::sendPermisions(const User* user) {
+	std::string msg = ":" + _name + " 381 " + user->getNickname() + " :You are now an IRC operator\r\n";
+	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
+
+	std::string notice = ":" + _name + " NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
+	broadcast_message(notice, *user);
+}
+
+void Server::sendMode(const User* user, const Channel* c, bool isPossitive, const char m) {
+	std::string tag = (isPossitive ? "+" : "-");
+	tag.push_back(m);
+	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@"
+		+ user->getHostname() + " MODE #" + c->getName() + " " + tag + "\r\n";
+	Server::broadcastChannel(*c, msg);
 }

@@ -369,23 +369,19 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
  * @param channel The joined channel.
  * @param user The user just joined, excluded from receiving the joining message.
  */
-void	channel::goodbyeUser(Channel& channel, User& user) {
-	std::string				prefix = ":" + user.getNickname() + " PART #" + channel.getName() + " :";
-	const std::string		postfix = "\r\n";
-	std::string				msg;
-	std::map<int, User*>	members = channel.getMembers();
 
+void channel::goodbyeUser(Channel& channel, User& user) {
+
+    std::string msg = ":" + user.getNickname() + "!" + user.getUsername() + "@"
+                    + user.getHostname() + " PART #" + channel.getName() + " :Leaving\r\n";
+
+	std::cout << "'" << msg << "'" << std::endl;
+    std::map<int, User*> members = channel.getMembers();
 	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
-		if (it->second->getPoll().fd != user.getPoll().fd) {
-			msg = prefix + postfix;
-			send(it->first, msg.c_str(), msg.size(), 0);
-		}
-		else {
-			msg = ":" + user.getNickname() + " PART #" + channel.getName() + postfix;
-			send(it->second->getPoll().fd, msg.c_str(), msg.size(), 0);
-		}
+        send(it->first, msg.c_str(), msg.size(), 0);
 	}
 }
+
 
 /**
  * @brief Send a message to all members in the channel.

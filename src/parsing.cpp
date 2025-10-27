@@ -1,5 +1,4 @@
 #include "../include/Server.hpp"
-#include <iostream>
 
 /**
  * @note why rfind and not find: /join '#ch1' ????
