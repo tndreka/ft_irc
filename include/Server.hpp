@@ -27,13 +27,16 @@
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
-#include <algorithm>
+#include <csignal>
+#include <cstring>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
 #define IRC_OPER_NAME "root"
 #define IRC_OPER_PASS "secretpass"
 #endif
+
+extern volatile sig_atomic_t signal_flag;
 
 #include "User.hpp"
 #include "Channel.hpp"
@@ -127,7 +130,8 @@ class Server {
         const std::string&		        getPass(void) const;
         const std::map<int, User*>&     getUsers(void) const;
 		const std::vector<Channel*>&	getChannels(void) const;
-
+        void                            clearChannels(void);
+        void                            clearUsers(void);
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

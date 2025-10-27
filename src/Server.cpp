@@ -11,13 +11,6 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <unistd.h>
-#include "../include/Server.hpp"
-#include <string>
-#include <unistd.h>
 
 Server::Server() : _name("MalakaIRC"), _users(), _channels() {}
 
@@ -69,6 +62,22 @@ void	Server::deleteChannel(User* user, const std::string& name) {
 	msg = prefix + ": Channel '" + channel_to_delete->getName() + "' deleted successfully!" + postfix; 
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 	delete channel_to_delete;
+}
+
+void	Server::clearChannels(void) {
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		delete *it;
+		*it = NULL;
+	}
+	_channels.clear();
+}
+
+void	Server::clearUsers(void) {
+	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+		delete it->second;
+		it->second = NULL;
+	}
+	_users.clear();
 }
 
 std::ostream& operator<<(std::ostream& out, const Server& obj) {
@@ -142,8 +151,6 @@ bool Server::createSocket() {
 								ERROR => -1
 
 */
-
-
 bool Server::bindSocket()
 {
   //quick restarts
@@ -209,7 +216,6 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); Parameters:
 					success => New socket file descriptor for the connection
 					ERROR => -1
 */
-
 void Server::accept_connection() {
   clientSize = sizeof(client);
   listening_fd.fd = listening;
@@ -359,7 +365,7 @@ bool Server::init_Server() {
 }
 
 void Server::run_Server() {
-	while (true) {
+	while (!signal_flag) {
 		if (init_poll() == false)
 			break;
 		for (size_t i = 0; i < poll_fds.size(); i++) {
@@ -380,5 +386,10 @@ void Server::run_Server() {
 			}
 		}
 	}
+	clearChannels();
+	clearUsers();
+	server::printChannels(_channels);
+	server::printUsers(_users);
+			
 }
 

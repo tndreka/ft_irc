@@ -24,7 +24,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 		+ u->getHostname() + " KICK #" + channel + " " + target + " " + msg;
 	Server::broadcastChannel(*c, message);
 
-	c->removeMember(*t);
+	// c->removeMember(*t);
 }
 
 void Server::cmdOper(User *user, std::string line) {

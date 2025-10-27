@@ -189,21 +189,19 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 
 	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
-		// std::cout << "Channel name: '" << *it << "'" << std::endl;
-		if (channel::isAlreadyExisting(server.getChannels(), *it)) {
-			if (user::isAlreadyConnected(*channel, *user)) {
-				channel::goodbyeUser(*channel, *user);
-				channel->removeMember(*user);
-				if (channel->getMembers().empty())
-					server.deleteChannel(user, *it);
-			}
-			else
-				std::cout << "'" << user->getNickname() << "' is not connected to any channels named '" << *it << "'!" << std::endl; 
-		}
-		else
+		if (!channel::isAlreadyExisting(server.getChannels(), *it)) {
 			std::cout << "The channel doesn't exist!" << std::endl;
+			continue;
+		}
+		if (!user::isAlreadyConnected(*channel, *user))
+			std::cout << "'" << user->getNickname() << "' is not connected to any channels named '" << *it << "'!" << std::endl; 
+		else {
+			channel::goodbyeUser(*channel, *user);
+			channel->removeMember(*user, server.getName());
+			if (channel->getMembers().empty())
+				server.deleteChannel(user, *it);
+		}
 	}
-	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -236,7 +234,7 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
  * 
  */
 void	server::handleQuit(Server& server, User& user) {
-	const std::string msg = ":" + user.getNickname() + " QUIT:";
+	const std::string	msg = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname() + " QUIT\r\n";
 	const std::map<int, User*>& users = server.getUsers();
 
 	for (std::map<int, User*>::const_iterator it = users.begin(); it != users.end(); ++it) {
@@ -384,9 +382,9 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
 
 	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
 		send(it->first, (prefix + postfix).c_str(), (prefix + postfix).size(), 0);
-		if (it->second->getPoll().fd == user.getPoll().fd) {
-			prefix = ":" + server_name + " PRIVMSG #" + channel.getName() + " :";
-			std::string msg = prefix + ": [Users #" + channel.getName() + "] ";
+		if (it->first == user.getPoll().fd) {
+			prefix = ":" + server_name + " PRIVMSG #" + channel.getName();
+			std::string msg = prefix + " : [Users #" + channel.getName() + "] ";
 			for (std::map<int, User*>::iterator it = members.begin(); it != members.end();++it)
 				msg += "[" + it->second->getNickname() + "] ";
 			msg += postfix;

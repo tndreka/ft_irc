@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <map>
+#include <sys/socket.h>
 
 class User;
 
@@ -28,7 +29,7 @@ class Channel {
 		const std::map<int, User*>&	getMembers(void) const;
 		std::string					getPassword(void) const;
 		void						addMember(User* user);
-		void						removeMember(User& user);
+		void						removeMember(User& user, const std::string server_name);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

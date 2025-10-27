@@ -48,8 +48,13 @@ void	Channel::addMember(User* member) {
 	_members[member->getPoll().fd] = member;
 };
 
-void	Channel::removeMember(User& member) {
+void	Channel::removeMember(User& member, const std::string server_name) {
+	const std::string	prefix = ":" + server_name + " NOTICE " + member.getNickname();
+	const std::string	postfix = "\r\n";
+	const std::string	msg = prefix + ": You left channel " + getName() + postfix;
+	
 	_members.erase(member.getPoll().fd);
+	send(member.getPoll().fd, msg.c_str(), msg.size(), 0);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj) {
