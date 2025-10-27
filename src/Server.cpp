@@ -74,6 +74,8 @@ void	Server::clearChannels(void) {
 
 void	Server::clearUsers(void) {
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+		const std::string	msg = ":" + it->second->getNickname() + "!" + it->second->getUsername() + "@" + it->second->getHostname() + " QUIT\r\n";
+		send(it->first, msg.c_str(), msg.size(), 0);
 		delete it->second;
 		it->second = NULL;
 	}
@@ -392,4 +394,3 @@ void Server::run_Server() {
 	server::printUsers(_users);
 			
 }
-

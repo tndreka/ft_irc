@@ -34,7 +34,7 @@ namespace channel {
 };
 
 namespace user {
-	bool	isAlreadyConnected(Channel& channel, User& user);
+	bool	isAlreadyConnected(Channel& channel, const User& user);
 	void	sendMsg(User& sender, User& recepient, const std::string& msg);
 };
 

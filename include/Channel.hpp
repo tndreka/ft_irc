@@ -4,6 +4,8 @@
 #include <iostream>
 #include <map>
 #include <sys/socket.h>
+#include <set>
+#include <string>
 
 class User;
 
@@ -14,7 +16,9 @@ class Channel {
 		unsigned int			_maxMembers;	// TODO: check before joining
 		std::string				_password;
 		std::string				_topic;
+		bool					_topicAdminOnly;
 		bool					_isInviteOnly;
+		std::set<char>			_modes;
 
 
 	public:
@@ -28,8 +32,22 @@ class Channel {
 		const std::string			getName(void) const;
 		const std::map<int, User*>&	getMembers(void) const;
 		std::string					getPassword(void) const;
+		bool						getTopicAdminOnly(void) const;
+		bool						getIsInvitedOnly(void) const;
+	
+		void						setTopic(const std::string& topic);
+		void						setPassword(const std::string& pass);
+		void						setMaxMembers(unsigned int num);
+		void						setTopicAdminOnly(bool b);
+		void						setIsInvitedOnly(bool b);
+
 		void						addMember(User* user);
-		void						removeMember(User& user, const std::string server_name);
+		void						removeMember(User& user, const std::string& server_name);
+
+		bool						hasMode(char m);
+		void						addMode(char m);
+		void						removeMode(char m);
+		std::string					getModes() const;
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

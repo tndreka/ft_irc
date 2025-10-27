@@ -238,7 +238,7 @@ void	server::handleQuit(Server& server, User& user) {
 	const std::map<int, User*>& users = server.getUsers();
 
 	for (std::map<int, User*>::const_iterator it = users.begin(); it != users.end(); ++it) {
-		if (it->second->getPoll().fd != user.getPoll().fd)
+		if (it->first != user.getPoll().fd)
 			send(it->first, msg.c_str(), msg.size(), 0);
 	}
 }
@@ -410,6 +410,7 @@ void	channel::goodbyeUser(Channel& channel, User& user) {
 		send(it->first, msg.c_str(), msg.size(), 0);
 }
 
+
 /**
  * @brief Send a message to all members in the channel.
  * 
@@ -444,7 +445,7 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
  * 
  * @return True/False.
  */
-bool	user::isAlreadyConnected(Channel& channel, User& user) {
+bool	user::isAlreadyConnected(Channel& channel, const User& user) {
 	std::map<int, User*>	members = channel.getMembers();
 
 	for (std::map<int, User*>::const_iterator m_it = members.begin(); m_it != members.end(); ++m_it) {

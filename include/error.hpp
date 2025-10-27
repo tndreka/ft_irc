@@ -9,7 +9,6 @@ namespace Error {
 		
 		std::cout << atemptedNick << std::endl;
 		std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
-		// std::string msg = ":" + _name + " 433 * " + ":Nickname is already in use\r\n";
 		std::string msg = ":" + _name + " 433 " + nick + " " + atemptedNick
 			+ " :Nickname is already in use\r\n";
 
@@ -22,10 +21,6 @@ namespace Error {
     	send(fd, msg.c_str(), msg.length(), 0);
 	}
 
-	// inline void USERALREADYEXISTS(const User& user) {
-	// 	send(user.getPoll().fd, "Error: You are already connected\r\n", 27, 0);
-	// }
-	//
 	inline void USERALREADYEXISTS(const User* user) {
 		std::string msg = ":MalakaIRC 462 " + (user->getNickname().empty() ? "*" : user->getNickname())
 			+ " :Unauthorized command (already registered)\r\n";
@@ -85,6 +80,14 @@ namespace Error {
 		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
 
+	inline void WRONGMODE(const User* user, const std::string &server, char flag) {
+		std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+		std::string f;
+		f.append(0, flag);
+		std::string msg = ":" + server + " 472 " + nick + " :Unknown MODE flag: " + f +"\r\n";
+		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
+	}
+
 
 
 	//================================COMMON ERRORS=======================================
@@ -111,5 +114,11 @@ namespace Error {
 		std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
 		std::string msg = ":" + server + " 482 " + nick + " " + channel + " :You're not channel operator\r\n";
 		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
+	}
+
+	inline void NOCREDENTIALS(const User *user, const std::string &server) {
+		std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+		std::string err = ":" + server + " 464 " + nick + " :Incorrect credentials\r\n";
+        send(user->getPoll().fd, err.c_str(), err.size(), 0);
 	}
 }

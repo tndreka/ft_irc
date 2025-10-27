@@ -1,10 +1,133 @@
 #include "../include/Server.hpp"
 
+static bool isAllDigits(const std::string& str) {
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+        if (!std::isdigit(static_cast<unsigned char>(*it)))
+            return false;
+    }
+    return true;
+}
+
+void Server::channelMode(const User *user, const std::string& line) {
+
+	std::istringstream iss(line);
+	std::string channel, modes;
+
+	iss >> channel >> modes;
+	
+	if (!user->getIsAdmin()) {
+		Error::CHANOPRIVSNEEDED(user, _name, channel);
+		return;
+	}
+
+	Channel* c = server::getChannelFromList(_channels, channel);
+	if (!c) {
+		Error::NOSUCHCHANNEL(user, _name, "#" + channel);
+		return;
+	}
+
+	std::cout << "this is the mode requested: " << modes<< std::endl;
+
+	if (modes[0] != '+' && modes[0] != '-') {
+		Error::WRONGMODE(user, _name, '+');
+		return;
+	}
+
+	bool isPositive;
+
+	for (size_t i = 0; i < modes.size(); ++i) {
+		std::string param;
+		if (modes[i] == '+' || modes[i] == '-') {
+			isPositive = (modes[0] == '+');
+			continue;
+		}
+
+		if (modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') {
+			iss >> param;
+			if (param.empty()) {
+				Error::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
+				continue;
+			}
+			if (modes[i] == 'k') {
+				isPositive ? c->setPassword(param) : c->setPassword("");
+			} else if (modes[i] == 'l') {
+				if (!isAllDigits(param)) {
+					Error::WRONGMODE(user, _name, 'l');
+					return;
+				}
+				int num = std::atoi(param.c_str());
+				if (num > 2 && num <= 200)
+					c->setMaxMembers(num);
+			} else if (modes[i] == 'o') {
+				User* target = server::getUserFromList(_users, param);
+				if (!target || !user::isAlreadyConnected(*c, *target)) {
+					Error::USERNOTINCHANNEL(user, _name, target->getNickname(), c->getName());
+					continue;
+				}
+				target->setAdmin(isPositive);
+				if (isPositive) {
+					Server::sendPermisions(target);
+				}
+			}
+		} else if (modes[i] == 't') {
+			c->setTopicAdminOnly(isPositive ? true : false);
+		} else if (modes[i] == 'i') {
+			c->setIsInvitedOnly(isPositive ? true : false);
+		} else {
+			Error::WRONGMODE(user, _name, modes[i]);
+			return;
+		}
+		isPositive ? c->addMode(modes[i]) : c->removeMode(modes[i]);
+		std::cout << "The channel: " <<  c->getName() << "has these modes: " << c->getModes() << std::endl;
+		Server::sendMode(user, c, isPositive, modes[i]);
+	}
+}
+
+void Server::channelTopic(const User* u, const std::string& line) {
+
+	std::istringstream iss(line);
+	std::string channel, topic;
+
+	iss >> channel;
+	std::getline(iss, topic);
+
+	Channel* c = server::getChannelFromList(_channels, channel);
+	if (!c) {
+		Error::NOSUCHCHANNEL(u, _name, "#" + channel);
+		return;
+	}
+
+	if (!user::isAlreadyConnected(*c, *u)) {
+		Error::NOTONCHANNEL(u, _name, channel);
+		return;
+	}
+
+	if (c->hasMode('t') && !u->getIsAdmin()) {
+		Error::CHANOPRIVSNEEDED(u, _name, channel);
+		return;
+	}
+
+	if (!topic.empty() && topic[0] == ' ') {
+		topic.erase(0 , 1);
+	}
+	if (!topic.empty() && topic[0] == ':') {
+		topic.erase(0 , 1);
+	}
+
+	if (!topic.empty()) {
+		c->setTopic(topic);
+		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
+			+ u->getHostname() + " TOPIC #" + channel + " :" + topic + "\n";
+		Server::broadcastChannel(*c, msg);
+	}
+}
+
 void Server::channelKick(const User* u, const std::string& line) {
 
 	std::istringstream iss(line);
 	std::string channel, target, msg;
-	iss >> channel >> target >> msg;
+	iss >> channel >> target;
+	std::getline(iss, msg);
 
 	if (!u->getIsAdmin()) {
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
@@ -20,11 +143,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 		return;
 	}
 
-	std::string message = ":" + u->getNickname() + "!" + u->getUsername() + "@"
-		+ u->getHostname() + " KICK #" + channel + " " + target + " " + msg;
-	Server::broadcastChannel(*c, message);
-
-	// c->removeMember(*t);
+	Server::sendKick(u, c, target, msg);
 }
 
 void Server::cmdOper(User *user, std::string line) {
@@ -34,24 +153,17 @@ void Server::cmdOper(User *user, std::string line) {
     iss >> cmd >> name >> _password;
 
     if (name.empty() || _password.empty()) {
-        std::string err = ":" + _name + " 461 " + user->getNickname() + " OPER :Not enough parameters\r\n";
-        send(user->getPoll().fd, err.c_str(), err.size(), 0);
+		Error::NEEDMOREPARAMS(user, _name, cmd);
         return;
     }
 
 	if (name != IRC_OPER_NAME || _password != IRC_OPER_PASS) {
-		std::string err = ":" + _name + " 464 " + user->getNickname() + " :Incorrect credentials\r\n";
-        send(user->getPoll().fd, err.c_str(), err.size(), 0);
+		Error::NOCREDENTIALS(user, _name);
 		return;
 	}
-
+	
 	user->setAdmin(true);
-
-	std::string msg = ":" + _name + " 381 " + user->getNickname() + " :You are now an IRC operator\r\n";
-	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
-
-	std::string notice = ":" + _name + " NOTICE * :Operator " + user->getNickname() + " has authenticated\r\n";
-	broadcast_message(notice, *user);
+	Server::sendPermisions(user);
 }
 
 
@@ -66,24 +178,19 @@ void Server::cmdWhois(User *user, std::string line) {
         return;
     }
 
-    // Find target user
     for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
         User *target = it->second;
         if (target->getNickname() == targetNick) {
             std::string msg;
 
-            // 311 - WHOISUSER
             msg = ":" + _name + " 311 " + user->getNickname() + " " + targetNick + " "
                 + target->getUsername() + " " + target->getHostname() + " * :"
                 + target->getRealname() + "\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
-            // 312 - WHOISSERVER
             msg = ":" + _name + " 312 " + user->getNickname() + " " + targetNick + " " + _name + " :The BIGGEST MALAKA Server\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
-
-            // 318 - ENDOFWHOIS
             msg = ":" + _name + " 318 " + user->getNickname() + " " + targetNick + " :End of /WHOIS list\r\n";
             send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 
@@ -116,6 +223,6 @@ void Server::cmdNick(User *user, std::string line) {
 	std::string msg = ":" + oldNick + "!" + user->getUsername() + "@" + user->getHostname()
 		+ " NICK :" + newNick + "\r\n";
 
-	std::cout <<msg.c_str() << std::endl;
+	std::cout << msg.c_str() << std::endl;
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
 }

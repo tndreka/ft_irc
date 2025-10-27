@@ -62,7 +62,11 @@ void Server::parse(User& user, std::string buff) {
             server::handlePrivMsg(*this, user, line);
         } else if (!line.rfind("QUIT")) {
             server::handleQuit(*this, user);
-        }
+        } else if (!line.rfind("TOPIC #")) {
+			Server::channelTopic(&user, line.substr(7));
+		} else if (!line.rfind("MODE #")) {
+			Server::channelMode(&user, line.substr(6));
+		}
 	}
 	server::printUsers(_users);
 }
@@ -93,7 +97,6 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
 		if (it->second->getNickname() == nickname) {
-			// Error::NICKNAMEINUSE(_name, user.getPoll().fd, nickname);
 			Error::NICKNAMEINUSE(user, _name, nickname);
 			return "";
 		}
