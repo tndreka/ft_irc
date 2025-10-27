@@ -7,8 +7,8 @@ void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
 
-	std::cout << user << std::endl;
-	std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
+	// std::cout << user << std::endl;
+	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 	if(user.getState() == WAITING_AUTH)
 	{
 		int auth_res = authenticateParser(user, buff);
@@ -60,6 +60,8 @@ void Server::parse(User& user, std::string buff) {
 			Server::channelKick(&user, line.substr(5));
 		} else if (!line.rfind("PRIVMSG ")) {
             server::handlePrivMsg(*this, user, line);
+        } else if (!line.rfind("QUIT")) {
+            server::handleQuit(*this, user);
         }
 	}
 }
@@ -71,7 +73,7 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 	iss >> arg >> nickname;
 
 
-	std::cout << arg << nickname << std::endl;
+	// std::cout << arg << nickname << std::endl;
 	if (nickname.empty() || nickname.length() > 32) {
 		// Error msg
 		return "";

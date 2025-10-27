@@ -291,18 +291,18 @@ void Server::handle_new_host()
 			_users[new_connection] = user;
 			poll_fds.push_back(user->getPoll());
 			user->setState(WAITING_AUTH); // waiting state
-      Server::sendCapabilities(*user);
-    //  int auth_res = Server::authenticateParser(*user);
-			//if (Server::authenticateParser(*user) == -1)
-      // if(auth_res == -1)
-      // {
-			// 	// poll_fds.pop_back();
-			// 	Server::closeConnection(user->getPoll().fd);
-			// 	return;
+      		Server::sendCapabilities(*user);
+			//  int auth_res = Server::authenticateParser(*user);
+					//if (Server::authenticateParser(*user) == -1)
+			// if(auth_res == -1)
+			// {
+					// 	// poll_fds.pop_back();
+					// 	Server::closeConnection(user->getPoll().fd);
+					// 	return;
+					// }
+			// else if(auth_res == 1){
+			//   return; //need more data client didnt send everything yet we keep connection open
 			// }
-      // else if(auth_res == 1){
-      //   return; //need more data client didnt send everything yet we keep connection open
-      // }
 			// user->setState(VERIFIED);
 			// Server::sendWelcome(*user);
 		}
@@ -322,19 +322,18 @@ void Server::handle_messages(size_t index)
 { 
 	User *user = _users[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
-	bytes_recived = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
-	if (bytes_recived <= 0) {
+	bytes_received = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
+	if (bytes_received <= 0) {
 		std::cout << "Client " << user->getPoll().fd << "(" << user->getHostname() << ") disconnected" << std::endl;
 		close(user->getPoll().fd);
 		poll_fds.erase(poll_fds.begin() + index);
-		user->setHostname("_DISCONNECTED_");
-    _users.erase(user->getPoll().fd);
-		remove_from_vector(index);
+    	_users.erase(user->getPoll().fd);
+		delete user;
 	}
-	buff[bytes_recived] = '\0';
+	buff[bytes_received] = '\0';
 	// std::cout << "Buff: '" << buff << "'" << std::endl;
 	Server::parse(*user, buff);
-	server::printChannels(_channels);
+	// server::printChannels(_channels);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

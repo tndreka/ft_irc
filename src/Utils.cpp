@@ -179,10 +179,10 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 void	server::handlePart(Server& server, User* user, std::string user_input) {
 	std::vector<std::string> channels_to_delete = parsePart(user_input);
 	
-	std::cout << user->getNickname() << " deleted the channel(s): ";
-	for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it)
-		std::cout << "'" << *it << "' ";
-	std::cout << std::endl;
+	// std::cout << user->getNickname() << " deleted the channel(s): ";
+	// for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it)
+	// 	std::cout << "'" << *it << "' ";
+	// std::cout << std::endl;
 	for (std::vector<std::string>::const_iterator it = channels_to_delete.begin(); it != channels_to_delete.end(); ++it) {
 		// std::cout << "Channel name: '" << *it << "'" << std::endl;
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
@@ -223,6 +223,23 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 	}
 }
 
+
+/**
+ * @brief Notifies the remaining clients when another user disconnects.
+ * 
+ * @param server The server's instance.
+ * 
+ */
+void	server::handleQuit(Server& server, User& user) {
+	const std::string msg = ":" + user.getNickname() + " QUIT:";
+	const std::map<int, User*>& users = server.getUsers();
+
+	for (std::map<int, User*>::const_iterator it = users.begin(); it != users.end(); ++it) {
+		if (it->second->getPoll().fd != user.getPoll().fd)
+			send(it->first, msg.c_str(), msg.size(), 0);
+	}
+}
+
 /**
  * @brief Prints all the channels of the server.
  * 
@@ -242,6 +259,23 @@ void    server::printChannels(std::vector<Channel*>& channels) {
 			std::cout << std::endl;
     }
     std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
+}
+
+/**
+ * @note QUIT :leaving (disconnect)
+ * @note Client 5(127.0.0.1) disconnected (/disconnect)
+ */
+void	server::printUsers(std::map<int, User*>& users) {
+	if (users.empty())
+		return ((void)(std::cout << "No active users!" << std::endl));
+	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
+	std::cout << "User list: ";
+    for (std::map<int, User*>::iterator it = users.begin(); it != users.end(); ++it) {
+		if (it != users.begin())
+			std::cout << ", ";
+		std::cout << "{" << it->first << ", '" << it->second->getNickname() << "'}";
+    }
+    std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
 }
 
 /**

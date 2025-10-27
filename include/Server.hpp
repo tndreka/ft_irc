@@ -66,7 +66,7 @@ class Server {
         bool					err;
 
         char					buff[MAX_BUFF];
-        int						bytes_recived;
+        int						bytes_received;
 
         // Server
         bool					createSocket();
