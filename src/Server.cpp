@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/22 12:52:22 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/28 19:06:52 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,18 +321,24 @@ void Server::handle_messages(size_t index)
 		poll_fds.erase(poll_fds.begin() + index);
     	_users.erase(user->getPoll().fd);
 		delete user;
+		return;
 	}
 	buff[bytes_received] = '\0';
 	Server::parse(*user, buff);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
-	User user = *_users[index];
-	std::cout << "Client " << poll_fds[index].fd << "(" << user.getHostname() << ") error/hungup " << std::endl;
-	close(poll_fds[index].fd);
-	user.setHostname("_DISCONNECTED_");
-	remove_from_vector(index);
-	// delete user;
+	int fd = poll_fds[index].fd;
+	User *user = _users[fd];
+	
+	std::cout << "Client " << fd << "(" << user->getHostname() << ") error/hungup " << std::endl;
+	close(fd);
+	
+	poll_fds.erase(poll_fds.begin() + index);
+	_users.erase(fd);
+	delete user;
+	//user.setHostname("_DISCONNECTED_");
+	//remove_from_vector(index);
 }
 
 bool Server::init_Server() {
