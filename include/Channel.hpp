@@ -7,6 +7,9 @@
 #include <set>
 #include <string>
 
+#define MAX_MEMBERS 200
+#define DEFAULT 20
+
 class User;
 
 class Channel {
@@ -24,7 +27,7 @@ class Channel {
 	public:
 		Channel();
 		Channel(std::string name, std::string pass);
-		Channel(const Channel& othher);
+		Channel(const Channel& other);
 		~Channel();
 
 		Channel&	operator=(const Channel& other);
@@ -34,6 +37,7 @@ class Channel {
 		std::string					getPassword(void) const;
 		bool						getTopicAdminOnly(void) const;
 		bool						getIsInvitedOnly(void) const;
+		std::string					getTopic() const;
 	
 		void						setTopic(const std::string& topic);
 		void						setPassword(const std::string& pass);

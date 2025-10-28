@@ -94,6 +94,10 @@ void	Channel::setIsInvitedOnly(bool b) {
 	_isInviteOnly = b;
 }
 
+std::string	Channel::getTopic() const {
+	return _topic;
+}
+
 bool Channel::hasMode(char m) {
 	return _modes.count(m);
 }

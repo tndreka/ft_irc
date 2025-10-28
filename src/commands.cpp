@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include <pthread.h>
 
 static bool isAllDigits(const std::string& str) {
     for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
@@ -26,7 +27,10 @@ void Server::channelMode(const User *user, const std::string& line) {
 		return;
 	}
 
-	//TODO needs to be in the channel
+	if (!user::isAlreadyConnected(*c, *user)) {
+		Error::NOTONCHANNEL(user, _name, c->getName());
+		return;
+	}
 
 	std::cout << "this is the mode requested: " << modes<< std::endl;
 
@@ -46,19 +50,23 @@ void Server::channelMode(const User *user, const std::string& line) {
 
 		if (modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') {
 			iss >> param;
-			if (param.empty()) {
+			if (isPositive && param.empty()) {
 				Error::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
 				continue;
 			}
 			if (modes[i] == 'k') {
 				isPositive ? c->setPassword(param) : c->setPassword("");
 			} else if (modes[i] == 'l') {
+				if (!isPositive) {
+					c->setMaxMembers(DEFAULT);
+					return;
+				}
 				if (!isAllDigits(param)) {
 					Error::WRONGMODE(user, _name, 'l');
 					return;
 				}
 				int num = std::atoi(param.c_str());
-				if (num > 2 && num <= 200)
+				if (num > 2 && num <= MAX_MEMBERS)
 					c->setMaxMembers(num);
 			} else if (modes[i] == 'o') {
 				User* target = server::getUserFromList(_users, param);
@@ -104,7 +112,7 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		return;
 	}
 
-	if (c->hasMode('t') && !u->getIsAdmin() || ()) {
+	if (c->hasMode('t') && !u->getIsAdmin()) { // TODO || isChannelOper
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
@@ -131,7 +139,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 	iss >> channel >> target;
 	std::getline(iss, msg);
 
-	if (!u->getIsAdmin()) {
+	if (!u->getIsAdmin()) { //TODO is channel oper
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
