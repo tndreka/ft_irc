@@ -5,6 +5,8 @@
 Channel::Channel() :
 	_name("default"),
 	_members(),
+	_operators(),
+	_size(DEFAULT_SIZE),
 	_password(""),
 	_topic(""),
 	_topicAdminOnly(false)
@@ -13,6 +15,8 @@ Channel::Channel() :
 Channel::Channel(std::string name, std::string pass) :
 	_name(name),
 	_members(),
+	_operators(),
+	_size(DEFAULT_SIZE),
 	_password(pass),
 	_topic(""),
 	_topicAdminOnly(false)
@@ -23,6 +27,8 @@ Channel::Channel(std::string name, std::string pass) :
 Channel::Channel(const Channel& other) :
 	_name(other._name),
 	_members(other._members),
+	_operators(other._operators),
+	_size(other._size),
 	_password(other._password),
 	_topic(""),
 	_topicAdminOnly(false)
@@ -34,6 +40,8 @@ Channel&	Channel::operator=(const Channel& other) {
 	if (this != &other) {
 		_name = other._name;
 		_members = other._members;
+		_operators = other._operators;
+		_size = other._size;
 		_password = other._password;
 		_topic = other._topic;
 		_topicAdminOnly = other._topicAdminOnly;
@@ -49,13 +57,25 @@ const std::map<int, User*>&	Channel::getMembers(void) const {
 	return (_members);
 };
 
+const std::map<int, User*>&	Channel::getOperators(void) const {
+	return (_operators);
+}
+
 std::string	Channel::getPassword(void) const {
 	return (_password);
+}
+
+unsigned int  Channel::getSize(void) const {
+	return (_size);
 }
 
 void	Channel::addMember(User* member) {
 	_members[member->getPoll().fd] = member;
 };
+
+void	Channel::addOperator(User* oper) {
+	_operators[oper->getPoll().fd] = oper;
+}
 
 void	Channel::removeMember(User& member, const std::string& server_name) {
 	const std::string	prefix = ":" + server_name + " NOTICE " + member.getNickname();
@@ -74,8 +94,8 @@ void	Channel::setPassword(const std::string& pass) {
 	_password = pass;
 }
 
-void	Channel::setMaxMembers(unsigned int num) {
-	_maxMembers = num;
+void	Channel::setSize(unsigned int num) {
+	_size = num;
 }
 
 bool	Channel::getTopicAdminOnly() const {

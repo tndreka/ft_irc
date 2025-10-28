@@ -59,7 +59,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 				}
 				int num = std::atoi(param.c_str());
 				if (num > 2 && num <= 200)
-					c->setMaxMembers(num);
+					c->setSize(num);
 			} else if (modes[i] == 'o') {
 				User* target = server::getUserFromList(_users, param);
 				if (!target || !user::isAlreadyConnected(*c, *target)) {
@@ -104,7 +104,7 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		return;
 	}
 
-	if (c->hasMode('t') && !u->getIsAdmin() || ()) {
+	if (c->hasMode('t') && !u->getIsAdmin()) {
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}

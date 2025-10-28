@@ -33,6 +33,7 @@ void Server::parse(User& user, std::string buff) {
 	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
 		return;
 	
+	server::printUsers(_users);
 	while (std::getline(iss, line)) {
         // std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.find("PING ", 0)) {
@@ -59,7 +60,6 @@ void Server::parse(User& user, std::string buff) {
 			Server::channelMode(&user, line.substr(6));
 		}
 	}
-	server::printUsers(_users);
 }
 
 std::string Server::authenticateNickname(User &user, std::string line) {

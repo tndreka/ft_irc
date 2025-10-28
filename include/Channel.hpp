@@ -1,6 +1,8 @@
 #ifndef CHANNEL_HPP
 #define	CHANNEL_HPP
 
+#define DEFAULT_SIZE 20
+
 #include <iostream>
 #include <map>
 #include <sys/socket.h>
@@ -13,13 +15,13 @@ class Channel {
 	private:
 		std::string				_name;
 		std::map<int, User*>	_members;
-		unsigned int			_maxMembers;	// TODO: check before joining
+		std::map<int, User*>	_operators; // delete pointer in quit???
+		unsigned int			_size;
 		std::string				_password;
 		std::string				_topic;
 		bool					_topicAdminOnly;
 		bool					_isInviteOnly;
 		std::set<char>			_modes;
-
 
 	public:
 		Channel();
@@ -31,23 +33,26 @@ class Channel {
 
 		const std::string			getName(void) const;
 		const std::map<int, User*>&	getMembers(void) const;
+		const std::map<int, User*>&	getOperators(void) const; 
 		std::string					getPassword(void) const;
 		bool						getTopicAdminOnly(void) const;
 		bool						getIsInvitedOnly(void) const;
+		std::string					getModes() const;
+		unsigned int				getSize(void) const;
 	
 		void						setTopic(const std::string& topic);
 		void						setPassword(const std::string& pass);
-		void						setMaxMembers(unsigned int num);
+		void						setSize(unsigned int num);
 		void						setTopicAdminOnly(bool b);
 		void						setIsInvitedOnly(bool b);
 
 		void						addMember(User* user);
+		void						addOperator(User* user);
 		void						removeMember(User& user, const std::string& server_name);
-
+		// void						removeOperator(User& user, const std::string& server_name);
 		bool						hasMode(char m);
 		void						addMode(char m);
 		void						removeMode(char m);
-		std::string					getModes() const;
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

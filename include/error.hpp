@@ -88,6 +88,11 @@ namespace Error {
 		send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
 
+	inline void	CHANNELISFULL(const User& user, const Channel& channel) {
+		const std::string nick = user.getNickname().empty() ? "*" : user.getNickname();
+		const std::string msg = nick + " " + channel.getName() + " :Cannot join channel (+l)" + "\r\n";
+		send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
+	}
 
 
 	//================================COMMON ERRORS=======================================
