@@ -1,12 +1,18 @@
 #include "../include/Server.hpp"
 
 void Server::parse(User& user, std::string buff) {
+	std::cout << "DEBUG: parse() started for user: " << user.getNickname() << std::endl;
+    
 	std::istringstream iss(buff);
 	std::string line;
 
 	if(user.getState() == WAITING_AUTH)
 	{
+		 std::cout << "DEBUG: User in WAITING_AUTH state" << std::endl;
+    
 		int auth_res = authenticateParser(user, buff);
+		std::cout << "DEBUG: authenticateParser returned: " << auth_res << std::endl;
+        
 		if(auth_res == 0)
 		{
 			user.setState(VERIFIED);
@@ -14,28 +20,42 @@ void Server::parse(User& user, std::string buff) {
 		}
 		else if(auth_res == -1)
 		{
+			std::cout << "DEBUG: Authentication failed, cleaning up" << std::endl;
+
 			sendWrongPassword(user);
 			// server::handleQuit(*this, )
-			close(user.getPoll().fd);
+			int fd = user.getPoll().fd;
+
+			//close(user.getPoll().fd);
 			for(size_t i = 0; i < poll_fds.size(); ++i)
 			{
-				if(poll_fds[i].fd == user.getPoll().fd)
+				if(poll_fds[i].fd == fd)
 				{
 					poll_fds.erase(poll_fds.begin() + i);
 					break;
 				}
 			}
-			_users.erase(user.getPoll().fd);
+			close(fd);
+			_users.erase(fd);
+			return;
 		}
+		std::cout << "DEBUG: parse() authentication complete" << std::endl;
+ 
 		return;
 	}
 
 	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
+	{
+   std::cout << "DEBUG: User not verified/registered, returning" << std::endl;
+   
 		return;
+	}
 	
+	 std::cout << "DEBUG: Processing verified user messages" << std::endl;
+
 	server::printUsers(_users);
 	while (std::getline(iss, line)) {
-        // std::cout << "Line: '" << line << "'" << std::endl;
+         std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.find("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.find("JOIN #")) {
@@ -60,6 +80,7 @@ void Server::parse(User& user, std::string buff) {
 			Server::channelMode(&user, line.substr(6));
 		}
 	}
+	 std::cout << "DEBUG: parse() completed successfully" << std::endl;
 }
 
 std::string Server::authenticateNickname(User &user, std::string line) {

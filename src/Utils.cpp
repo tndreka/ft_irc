@@ -246,7 +246,7 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 		if (recepient)
 			user::sendMsg(sender, *recepient, pair.second);
 		else {
-			Error::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
+			Error::NOSUCHCHANNEL(&sender, server.getName(), pair.first);
 		}
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/28 19:06:52 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/28 21:07:08 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,25 +312,50 @@ void Server::handle_new_host()
 
 void Server::handle_messages(size_t index)
 {
+	if (index >= poll_fds.size())
+	{
+		std::cout << "DEBUG: Invalid index" << index << std::endl;
+		return;
+	}	
+	int fd = poll_fds[index].fd;
 	User *user = _users[poll_fds[index].fd];
+	if(!user)
+	{
+		std::cout << "DEBUG: User not found" << fd << std::endl;
+		return;
+	}
+	std::cout << "DEBUG: Proccessing user" << user->getNickname() << std::endl;
+		
 	memset(buff, 0, MAX_BUFF);
 	bytes_received = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
 	if (bytes_received <= 0) {
-		std::cout << "Client " << user->getPoll().fd << "(" << user->getHostname() << ") disconnected" << std::endl;
-		close(user->getPoll().fd);
+		std::cout << "Client " << fd << "(" << user->getHostname() << ") disconnected" << std::endl;
+		close(fd);
 		poll_fds.erase(poll_fds.begin() + index);
-    	_users.erase(user->getPoll().fd);
+    	_users.erase(fd);
 		delete user;
 		return;
 	}
 	buff[bytes_received] = '\0';
+	if (_users.find(fd) == _users.end())
+	{
+		std::cout << "DEBUG: User deleted during parsing" <<std::endl;
+		return;
+	}
+	std::cout << "DEBUG: calling parser for user:" << user->getNickname() << std::endl;
+		
 	Server::parse(*user, buff);
+	std::cout << "DEBUG: XXXXX parser complete for user:" << user->getNickname() << std::endl;
+		
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
+	if (index >= poll_fds.size())
+		return;
 	int fd = poll_fds[index].fd;
 	User *user = _users[fd];
-	
+	if(!user)
+		return;
 	std::cout << "Client " << fd << "(" << user->getHostname() << ") error/hungup " << std::endl;
 	close(fd);
 	
@@ -358,26 +383,84 @@ bool Server::init_Server() {
 	return true;
 }
 
+// void Server::run_Server() {
+// 	while (!signal_flag) {
+// 		if (init_poll() == false)
+// 			break;
+// 		for (size_t i = 0; i < poll_fds.size(); i++) {
+// 			event_check(i);
+// 			if ((client_hungup || err) && !is_listening) {
+// 				handle_disconn_err_hungup(i);
+// 				break;
+// 				//i--;
+// 			}
+// 			if (incoming_data) {
+// 				if (is_listening)
+// 				{
+// 					handle_new_host();
+// 					break;
+// 				}
+// 				else {
+// 					handle_messages(i);
+// 					break;
+// 					//poll_fds[i].revents = 0;
+// 					//i--;
+// 					// server::printChannels(_channels);
+// 				}
+// 			}
+// 		}
+// 	}
+// 	clearChannels();
+// 	clearUsers();
+// 	server::printChannels(_channels);
+// 	server::printUsers(_users);
+			
+// }
+
+
 void Server::run_Server() {
 	while (!signal_flag) {
 		if (init_poll() == false)
 			break;
 		for (size_t i = 0; i < poll_fds.size(); i++) {
 			event_check(i);
-			if (incoming_data) {
-				if (is_listening)
-					handle_new_host();
-				else {
+			 if (incoming_data || client_hungup || err) {
+                std::cout << "DEBUG: fd=" << poll_fds[i].fd 
+                         << " listening=" << is_listening
+                         << " incoming=" << incoming_data 
+                         << " hungup=" << client_hungup 
+                         << " err=" << err << std::endl;
+            }
+			if (incoming_data && is_listening)
+			{
+				std::cout << "DEBUG: Handling new connection" << std::endl;
+				handle_new_host();
+					break;
+			}
+			
+			else if ((client_hungup || err) && !is_listening) {
+				          std::cout << "DEBUG: Handling disconnect for fd=" << poll_fds[i].fd << std::endl;
+				handle_disconn_err_hungup(i);
+				break;
+				//i--;
+			}
+			//if (incoming_data) {
+				// if (is_listening)
+				// {
+				// 	handle_new_host();
+				// 	break;
+				// }
+			else if (incoming_data && !is_listening)
+			{
+				   std::cout << "DEBUG: Handling message for fd=" << poll_fds[i].fd << std::endl;
+                    // handle_messages(i);
 					handle_messages(i);
-					poll_fds[i].revents = 0;
-					i--;
+					break;
+					//poll_fds[i].revents = 0;
+					//i--;
 					// server::printChannels(_channels);
 				}
-			}
-			if ((client_hungup || err) && !is_listening) {
-				handle_disconn_err_hungup(i);
-				i--;
-			}
+			//}
 		}
 	}
 	clearChannels();
