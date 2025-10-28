@@ -2,6 +2,7 @@
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
 #include "../include/Server.hpp"
+#include <string>
 
 /****************************************************
 *						SERVER						*
@@ -170,6 +171,11 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 		if (channel->getMembers().size() >= channel->getSize()) {
 			std::cout << "Channel '" << channel->getName() << "' already full!" << std::endl;
 			Error::CHANNELISFULL(*user, *channel);
+			continue;
+		}
+
+		if (!channel->getPassword().empty() && channel->getPassword() != it->second) {
+			Error::NOCREDENTIALS(user, server.getName());
 			continue;
 		}
 
@@ -423,6 +429,7 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
 
 	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it) {
 		send(it->first, (prefix + postfix).c_str(), (prefix + postfix).size(), 0);
+		
 		if (it->first == user.getPoll().fd) {
 			prefix = ":" + server_name + " PRIVMSG #" + channel.getName();
 			std::string msg = prefix + " : [Users #" + channel.getName() + "] ";
@@ -430,7 +437,7 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
 				msg += "[" + it->second->getNickname() + "] ";
 			msg += postfix;
 			send(it->first, msg.c_str(), msg.size(), 0);
-			// TODO +Topic
+			channel::sendTopic(server_name, &user, &channel);
 		}
 	}
 }
@@ -470,6 +477,18 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
 	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it) {
 		if (it->first != sender.getPoll().fd)
 			send(it->first, full_msg.c_str(), full_msg.size(), 0);
+	}
+}
+
+void	channel::sendTopic(const std::string&server, const User* user, const Channel* channel) {
+	if (!channel->getTopic().empty()) {
+		std::string topicMsg = ":" + server + " 332 " + user->getNickname() + " " + channel->getName() +
+			" :" + channel->getTopic() + "\r\n";
+		send(user->getPoll().fd, topicMsg.c_str(), topicMsg.size(), 0);
+	} else {
+		std::string noTopic = ":" + server + " 331 " + user->getNickname() + " " + channel->getName() +
+			" :No topic is set\r\n";
+		send(user->getPoll().fd, noTopic.c_str(), noTopic.size(), 0);
 	}
 }
 

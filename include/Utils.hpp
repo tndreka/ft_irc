@@ -32,6 +32,7 @@ namespace channel {
 	void		welcomeUser(std::string server_name, Channel& channel, User& user);
 	void		goodbyeUser(Channel& channel, User& user);
 	void		sendMsg(Channel& channel, User& user, const std::string& msg);
+	void		sendTopic(const std::string&server, const User* user, const Channel* channel);
 };
 
 namespace user {
