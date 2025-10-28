@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/28 21:07:08 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/10/28 22:48:41 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -417,6 +417,7 @@ bool Server::init_Server() {
 			
 // }
 
+//to do clean up ,signals
 
 void Server::run_Server() {
 	while (!signal_flag) {
