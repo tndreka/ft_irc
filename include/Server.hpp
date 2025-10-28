@@ -44,7 +44,7 @@ extern volatile sig_atomic_t signal_flag;
 #include "error.hpp"
 
 class Server {
-    protected:
+    private:
         std::string             _name;
         std::string             _password;
         std::map<int, User*>    _users;

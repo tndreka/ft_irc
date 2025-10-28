@@ -118,11 +118,12 @@ static std::map<std::string, std::string> parseJoin(const std::string& line) {
 	std::string command;
 	std::string key_list_str;
 
+	// TODO authenticate channel
 	if (!(iss >> command) || command != "JOIN")
 		return (result);
 	if (!(iss >> command))
 		return (result);
-	iss >> key_list_str; 
+	iss >> key_list_str;
 	std::vector<std::string> channels = split_comma_list(command, true);
 	std::vector<std::string> keys;
 	if (!key_list_str.empty())
@@ -154,20 +155,23 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 
 	for (std::map<std::string, std::string>::const_iterator it = channel_map.begin(); it != channel_map.end(); ++it) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), it->first);
-		if (channel::isAlreadyExisting(server.getChannels(), (*it).first)) {
-			if (!user::isAlreadyConnected(*channel, *user)) {
-				channel->addMember(user);
-				channel::welcomeUser(server.getName(), *channel, *user);
-				std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
-			}
-			else
-				std::cout << "'" << user->getNickname() << "' already connected to " << channel->getName() << std::endl;
-		} 
-		else {
+
+		if (!channel::isAlreadyExisting(server.getChannels(), (*it).first)) {
 			Channel* new_channel = channel::create(user, *it);
 			server.addChannel(new_channel);
 			channel::welcomeUser(server.getName(), *new_channel, *user);
+			continue;
 		}
+
+		if (user::isAlreadyConnected(*channel, *user)) {
+			std::cout << "'" << user->getNickname() << "' already connected to " << channel->getName() << std::endl;
+			Error::USERONCHANNEL(user, server.getName(), user->getNickname(), channel->getName());
+			continue;
+		}
+
+		channel->addMember(user);
+		channel::welcomeUser(server.getName(), *channel, *user);
+		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 	}
 	// server::printChannels(server.getChannels());
 }
@@ -187,20 +191,25 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 		std::cout << "'" << *it << "' ";
 	std::cout << std::endl;
 
+
+	//TODO handle auth
 	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
 		if (!channel::isAlreadyExisting(server.getChannels(), *it)) {
 			std::cout << "The channel doesn't exist!" << std::endl;
+			Error::NOSUCHCHANNEL(user, server.getName(), channel->getName());
 			continue;
 		}
-		if (!user::isAlreadyConnected(*channel, *user))
+		if (!user::isAlreadyConnected(*channel, *user)) {
 			std::cout << "'" << user->getNickname() << "' is not connected to any channels named '" << *it << "'!" << std::endl; 
-		else {
-			channel::goodbyeUser(*channel, *user);
-			channel->removeMember(*user, server.getName());
-			if (channel->getMembers().empty())
-				server.deleteChannel(user, *it);
+			Error::NOTONCHANNEL(user, server.getName(), channel->getName());
+			continue;
 		}
+
+		channel::goodbyeUser(*channel, *user);
+		channel->removeMember(*user, server.getName());
+		if (channel->getMembers().empty())
+			server.deleteChannel(user, *it);
 	}
 }
 
@@ -217,13 +226,17 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 	const std::pair<std::string, std::string>	pair = parsePrivMsg(user_input);
 	Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
 
+	
+
 	if (channel)
 		channel::sendMsg(*channel, sender, pair.second);
 	else {
 		User* recepient = server::getUserFromList(server.getUsers(), pair.first);
 		if (recepient)
 			user::sendMsg(sender, *recepient, pair.second);
-		//else error: invalid user
+		else {
+			Error::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
+		}
 	}
 }
 
@@ -389,6 +402,7 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
 				msg += "[" + it->second->getNickname() + "] ";
 			msg += postfix;
 			send(it->first, msg.c_str(), msg.size(), 0);
+			// TODO +Topic
 		}
 	}
 }
@@ -416,7 +430,7 @@ void	channel::goodbyeUser(Channel& channel, User& user) {
  * 
  * @param channel The channel to receive the messages.
  * @param sender The user that sends the message.
- * @param msg The message to be sent.
+ * @param msg The message to be sent.werty You're not channel operator
  * 
  */
 void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {

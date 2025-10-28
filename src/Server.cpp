@@ -256,75 +256,62 @@ TIMEOUT: 0 (if timeout occurred)
 ERROR: -1
 */
 bool Server::init_poll() {
-  if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
-    std::cerr << "" << std::endl;
-    return false;
-  }
-  return true;
+	if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
+		std::cerr << "" << std::endl;
+		return false;
+	}
+	return true;
 }
 
 /*
 		=== EVENTS ===
 */
 void Server::event_state() {
-  incoming_data = false;
-  client_hungup = false;
-  err = false;
-  is_listening = false;
+	incoming_data = false;
+	client_hungup = false;
+	err = false;
+	is_listening = false;
 }
 
 void Server::event_check(size_t index) {
-  // flags
-  	event_state();
+	event_state();
 
-  if (poll_fds[index].revents & POLLIN)
-    incoming_data = true;
-  if (poll_fds[index].revents & POLLHUP)
-    client_hungup = true;
-  if (poll_fds[index].revents & POLLERR)
-    err = true;
-  if (poll_fds[index].fd == listening)
-    is_listening = true;
+	if (poll_fds[index].revents & POLLIN)
+		incoming_data = true;
+	if (poll_fds[index].revents & POLLHUP)
+		client_hungup = true;
+	if (poll_fds[index].revents & POLLERR)
+		err = true;
+	if (poll_fds[index].fd == listening)
+		is_listening = true;
 }
 
 void Server::handle_new_host()
 {
 	clientSize = sizeof(client);
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
-	if (new_connection != -1) {
-		if (fcntl(new_connection, F_SETFL, O_NONBLOCK) != -1) {
-			User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
-			_users[new_connection] = user;
-			poll_fds.push_back(user->getPoll());
-			user->setState(WAITING_AUTH); // waiting state
-			Server::sendCapabilities(*user);
-			//  int auth_res = Server::authenticateParser(*user);
-					//if (Server::authenticateParser(*user) == -1)
-			// if(auth_res == -1)
-			// {
-					// 	// poll_fds.pop_back();
-					// 	Server::closeConnection(user->getPoll().fd);
-					// 	return;
-					// }
-			// else if(auth_res == 1){
-			//   return; //need more data client didnt send everything yet we keep connection open
-			// }
-			// user->setState(VERIFIED);
-			// Server::sendWelcome(*user);
-		}
-		else {
-			std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
-			close(new_connection);
-		}
-	}
-	else {
+
+	if (new_connection == -1) {
 		std::cerr << "Failed accepting new connections" << std::endl;
 		//close(new_connection);
+		return;
 	}
+
+	if (fcntl(new_connection, F_SETFL, O_NONBLOCK) == -1) {
+		std::cerr << "handle_new_host() making new_connection non-blocking failed" << std::endl;
+		close(new_connection);
+		return;
+	}
+
+	User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
+	_users[new_connection] = user;
+	poll_fds.push_back(user->getPoll());
+	user->setState(WAITING_AUTH);
+	Server::sendCapabilities(*user);
 }
 
 void Server::handle_messages(size_t index)
-{ 
+{
 	User *user = _users[poll_fds[index].fd];
 	memset(buff, 0, MAX_BUFF);
 	bytes_received = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
@@ -336,9 +323,7 @@ void Server::handle_messages(size_t index)
 		delete user;
 	}
 	buff[bytes_received] = '\0';
-	// std::cout << "Buff: '" << buff << "'" << std::endl;
 	Server::parse(*user, buff);
-	// server::printUsers(_users);
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

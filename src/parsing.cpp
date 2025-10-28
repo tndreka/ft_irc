@@ -1,14 +1,9 @@
 #include "../include/Server.hpp"
 
-/**
- * @note why rfind and not find: /join '#ch1' ????
- */
 void Server::parse(User& user, std::string buff) {
 	std::istringstream iss(buff);
 	std::string line;
 
-	// std::cout << user << std::endl;
-	// std::cout << user.getUsername() + ": "<< "'" + buff + "'"<< std::endl;
 	if(user.getState() == WAITING_AUTH)
 	{
 		int auth_res = authenticateParser(user, buff);
@@ -20,8 +15,7 @@ void Server::parse(User& user, std::string buff) {
 		else if(auth_res == -1)
 		{
 			sendWrongPassword(user);
-
-			// closeConnection(user.getPoll().fd);
+			// server::handleQuit(*this, )
 			close(user.getPoll().fd);
 			for(size_t i = 0; i < poll_fds.size(); ++i)
 			{
@@ -32,39 +26,36 @@ void Server::parse(User& user, std::string buff) {
 				}
 			}
 			_users.erase(user.getPoll().fd);
-			return;
 		}
 		return;
 	}
+
 	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
 		return;
 	
 	while (std::getline(iss, line)) {
         // std::cout << "Line: '" << line << "'" << std::endl;
-		if (!line.rfind("PING ", 0)) {
+		if (!line.find("PING ", 0)) {
 			Server::sendPong(&user, line);
-		} else if (!line.rfind("JOIN #")) {
+		} else if (!line.find("JOIN #")) {
 			server::handleJoin(*this, &user, line);
-        } else if (!line.rfind("PART ")) {
+        } else if (!line.find("PART ")) {
 			server::handlePart(*this, &user, line);
-		} else if (!line.rfind("NICK ")) {
+		} else if (!line.find("NICK ")) {
 			Server::cmdNick(&user, line);
-		} else if (!line.rfind("userhost ")) {
-			// Server::cmdUser(&user, line); // Maybe change userName
-			return;
-		} else if (!line.rfind("WHOIS ")) {
+		} else if (!line.find("WHOIS ")) {
 			Server::cmdWhois(&user, line);
-		} else if (!line.rfind("OPER ")) {
+		} else if (!line.find("OPER ")) {
 			Server::cmdOper(&user, line);
-		} else if (!line.rfind("KICK ")) {
+		} else if (!line.find("KICK ")) {
 			Server::channelKick(&user, line.substr(5));
-		} else if (!line.rfind("PRIVMSG ")) {
+		} else if (!line.find("PRIVMSG ")) {
             server::handlePrivMsg(*this, user, line);
-        } else if (!line.rfind("QUIT")) {
+        } else if (!line.find("QUIT")) {
             server::handleQuit(*this, user);
-        } else if (!line.rfind("TOPIC #")) {
+        } else if (!line.find("TOPIC #")) {
 			Server::channelTopic(&user, line.substr(7));
-		} else if (!line.rfind("MODE #")) {
+		} else if (!line.find("MODE #")) {
 			Server::channelMode(&user, line.substr(6));
 		}
 	}
@@ -78,19 +69,18 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 	iss >> arg >> nickname;
 
 
-	// std::cout << arg << nickname << std::endl;
 	if (nickname.empty() || nickname.length() > 32) {
-		// Error msg
+		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 	if (nickname[0] > '}' || nickname[0] < 'A') {
-		//Error
+		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 
-	for (size_t i = 1; nickname[i]; ++i) {
+	for (size_t i = 1; i < nickname.size(); ++i) {
 		if ((nickname[i] > '}' || nickname[i] < 'A') && (nickname[i] > '9' || nickname[i] < '0')) {
-			//Error 
+			Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 			return "";
 		}
 	}
@@ -107,16 +97,6 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 
 int Server::authenticateParser(User& user, std::string buff) {
 
-	// char buffer[MAX_BUFF];
-	// memset(buffer, 0, MAX_BUFF);
-	// int bytes_received = recv(user.getPoll().fd, buffer, MAX_BUFF - 1, 0);
-	// if (bytes_received <= 0)
-	// 	return -1;
-	// if(bytes_received == 0){
-	// 	return -1;
-	// }
-	//buffer[bytes_received] = '\0';
-	//std::string msg(buffer);
 	std::istringstream iss(buff);
 	std::string line;
 	std::string pass;
@@ -125,19 +105,18 @@ int Server::authenticateParser(User& user, std::string buff) {
 	while (std::getline(iss, line)) {
 		if (!line.empty() && line[line.size() - 1] == '\r')
 			line.erase(line.size() - 1);
-		if (line.rfind("PASS ") == 0) {
+		if (line.find("PASS ") == 0) {
 			pass = line.substr(5);
 			if (pass != _password) {
-				Server::sendWrongPassword(user);
 				return -1;
 			}
 			user.setPassVerified(true);
-		} else if (line.rfind("NICK ", 0) == 0) {
+		} else if (line.find("NICK ", 0) == 0) {
 			user.setNickname(authenticateNickname(user, line));
-		} else if (line.rfind("USER ", 0) == 0) {
+		} else if (line.find("USER ", 0) == 0) {
 			std::istringstream issUser(line.substr(5));
-			std::string username, hostname, reallarg, firstName, lastName;
-			issUser >> username >> hostname >> reallarg >> firstName >> lastName;
+			std::string username, hostname, realarg, firstName, lastName;
+			issUser >> username >> hostname >> realarg >> firstName >> lastName;
 			
 			if (firstName[0] == ':')
 				firstName = firstName.substr(1);
@@ -147,7 +126,6 @@ int Server::authenticateParser(User& user, std::string buff) {
 	}
 	if (!user.isPassVerified() || user.getNickname().empty() || user.getUsername().empty())
 		return 1;
-//	std::cout<< "=====================> yep\n";
 	user.setState(REGISTERED);
 	return 0;
 }

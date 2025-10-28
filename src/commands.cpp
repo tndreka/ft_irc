@@ -26,6 +26,8 @@ void Server::channelMode(const User *user, const std::string& line) {
 		return;
 	}
 
+	//TODO needs to be in the channel
+
 	std::cout << "this is the mode requested: " << modes<< std::endl;
 
 	if (modes[0] != '+' && modes[0] != '-') {
@@ -102,7 +104,7 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		return;
 	}
 
-	if (c->hasMode('t') && !u->getIsAdmin()) {
+	if (c->hasMode('t') && !u->getIsAdmin() || ()) {
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
