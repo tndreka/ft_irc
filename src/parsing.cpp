@@ -35,7 +35,8 @@ void Server::parse(User& user, std::string buff) {
 	
 	server::printUsers(_users);
 	while (std::getline(iss, line)) {
-        // std::cout << "Line: '" << line << "'" << std::endl;
+		line.erase(line.find_last_not_of("\r\n") + 1);
+        std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.find("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.find("JOIN #")) {

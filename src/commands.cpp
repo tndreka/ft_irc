@@ -106,24 +106,20 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		Error::NOSUCHCHANNEL(u, _name, "#" + channel);
 		return;
 	}
-
 	if (!user::isAlreadyConnected(*c, *u)) {
 		Error::NOTONCHANNEL(u, _name, channel);
 		return;
 	}
-
 	if (c->hasMode('t') && !u->getIsAdmin()) { // TODO || isChannelOper
 		Error::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
-
 	if (!topic.empty() && topic[0] == ' ') {
 		topic.erase(0 , 1);
 	}
 	if (!topic.empty() && topic[0] == ':') {
 		topic.erase(0 , 1);
 	}
-
 	if (!topic.empty()) {
 		c->setTopic(topic);
 		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"

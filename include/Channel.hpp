@@ -18,7 +18,7 @@ class Channel {
 	private:
 		std::string				_name;
 		std::map<int, User*>	_members;
-		std::map<int, User*>	_operators; // delete pointer in quit???
+		std::map<int, User*>	_operators; // delete pointer in leave???
 		unsigned int			_size;
 		std::string				_password;
 		std::string				_topic;

@@ -12,6 +12,12 @@ class User;
 class Channel;
 class Server;
 
+namespace PROTOCOL {
+	const std::string RPL_TOPIC = " 332 ";
+	const std::string RPL_NAMREPLY = " 353 ";
+	const std::string RPL_ENDOFNAMES = " 366 ";
+};
+
 namespace server {
 	void		handleJoin(Server& server, User* user, std::string user_input);
 	void		handlePart(Server& server, User* user, std::string user_input);
@@ -32,7 +38,8 @@ namespace channel {
 	void		welcomeUser(std::string server_name, Channel& channel, User& user);
 	void		goodbyeUser(Channel& channel, User& user);
 	void		sendMsg(Channel& channel, User& user, const std::string& msg);
-	void		sendTopic(const std::string&server, const User* user, const Channel* channel);
+	void		sendTopic(const std::string& server_name, const Channel& channel, const User& user);
+	void		sendNameList(const std::string& server_name, const Channel& channel, const User& user);
 };
 
 namespace user {
