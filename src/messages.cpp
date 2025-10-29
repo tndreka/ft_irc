@@ -1,10 +1,10 @@
 #include "../include/Server.hpp"
 
 void Server::broadcastChannel(const Channel& channel, const std::string& msg) {
-	std::map<int, User*> usersInChannel = channel.getMembers();
+	std::map<User*, bool> usersInChannel = channel.getMembers();
 
-	for (std::map<int, User*>::iterator it = usersInChannel.begin(); it != usersInChannel.end(); ++it) {
-		send(it->first, msg.c_str(), msg.length(), 0);
+	for (std::map<User*, bool>::iterator it = usersInChannel.begin(); it != usersInChannel.end(); ++it) {
+		send(it->first->getPoll().fd, msg.c_str(), msg.length(), 0);
 	}
 }
 

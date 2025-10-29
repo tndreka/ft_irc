@@ -157,8 +157,10 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), it->first);
 
 		if (!channel::isAlreadyExisting(server.getChannels(), (*it).first)) {
-			Channel* new_channel = channel::create(user, *it);
+			Channel* new_channel = new Channel(it->first, it->second);
+			new_channel->addMember(user, true);
 			server.addChannel(new_channel);
+			// what happens with the user's operator functionality ???
 			channel::welcomeUser(server.getName(), *new_channel, *user);
 			continue;
 		}
@@ -176,7 +178,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			Error::NOCREDENTIALS(user, server.getName());
 			continue;
 		}
-		channel->addMember(user);
+		channel->addMember(user, false);
 		channel::welcomeUser(server.getName(), *channel, *user);
 		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 	}
@@ -235,7 +237,6 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 	Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
 
 	
-
 	if (channel)
 		channel::sendMsg(*channel, sender, pair.second);
 	else {
@@ -290,15 +291,15 @@ void    server::printChannels(const std::vector<Channel*>& channels) {
  * @note QUIT :leaving (disconnect)
  * @note Client 5(127.0.0.1) disconnected (/disconnect)
  */
-void	server::printUsers(std::map<int, User*>& users) {
+void	server::printUsers(const std::map<int, User*>& users) {
 	if (users.empty())
 		return ((void)(std::cout << "No active users!" << std::endl));
 	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
 	std::cout << "User list: ";
-    for (std::map<int, User*>::iterator it = users.begin(); it != users.end(); ++it) {
+    for (std::map<int, User*>::const_iterator it = users.begin(); it != users.end(); ++it) {
 		if (it != users.begin())
 			std::cout << ", ";
-		std::cout << "{" << it->first << ", '" << it->second->getNickname() << "'}";
+		std::cout << "{" << it->second->getPoll().fd << ", '" << it->second->getNickname() << "'}";
     }
     std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
 }
@@ -359,36 +360,20 @@ bool	channel::isAlreadyExisting(const std::vector<Channel*>& channels, const std
 }
 
 /**
- * @brief Create a new channel and adds the user to its members.
- * 
- * @note pair = <channel_name>,<password>.
- */
-Channel*	channel::create(User* user, std::pair<std::string, std::string> pair) {
-	Channel*	channel = new Channel(pair.first, pair.second);
-	channel->addMember(user);
-	channel->addOperator(user);
-	for (std::map<int, User*>::const_iterator it = channel->getMembers().begin(); it != channel->getMembers().end(); ++it) {
-		std::string msg = ":" + user->getNickname() + " JOIN :#" + channel->getName() + "\r\n";
-		send(it->first, msg.c_str(), msg.size(), 0);
-	}
-	return (channel);
-}
-
-/**
  * @brief Print a channel's members' nickname.
  * 
  * @param channel The channel's for its users to be printed.
  */
-void	channel::printMembers(Channel& channel) {
-	std::map<int, User*> map = channel.getMembers();
+void	channel::printMembers(const Channel& channel) {
+	const std::map<User*, bool> map = channel.getMembers();
 	
 	if (map.empty())
 		return ((void)(std::cout << "No members in channel '" << channel.getName() << "'!" << std::endl));
 	std::cout << "'" << channel.getName() << "' members: ";
-	for (std::map<int, User*>::const_iterator it = map.begin(); it != map.end(); ++it) {
+	for (std::map<User*, bool>::const_iterator it = map.begin(); it != map.end(); ++it) {
 		if (it != map.begin())
 			std::cout << ", ";
-		std::cout << "'" << (*it).second->getNickname() << "' (" << (*it).second->getPoll().fd << ")";
+		std::cout << "'" << it->first->getNickname() << "' (" << it->first->getPoll().fd << ")";
 	}
 	std::cout << std::endl;
 }
@@ -398,16 +383,18 @@ void	channel::printMembers(Channel& channel) {
  * 
  * @param channel The channel's for its users to be printed.
  */
-void	channel::printOperators(Channel& channel) {
-	std::map<int, User*> map = channel.getOperators();
+void	channel::printOperators(const Channel& channel) {
+	const std::map<User*, bool> members = channel.getMembers();
 	
-	if (map.empty())
+	if (members.empty())
 		return ((void)(std::cout << "No operators in the channel!" << std::endl));
 	std::cout << "'" << channel.getName() << "' operators: ";
-	for (std::map<int, User*>::const_iterator it = map.begin(); it != map.end(); ++it) {
-		if (it != map.begin())
+	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it) {
+		if (!it->second)
+			continue;
+		if (it != members.begin())
 			std::cout << ", ";
-		std::cout << "'" << (*it).second->getNickname();
+		std::cout << "'" << it->first->getNickname();
 	}
 	std::cout << std::endl;
 }
@@ -419,17 +406,17 @@ void	channel::printOperators(Channel& channel) {
  * @param channel The newly created channel.
  * @param user The user entered the new channel.
  */
-void	channel::welcomeUser(std::string server_name, Channel& channel, User& user) {
+void	channel::welcomeUser(const std::string& server_name, const Channel& channel, const User& user) {
 	const std::string			prefix = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname();
 	const std::string			postfix = "\r\n";
-	const std::map<int, User*>	members = channel.getMembers();
+	const std::map<User*, bool>	members = channel.getMembers();
 	
-	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it) {
+	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it) {
 		std::string msg = prefix + " JOIN :#" + channel.getName() + postfix;
-		send(it->first, msg.c_str(), msg.size(), 0);
-		channel::sendTopic(server_name, channel, user);
-		channel::sendNameList(server_name, channel, user);
+		send(it->first->getPoll().fd, msg.c_str(), msg.size(), 0);
 	}
+	channel::sendTopic(server_name, channel, user);
+	channel::sendNameList(server_name, channel, user);
 }
 
 /**
@@ -438,12 +425,15 @@ void	channel::welcomeUser(std::string server_name, Channel& channel, User& user)
  * @param channel The leaving channel.
  * @param user The user to leave the channel.
  */
-void	channel::goodbyeUser(Channel& channel, User& user) {
-	std::string				msg = ":" + user.getNickname() + " PART #" + channel.getName() + "\r\n";
-	std::map<int, User*>	members = channel.getMembers();
-
-	for (std::map<int, User*>::iterator it = members.begin(); it != members.end(); ++it)
-		send(it->first, msg.c_str(), msg.size(), 0);
+void	channel::goodbyeUser(const Channel& channel, const User& user) {
+	const std::map<User*, bool>	members = channel.getMembers();
+	const std::string			prefix = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname();
+	const std::string			info = " PART #" + channel.getName() + " :Goodbye everybody!";
+	const std::string			postfix = "\r\n";
+	const std::string 			msg = prefix + info + postfix;
+	
+	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it)
+		send(it->first->getPoll().fd, msg.c_str(), msg.size(), 0);
 }
 
 
@@ -459,11 +449,11 @@ void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
 	const std::string			prefix = ":" + sender.getNickname() + " PRIVMSG #" + channel.getName() + " :";
 	const std::string			postfix = "\r\n";
 	const std::string			full_msg = prefix + msg + postfix;
-	const std::map<int, User*>	members = channel.getMembers();
+	const std::map<User*, bool>	members = channel.getMembers();
 
-	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it) {
-		if (it->first != sender.getPoll().fd)
-			send(it->first, full_msg.c_str(), full_msg.size(), 0);
+	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it) {
+		if (it->first->getPoll().fd != sender.getPoll().fd)
+			send(it->first->getPoll().fd, full_msg.c_str(), full_msg.size(), 0);
 	}
 }
 
@@ -474,20 +464,19 @@ void	channel::sendTopic(const std::string& server_name,  const Channel& channel,
 	
 	if (!channel.getTopic().empty()) {
 		std::string msg = prefix + PROTOCOL::RPL_TOPIC + info + channel.getTopic() + postfix;
-		std::cout << "Topic msg: '" << msg << "'" << std::endl;
 		send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
 	}
 }
 
 void	channel::sendNameList(const std::string& server_name, const Channel& channel, const User& user) {
-	const std::map<int, User*> members = channel.getMembers();
+	const std::map<User*, bool> members = channel.getMembers();
 	const std::string	prefix = ":" + server_name;
 	const std::string	info = user.getNickname() + " = #" + channel.getName() + " :";
 	const std::string	postfix = "\r\n";
 	
 	std::string	msg = prefix + PROTOCOL::RPL_NAMREPLY + info;
-	for (std::map<int, User*>::const_iterator it = members.begin(); it != members.end(); ++it)
-		msg += it->second->getNickname() + " ";
+	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it)
+		msg += it->first->getNickname() + " ";
 	msg += postfix;
 	send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
 	msg = prefix + PROTOCOL::RPL_ENDOFNAMES + user.getNickname() + " " + channel.getName() + " :End of /NAMES list" + postfix;
@@ -509,10 +498,10 @@ void	channel::sendNameList(const std::string& server_name, const Channel& channe
  * @return True/False.
  */
 bool	user::isAlreadyConnected(Channel& channel, const User& user) {
-	std::map<int, User*>	members = channel.getMembers();
+	std::map<User*, bool>	members = channel.getMembers();
 
-	for (std::map<int, User*>::const_iterator m_it = members.begin(); m_it != members.end(); ++m_it) {
-		if (user.getPoll().fd == m_it->first)
+	for (std::map<User*, bool>::const_iterator m_it = members.begin(); m_it != members.end(); ++m_it) {
+		if (user.getPoll().fd == m_it->first->getPoll().fd)
 			return (true);
 	}
 	return (false);
