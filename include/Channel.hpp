@@ -33,16 +33,16 @@ class Channel {
 
 		Channel&	operator=(const Channel& other);
 
-		const std::string				getName(void) const;
+		const std::string&				getName(void) const;
+		const std::string&				getTopic() const;
+		const std::string&				getPassword(void) const;
+		std::string						getModes() const;
 		const std::map<User*, bool>&	getMembers(void) const;
-		std::string						getPassword(void) const;
 		bool							getTopicAdminOnly(void) const;
 		bool							getIsInvitedOnly(void) const;
-		std::string						getTopic() const;
-		std::string						getModes() const;
 		unsigned int					getSize(void) const;
 
-			void						setTopic(const std::string& topic);
+		void							setTopic(const std::string& topic);
 		void							setPassword(const std::string& pass);
 		void							setSize(unsigned int num);
 		void							setTopicAdminOnly(bool b);

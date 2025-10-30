@@ -50,11 +50,6 @@ void Server::sendPong(User* user, std::string ping) {
 	send(user->getPoll().fd, pong.c_str(), pong.size(), 0);
 }
 
-void Server::sendQuitMsg(User *user) {
-	std::string quitMsg = ":" + user->getNickname() + "!" + user->getUsername() + "@localhost QUIT :Client exited\r\n";
-	send(user->getPoll().fd, quitMsg.c_str(), quitMsg.size(), 0);
-}
-
 void Server::sendKick(const User* u, const Channel* c, const std::string target, std::string msg) {
 
 	if (!msg.empty() && msg[msg.size() - 1] == '\r') {

@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <sys/socket.h>
+#include <cstdio>
 
 class User;
 class Channel;
@@ -22,7 +23,7 @@ namespace server {
 	void		handleJoin(Server& server, User* user, std::string user_input);
 	void		handlePart(Server& server, User* user, std::string user_input);
 	void		handlePrivMsg(Server& server, User& user, const std::string& user_input);
-	void		handleQuit(Server& server, User& user);
+	void		handleQuit(Server& server, User& user, const std::string& user_input);
 	void		printChannels(const std::vector<Channel*>& channels);
 	void		printUsers(const std::map<int, User*>& users);
 	Channel*	getChannelFromList(const std::vector<Channel*>& channels, std::string name);

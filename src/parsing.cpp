@@ -54,7 +54,7 @@ void Server::parse(User& user, std::string buff) {
 		} else if (!line.find("PRIVMSG ")) {
             server::handlePrivMsg(*this, user, line);
         } else if (!line.find("QUIT")) {
-            server::handleQuit(*this, user);
+            server::handleQuit(*this, user, line);
         } else if (!line.find("TOPIC #")) {
 			Server::channelTopic(&user, line.substr(7));
 		} else if (!line.find("MODE #")) {
@@ -71,24 +71,24 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 
 
 	if (nickname.empty() || nickname.length() > 32) {
-		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+		error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 	if (nickname[0] > '}' || nickname[0] < 'A') {
-		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+		error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 
 	for (size_t i = 1; i < nickname.size(); ++i) {
 		if ((nickname[i] > '}' || nickname[i] < 'A') && (nickname[i] > '9' || nickname[i] < '0')) {
-			Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+			error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 			return "";
 		}
 	}
 
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
 		if (it->second->getNickname() == nickname) {
-			Error::NICKNAMEINUSE(user, _name, nickname);
+			error::registration::NICKNAMEINUSE(user, _name, nickname);
 			return "";
 		}
 	}

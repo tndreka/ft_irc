@@ -2,7 +2,6 @@
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
 #include "../include/Server.hpp"
-#include <string>
 
 /****************************************************
 *						SERVER						*
@@ -160,22 +159,21 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			Channel* new_channel = new Channel(it->first, it->second);
 			new_channel->addMember(user, true);
 			server.addChannel(new_channel);
-			// what happens with the user's operator functionality ???
 			channel::welcomeUser(server.getName(), *new_channel, *user);
 			continue;
 		}
 		if (user::isAlreadyConnected(*channel, *user)) {
 			std::cout << "'" << user->getNickname() << "' already connected to " << channel->getName() << std::endl;
-			Error::USERONCHANNEL(user, server.getName(), user->getNickname(), channel->getName());
+			error::channel::USERONCHANNEL(user, server.getName(), user->getNickname(), channel->getName());
 			continue;
 		}
 		if (channel->getMembers().size() == channel->getSize()) {
 			std::cout << "Channel '" << channel->getName() << "' already full!" << std::endl;
-			Error::CHANNELISFULL(*user, *channel);
+			error::channel::CHANNELISFULL(*user, *channel);
 			continue;
 		}
 		if (!channel->getPassword().empty() && channel->getPassword() != it->second) {
-			Error::NOCREDENTIALS(user, server.getName());
+			error::common::NOCREDENTIALS(user, server.getName());
 			continue;
 		}
 		channel->addMember(user, false);
@@ -206,12 +204,12 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
 		if (!channel::isAlreadyExisting(server.getChannels(), *it)) {
 			std::cout << "The channel doesn't exist!" << std::endl;
-			Error::NOSUCHCHANNEL(user, server.getName(), channel->getName());
+			error::channel::NOSUCHCHANNEL(user, server.getName(), channel->getName());
 			continue;
 		}
 		if (!user::isAlreadyConnected(*channel, *user)) {
 			std::cout << "'" << user->getNickname() << "' is not connected to any channels named '" << *it << "'!" << std::endl; 
-			Error::NOTONCHANNEL(user, server.getName(), channel->getName());
+			error::channel::NOTONCHANNEL(user, server.getName(), channel->getName());
 			continue;
 		}
 
@@ -235,7 +233,6 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 void	server::handlePrivMsg(Server& server, User& sender, const std::string& user_input) {
 	const std::pair<std::string, std::string>	pair = parsePrivMsg(user_input);
 	Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
-
 	
 	if (channel)
 		channel::sendMsg(*channel, sender, pair.second);
@@ -244,7 +241,7 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 		if (recepient)
 			user::sendMsg(sender, *recepient, pair.second);
 		else {
-			Error::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
+			error::channel::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
 		}
 	}
 }
@@ -253,16 +250,20 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
  * @brief Notifies the remaining clients when another user disconnects.
  * 
  * @param server The server's instance.
+ * @param user The quiting user.
+ * @param user_input The user input to be parsed.
  * 
  */
-void	server::handleQuit(Server& server, User& user) {
-	const std::string	msg = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname() + " QUIT\r\n";
-	const std::map<int, User*>& users = server.getUsers();
+void	server::handleQuit(Server& server, User& user, const std::string& user_input) {
+	std::vector<Channel*>	channels = server.getChannels();
 
-	for (std::map<int, User*>::const_iterator it = users.begin(); it != users.end(); ++it) {
-		if (it->first != user.getPoll().fd)
-			send(it->first, msg.c_str(), msg.size(), 0);
+	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+		if (user::isAlreadyConnected(**it, user)) {
+			channel::goodbyeUser(**it, user);
+			(*it)->removeMember(user, server.getName());
+		}
 	}
+	server.removeUser(user.getPoll().fd);
 }
 
 /**
@@ -435,7 +436,6 @@ void	channel::goodbyeUser(const Channel& channel, const User& user) {
 	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it)
 		send(it->first->getPoll().fd, msg.c_str(), msg.size(), 0);
 }
-
 
 /**
  * @brief Send a message to all members in the channel.

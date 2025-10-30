@@ -45,7 +45,7 @@ Channel&	Channel::operator=(const Channel& other) {
 	return (*this);
 };
 
-const std::string	Channel::getName(void) const {
+const std::string&	Channel::getName(void) const {
 	return (_name);
 };
 
@@ -54,7 +54,7 @@ const std::map<User*, bool>&	Channel::getMembers(void) const {
 };
 
 
-std::string	Channel::getPassword(void) const {
+const std::string&	Channel::getPassword(void) const {
 	return (_password);
 }
 
@@ -103,7 +103,7 @@ void	Channel::setIsInvitedOnly(bool b) {
 	_isInviteOnly = b;
 }
 
-std::string	Channel::getTopic() const {
+const std::string&	Channel::getTopic() const {
 	return _topic;
 }
 

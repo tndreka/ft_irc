@@ -87,7 +87,6 @@ class Server {
         void					remove_from_vector(size_t index);
 		bool					isNickInUse (std::string& attemptedNick);
 		bool					isValidNick(std::string& attemptedNick);
-		void					removeUser(int fd);
 		bool					isUserAlreadySigned(User& user);
 		//void closeConnection(int fd);
 
@@ -131,6 +130,7 @@ class Server {
         void							run_Server();
         void                            addChannel(Channel* new_channel);
         void                            deleteChannel(User* user, const std::string& name);
+		void					        removeUser(int fd);
         const std::string&   			getName() const;
         const std::string&		        getPass(void) const;
         const std::map<int, User*>&		getUsers(void) const;
