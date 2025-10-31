@@ -257,6 +257,9 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
  * 
  */
 void	server::handleQuit(Server& server, User& user) {
+	// const std::string		prefix = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname();
+	// const std::string		postfix = ":Client exiting!\r\n";
+	// const std::string		msg = prefix + " QUIT " + postfix;
 	std::vector<Channel*>	channels = server.getChannels();
 
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
@@ -265,6 +268,7 @@ void	server::handleQuit(Server& server, User& user) {
 			(*it)->removeMember(user, server.getName());
 		}
 	}
+	// send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
 	server.removeUser(user.getPoll().fd);
 	// send message to exit server
 }
