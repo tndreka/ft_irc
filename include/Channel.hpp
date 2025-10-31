@@ -48,11 +48,12 @@ class Channel {
 		void							setTopicAdminOnly(bool b);
 		void							setIsInvitedOnly(bool b);
 
-		void							addMember(User* user, bool value);
+		void							addMember(User& user, bool value);
 		void							removeMember(User& user, const std::string& server_name);
 		bool							hasMode(char m);
 		void							addMode(char m);
 		void							removeMode(char m);
+		bool							isChannelAdmin(const User& user);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

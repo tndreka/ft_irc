@@ -157,7 +157,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 
 		if (!channel::isAlreadyExisting(server.getChannels(), (*it).first)) {
 			Channel* new_channel = new Channel(it->first, it->second);
-			new_channel->addMember(user, true);
+			new_channel->addMember(*user, true);
 			server.addChannel(new_channel);
 			channel::welcomeUser(server.getName(), *new_channel, *user);
 			continue;
@@ -176,7 +176,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			error::common::NOCREDENTIALS(user, server.getName());
 			continue;
 		}
-		channel->addMember(user, false);
+		channel->addMember(*user, false);
 		channel::welcomeUser(server.getName(), *channel, *user);
 		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 	}

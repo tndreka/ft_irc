@@ -62,8 +62,8 @@ unsigned int  Channel::getSize(void) const {
 	return (_size);
 }
 
-void	Channel::addMember(User* member, bool value) {
-	_members[member] = value;
+void	Channel::addMember(User& member, bool value) {
+	_members[&member] = value;
 };
 
 void	Channel::removeMember(User& member, const std::string& server_name) {
@@ -125,6 +125,14 @@ std::string	Channel::getModes() const {
 		res += *it;
 	}
 	return res;
+}
+
+bool	Channel::isChannelAdmin(const User& user) {
+
+	for (std::map<User*, bool>::const_iterator it = _members.begin(); it != _members.end(); ++it) {
+		return (it->first->getNickname() == user.getNickname() && it->second);
+	}
+	return false;
 }
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj) {

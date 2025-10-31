@@ -343,10 +343,8 @@ void Server::handle_messages(size_t index)
 		return;
 	}
 	std::cout << "DEBUG: calling parser for user:" << user->getNickname() << std::endl;
-		
 	Server::parse(*user, buff);
 	std::cout << "DEBUG: XXXXX parser complete for user:" << user->getNickname() << std::endl;
-		
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {

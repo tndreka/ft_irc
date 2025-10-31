@@ -2,17 +2,17 @@
 
 void Server::parse(User& user, std::string buff) {
 	std::cout << "DEBUG: parse() started for user: " << user.getNickname() << std::endl;
-    
+ 
 	std::istringstream iss(buff);
 	std::string line;
 
 	if(user.getState() == WAITING_AUTH)
 	{
 		 std::cout << "DEBUG: User in WAITING_AUTH state" << std::endl;
-    
+
 		int auth_res = authenticateParser(user, buff);
 		std::cout << "DEBUG: authenticateParser returned: " << auth_res << std::endl;
-        
+ 
 		if(auth_res == 0)
 		{
 			user.setState(VERIFIED);
@@ -47,7 +47,7 @@ void Server::parse(User& user, std::string buff) {
 	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
 	{
    std::cout << "DEBUG: User not verified/registered, returning" << std::endl;
-   
+ 
 		return;
 	}
 	

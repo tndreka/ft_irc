@@ -29,7 +29,7 @@ _ispasswordverified(false)
 	_poll.revents = 0;
 };
 
-User::User(int connection, const std::string hostname) : 
+User::User(int connection, const std::string hostname) :
 _username(""),
 _nickname(""),
 _realname(""),

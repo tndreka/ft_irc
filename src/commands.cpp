@@ -15,15 +15,15 @@ void Server::channelMode(const User *user, const std::string& line) {
 	std::string channel, modes;
 
 	iss >> channel >> modes;
-	
-	if (!user->getIsAdmin()) {
-		error::common::CHANOPRIVSNEEDED(user, _name, channel);
-		return;
-	}
 
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
 		error::channel::NOSUCHCHANNEL(user, _name, "#" + channel);
+		return;
+	}
+	
+	if (!user->getIsAdmin() && !c->isChannelAdmin(*user)) {
+		error::common::CHANOPRIVSNEEDED(user, _name, channel);
 		return;
 	}
 
@@ -110,7 +110,7 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		error::channel::NOTONCHANNEL(u, _name, channel);
 		return;
 	}
-	if (c->hasMode('t') && !u->getIsAdmin()) { // TODO || isChannelOper
+	if (c->hasMode('t') && !u->getIsAdmin() && !c->isChannelAdmin(*u)) {
 		error::common::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
@@ -135,13 +135,18 @@ void Server::channelKick(const User* u, const std::string& line) {
 	iss >> channel >> target;
 	std::getline(iss, msg);
 
-	if (!u->getIsAdmin()) { //TODO is channel oper
+	channel.erase(0,1);
+	Channel *c = server::getChannelFromList(_channels,  channel);
+	if (!c) {
+		error::channel::NOSUCHCHANNEL(u, _name, channel);
+		return;
+	}
+
+	if (!u->getIsAdmin() && !c->isChannelAdmin(*u)) {
 		error::common::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
 
-	channel.erase(0,1);
-	Channel *c = server::getChannelFromList(_channels,  channel);
 	User *t = server::getUserFromList(_users, target);
 
 	if (!user::isAlreadyConnected(*c, *t)) {
