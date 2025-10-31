@@ -44,7 +44,7 @@ extern volatile sig_atomic_t signal_flag;
 #include "error.hpp"
 
 class Server {
-    protected:
+    private:
         std::string             _name;
         std::string             _password;
         std::map<int, User*>    _users;
@@ -115,13 +115,12 @@ class Server {
 		void					channelTopic(const User* u, const std::string& line);
 		void					channelMode(const User *user, const std::string& line);
 
-
     public:
         Server();
         Server(const Server &other);
         ~Server();
  
-        Server							&operator=(const Server &other);
+        Server  &operator=(const Server &other);
 
         bool							set_Port(const std::string &port);
         bool							set_Pass(const std::string &pass);

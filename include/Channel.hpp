@@ -9,8 +9,8 @@
 #include <set>
 #include <string>
 
-#define MAX_SIZE 200
 #define DEFAULT_SIZE 20
+#define MAX_SIZE 200
 
 class User;
 

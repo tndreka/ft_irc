@@ -23,7 +23,7 @@ namespace server {
 	void		handleJoin(Server& server, User* user, std::string user_input);
 	void		handlePart(Server& server, User* user, std::string user_input);
 	void		handlePrivMsg(Server& server, User& user, const std::string& user_input);
-	void		handleQuit(Server& server, User& user, const std::string& user_input);
+	void		handleQuit(Server& server, User& user);
 	void		printChannels(const std::vector<Channel*>& channels);
 	void		printUsers(const std::map<int, User*>& users);
 	Channel*	getChannelFromList(const std::vector<Channel*>& channels, std::string name);
@@ -37,14 +37,14 @@ namespace channel {
 	void		printOperators(const Channel& channel);
 	void		welcomeUser(const std::string& server_name, const Channel& channel, const User& user);
 	void		goodbyeUser(const Channel& channel,const  User& user);
-	void		sendMsg(Channel& channel, User& user, const std::string& msg);
+	void		sendMsg(Channel& channel, User& user, const std::string& msg, bool notice);
 	void		sendTopic(const std::string& server_name, const Channel& channel, const User& user);
 	void		sendNameList(const std::string& server_name, const Channel& channel, const User& user);
 };
 
 namespace user {
 	bool	isAlreadyConnected(Channel& channel, const User& user);
-	void	sendMsg(User& sender, User& recepient, const std::string& msg);
+	void	sendMsg(User& sender, User& recepient, const std::string& msg, bool notice);
 };
 
 #endif

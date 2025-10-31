@@ -51,10 +51,10 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdOper(&user, line);
 		} else if (!line.find("KICK ")) {
 			Server::channelKick(&user, line.substr(5));
-		} else if (!line.find("PRIVMSG ")) {
+		} else if (!line.find("PRIVMSG ") || !line.find("NOTICE ")) {
             server::handlePrivMsg(*this, user, line);
         } else if (!line.find("QUIT")) {
-            server::handleQuit(*this, user, line);
+            server::handleQuit(*this, user);
         } else if (!line.find("TOPIC #")) {
 			Server::channelTopic(&user, line.substr(7));
 		} else if (!line.find("MODE #")) {

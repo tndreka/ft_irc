@@ -82,7 +82,7 @@ static std::pair<std::string, std::string>  parsePrivMsg(const std::string& line
 	std::string                         command;
 	std::string                         target;
 
-	if (!(iss >> command) || command != "PRIVMSG")
+	if (!(iss >> command) || (command != "PRIVMSG" && command != "NOTICE"))
 		return result;
 	if (!(iss >> target))
 		return result;
@@ -232,17 +232,19 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
  */
 void	server::handlePrivMsg(Server& server, User& sender, const std::string& user_input) {
 	const std::pair<std::string, std::string>	pair = parsePrivMsg(user_input);
-	Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
-	
-	if (channel)
-		channel::sendMsg(*channel, sender, pair.second);
+	bool notice = !user_input.find("NOTICE") ? true : false;
+
+	if (user_input.find('#') != std::string::npos) {
+		Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
+		if (channel)
+			channel::sendMsg(*channel, sender, pair.second, notice);
+		else
+			error::channel::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
+	}
 	else {
 		User* recepient = server::getUserFromList(server.getUsers(), pair.first);
 		if (recepient)
-			user::sendMsg(sender, *recepient, pair.second);
-		else {
-			error::channel::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
-		}
+			user::sendMsg(sender, *recepient, pair.second, notice);
 	}
 }
 
@@ -254,7 +256,7 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
  * @param user_input The user input to be parsed.
  * 
  */
-void	server::handleQuit(Server& server, User& user, const std::string& user_input) {
+void	server::handleQuit(Server& server, User& user) {
 	std::vector<Channel*>	channels = server.getChannels();
 
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
@@ -264,6 +266,7 @@ void	server::handleQuit(Server& server, User& user, const std::string& user_inpu
 		}
 	}
 	server.removeUser(user.getPoll().fd);
+	// send message to exit server
 }
 
 /**
@@ -445,8 +448,9 @@ void	channel::goodbyeUser(const Channel& channel, const User& user) {
  * @param msg The message to be sent.werty You're not channel operator
  * 
  */
-void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg) {
-	const std::string			prefix = ":" + sender.getNickname() + " PRIVMSG #" + channel.getName() + " :";
+void	channel::sendMsg(Channel& channel, User& sender, const std::string& msg, bool notice) {
+	const std::string			type = notice ? " NOTICE #" : " PRIVMSG #";
+	const std::string			prefix = ":" + sender.getNickname() + "!" + sender.getUsername() + "@" + sender.getHostname() + type + channel.getName() + " :";
 	const std::string			postfix = "\r\n";
 	const std::string			full_msg = prefix + msg + postfix;
 	const std::map<User*, bool>	members = channel.getMembers();
@@ -507,8 +511,9 @@ bool	user::isAlreadyConnected(Channel& channel, const User& user) {
 	return (false);
 }
 
-void	user::sendMsg(User& sender, User& recepient, const std::string& msg) {
-	const std::string	prefix = ":" + sender.getNickname() + " PRIVMSG " + recepient.getNickname() + " :";
+void	user::sendMsg(User& sender, User& recepient, const std::string& msg, bool notice) {
+	const std::string	type = notice ? " NOTICE " : " PRIVMSG ";
+	const std::string	prefix = ":" + sender.getNickname() + "!" + sender.getUsername() + "@" + sender.getHostname() + type + recepient.getNickname() + " :";
 	const std::string	postfix = "\r\n";
 	const std::string	full_msg = prefix + msg + postfix;
 
