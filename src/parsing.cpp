@@ -55,7 +55,8 @@ void Server::parse(User& user, std::string buff) {
 
 	server::printUsers(_users);
 	while (std::getline(iss, line)) {
-         std::cout << "Line: '" << line << "'" << std::endl;
+		line.erase(line.find_last_not_of("\r\n") + 1);
+        std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.find("PING ", 0)) {
 			Server::sendPong(&user, line);
 		} else if (!line.find("JOIN #")) {
@@ -70,7 +71,7 @@ void Server::parse(User& user, std::string buff) {
 			Server::cmdOper(&user, line);
 		} else if (!line.find("KICK ")) {
 			Server::channelKick(&user, line.substr(5));
-		} else if (!line.find("PRIVMSG ")) {
+		} else if (!line.find("PRIVMSG ") || !line.find("NOTICE ")) {
             server::handlePrivMsg(*this, user, line);
         } else if (!line.find("QUIT")) {
             server::handleQuit(*this, user);
@@ -91,24 +92,24 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 
 
 	if (nickname.empty() || nickname.length() > 32) {
-		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+		error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 	if (nickname[0] > '}' || nickname[0] < 'A') {
-		Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+		error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 		return "";
 	}
 
 	for (size_t i = 1; i < nickname.size(); ++i) {
 		if ((nickname[i] > '}' || nickname[i] < 'A') && (nickname[i] > '9' || nickname[i] < '0')) {
-			Error::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
+			error::registration::ERRONEUSNICKNAME(_name, user.getPoll().fd, nickname);
 			return "";
 		}
 	}
 
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
 		if (it->second->getNickname() == nickname) {
-			Error::NICKNAMEINUSE(user, _name, nickname);
+			error::registration::NICKNAMEINUSE(user, _name, nickname);
 			return "";
 		}
 	}

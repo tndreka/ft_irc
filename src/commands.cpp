@@ -17,25 +17,25 @@ void Server::channelMode(const User *user, const std::string& line) {
 	iss >> channel >> modes;
 	
 	if (!user->getIsAdmin()) {
-		Error::CHANOPRIVSNEEDED(user, _name, channel);
+		error::common::CHANOPRIVSNEEDED(user, _name, channel);
 		return;
 	}
 
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
-		Error::NOSUCHCHANNEL(user, _name, "#" + channel);
+		error::channel::NOSUCHCHANNEL(user, _name, "#" + channel);
 		return;
 	}
 
 	if (!user::isAlreadyConnected(*c, *user)) {
-		Error::NOTONCHANNEL(user, _name, c->getName());
+		error::channel::NOTONCHANNEL(user, _name, c->getName());
 		return;
 	}
 
 	std::cout << "this is the mode requested: " << modes<< std::endl;
 
 	if (modes[0] != '+' && modes[0] != '-') {
-		Error::WRONGMODE(user, _name, '+');
+		error::channel::WRONGMODE(user, _name, '+');
 		return;
 	}
 
@@ -51,7 +51,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 		if (modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') {
 			iss >> param;
 			if (isPositive && param.empty()) {
-				Error::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
+				error::common::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
 				continue;
 			}
 			if (modes[i] == 'k') {
@@ -62,7 +62,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 					return;
 				}
 				if (!isAllDigits(param)) {
-					Error::WRONGMODE(user, _name, 'l');
+					error::channel::WRONGMODE(user, _name, 'l');
 					return;
 				}
 				int num = std::atoi(param.c_str());
@@ -71,7 +71,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 			} else if (modes[i] == 'o') {
 				User* target = server::getUserFromList(_users, param);
 				if (!target || !user::isAlreadyConnected(*c, *target)) {
-					Error::USERNOTINCHANNEL(user, _name, target->getNickname(), c->getName());
+					error::channel::USERNOTINCHANNEL(user, _name, target->getNickname(), c->getName());
 					continue;
 				}
 				target->setAdmin(isPositive);
@@ -84,7 +84,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 		} else if (modes[i] == 'i') {
 			c->setIsInvitedOnly(isPositive ? true : false);
 		} else {
-			Error::WRONGMODE(user, _name, modes[i]);
+			error::channel::WRONGMODE(user, _name, modes[i]);
 			return;
 		}
 		isPositive ? c->addMode(modes[i]) : c->removeMode(modes[i]);
@@ -103,27 +103,23 @@ void Server::channelTopic(const User* u, const std::string& line) {
 
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
-		Error::NOSUCHCHANNEL(u, _name, "#" + channel);
+		error::channel::NOSUCHCHANNEL(u, _name, "#" + channel);
 		return;
 	}
-
 	if (!user::isAlreadyConnected(*c, *u)) {
-		Error::NOTONCHANNEL(u, _name, channel);
+		error::channel::NOTONCHANNEL(u, _name, channel);
 		return;
 	}
-
 	if (c->hasMode('t') && !u->getIsAdmin()) { // TODO || isChannelOper
-		Error::CHANOPRIVSNEEDED(u, _name, channel);
+		error::common::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
-
 	if (!topic.empty() && topic[0] == ' ') {
 		topic.erase(0 , 1);
 	}
 	if (!topic.empty() && topic[0] == ':') {
 		topic.erase(0 , 1);
 	}
-
 	if (!topic.empty()) {
 		c->setTopic(topic);
 		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
@@ -140,7 +136,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 	std::getline(iss, msg);
 
 	if (!u->getIsAdmin()) { //TODO is channel oper
-		Error::CHANOPRIVSNEEDED(u, _name, channel);
+		error::common::CHANOPRIVSNEEDED(u, _name, channel);
 		return;
 	}
 
@@ -149,7 +145,7 @@ void Server::channelKick(const User* u, const std::string& line) {
 	User *t = server::getUserFromList(_users, target);
 
 	if (!user::isAlreadyConnected(*c, *t)) {
-		Error::USERNOTINCHANNEL(u, _name, target, channel);
+		error::channel::USERNOTINCHANNEL(u, _name, target, channel);
 		return;
 	}
 
@@ -163,12 +159,12 @@ void Server::cmdOper(User *user, std::string line) {
     iss >> cmd >> name >> _password;
 
     if (name.empty() || _password.empty()) {
-		Error::NEEDMOREPARAMS(user, _name, cmd);
+		error::common::NEEDMOREPARAMS(user, _name, cmd);
         return;
     }
 
 	if (name != IRC_OPER_NAME || _password != IRC_OPER_PASS) {
-		Error::NOCREDENTIALS(user, _name);
+		error::common::NOCREDENTIALS(user, _name);
 		return;
 	}
 	

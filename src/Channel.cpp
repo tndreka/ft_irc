@@ -5,7 +5,6 @@
 Channel::Channel() :
 	_name("default"),
 	_members(),
-	_operators(),
 	_size(DEFAULT_SIZE),
 	_password(""),
 	_topic(""),
@@ -15,7 +14,6 @@ Channel::Channel() :
 Channel::Channel(std::string name, std::string pass) :
 	_name(name),
 	_members(),
-	_operators(),
 	_size(DEFAULT_SIZE),
 	_password(pass),
 	_topic(""),
@@ -27,7 +25,6 @@ Channel::Channel(std::string name, std::string pass) :
 Channel::Channel(const Channel& other) :
 	_name(other._name),
 	_members(other._members),
-	_operators(other._operators),
 	_size(other._size),
 	_password(other._password),
 	_topic(""),
@@ -40,7 +37,6 @@ Channel&	Channel::operator=(const Channel& other) {
 	if (this != &other) {
 		_name = other._name;
 		_members = other._members;
-		_operators = other._operators;
 		_size = other._size;
 		_password = other._password;
 		_topic = other._topic;
@@ -49,19 +45,16 @@ Channel&	Channel::operator=(const Channel& other) {
 	return (*this);
 };
 
-const std::string	Channel::getName(void) const {
+const std::string&	Channel::getName(void) const {
 	return (_name);
 };
 
-const std::map<int, User*>&	Channel::getMembers(void) const {
+const std::map<User*, bool>&	Channel::getMembers(void) const {
 	return (_members);
 };
 
-const std::map<int, User*>&	Channel::getOperators(void) const {
-	return (_operators);
-}
 
-std::string	Channel::getPassword(void) const {
+const std::string&	Channel::getPassword(void) const {
 	return (_password);
 }
 
@@ -69,20 +62,16 @@ unsigned int  Channel::getSize(void) const {
 	return (_size);
 }
 
-void	Channel::addMember(User* member) {
-	_members[member->getPoll().fd] = member;
+void	Channel::addMember(User* member, bool value) {
+	_members[member] = value;
 };
-
-void	Channel::addOperator(User* oper) {
-	_operators[oper->getPoll().fd] = oper;
-}
 
 void	Channel::removeMember(User& member, const std::string& server_name) {
 	const std::string	prefix = ":" + server_name + " NOTICE " + member.getNickname();
 	const std::string	postfix = "\r\n";
 	const std::string	msg = prefix + ": You left channel " + getName() + postfix;
 	
-	_members.erase(member.getPoll().fd);
+	_members.erase(&member);
 	send(member.getPoll().fd, msg.c_str(), msg.size(), 0);
 };
 
@@ -114,7 +103,7 @@ void	Channel::setIsInvitedOnly(bool b) {
 	_isInviteOnly = b;
 }
 
-std::string	Channel::getTopic() const {
+const std::string&	Channel::getTopic() const {
 	return _topic;
 }
 

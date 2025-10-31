@@ -44,7 +44,7 @@ extern volatile sig_atomic_t signal_flag;
 #include "error.hpp"
 
 class Server {
-    protected:
+    private:
         std::string             _name;
         std::string             _password;
         std::map<int, User*>    _users;
@@ -87,7 +87,6 @@ class Server {
         void					remove_from_vector(size_t index);
 		bool					isNickInUse (std::string& attemptedNick);
 		bool					isValidNick(std::string& attemptedNick);
-		void					removeUser(int fd);
 		bool					isUserAlreadySigned(User& user);
 		//void closeConnection(int fd);
 
@@ -116,13 +115,12 @@ class Server {
 		void					channelTopic(const User* u, const std::string& line);
 		void					channelMode(const User *user, const std::string& line);
 
-
     public:
         Server();
         Server(const Server &other);
         ~Server();
  
-        Server							&operator=(const Server &other);
+        Server  &operator=(const Server &other);
 
         bool							set_Port(const std::string &port);
         bool							set_Pass(const std::string &pass);
@@ -131,6 +129,7 @@ class Server {
         void							run_Server();
         void                            addChannel(Channel* new_channel);
         void                            deleteChannel(User* user, const std::string& name);
+		void					        removeUser(int fd);
         const std::string&   			getName() const;
         const std::string&		        getPass(void) const;
         const std::map<int, User*>&		getUsers(void) const;
