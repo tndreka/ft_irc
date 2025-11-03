@@ -179,7 +179,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			continue;
 		}
 
-		if (channel->isInKickedlist(*user)) {
+		if (channel->isInKickedlist(*user) && !channel->isUserInvited(*user)) {
 			error::channel::BANNEDFROMCHAN(user, server.getName(), channel->getName());
 			continue;;
 		}
@@ -249,10 +249,11 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 
 	if (user_input.find('#') != std::string::npos) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), pair.first);
-		if (channel)
-			channel::sendMsg(*channel, sender, pair.second, notice);
-		else
-			error::channel::NOSUCHCHANNEL(&sender, server.getName(), channel->getName());
+		if (!channel)
+			return (error::channel::NOSUCHCHANNEL(&sender, server.getName(), pair.first));
+		if (!user::isAlreadyConnected(*channel, sender))
+			return (error::channel::NOTONCHANNEL(&sender, server.getName(), channel->getName()));
+		channel::sendMsg(*channel, sender, pair.second, notice);
 	}
 	else {
 		User* recepient = server::getUserFromList(server.getUsers(), pair.first);

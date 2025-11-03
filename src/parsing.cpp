@@ -8,7 +8,7 @@ void Server::parse(User& user, std::string buff) {
 
 	if(user.getState() == WAITING_AUTH)
 	{
-		 std::cout << "DEBUG: User in WAITING_AUTH state" << std::endl;
+		std::cout << "DEBUG: User in WAITING_AUTH state" << std::endl;
 
 		int auth_res = authenticateParser(user, buff);
 		std::cout << "DEBUG: authenticateParser returned: " << auth_res << std::endl;
@@ -46,15 +46,17 @@ void Server::parse(User& user, std::string buff) {
 
 	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
 	{
-   std::cout << "DEBUG: User not verified/registered, returning" << std::endl;
+   	std::cout << "DEBUG: User not verified/registered, returning" << std::endl;
  
 		return;
 	}
 	
-	 std::cout << "DEBUG: Processing verified user messages" << std::endl;
+	std::cout << "DEBUG: Processing verified user messages" << std::endl;
 
 	server::printUsers(_users);
 	while (std::getline(iss, line)) {
+		if (line.find_last_not_of("\r\n") == std::string::npos)
+			continue;			// every line need to be appended to the previous one until a "\r\n" is provided
 		line.erase(line.find_last_not_of("\r\n") + 1);
         std::cout << "Line: '" << line << "'" << std::endl;
 		if (!line.find("PING ", 0)) {

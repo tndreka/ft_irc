@@ -1,8 +1,8 @@
-NAME = IRC
+NAME = ircserv
 
 CPP = g++
 
-CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -std=c++98 -I$(INC_DIR) #-fsanitize=address #-fno-omit-frame-pointer
+CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -std=c++98 -I$(INC_DIR) -fsanitize=address #-fno-omit-frame-pointer
 MAKEFLAGS += -s
 
 #Folders
