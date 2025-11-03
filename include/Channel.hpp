@@ -1,13 +1,12 @@
 #ifndef CHANNEL_HPP
 #define	CHANNEL_HPP
 
-#define DEFAULT_SIZE 20
-
 #include <iostream>
 #include <map>
 #include <sys/socket.h>
 #include <set>
 #include <string>
+#include <vector>
 
 #define DEFAULT_SIZE 20
 #define MAX_SIZE 200
@@ -18,11 +17,11 @@ class Channel {
 	private:
 		std::string				_name;
 		std::map<User*, bool>	_members;
+		std::vector<User*>		_kickedUsers;
+		std::vector<User*>		_invitedUsers;
 		unsigned int			_size;
 		std::string				_password;
 		std::string				_topic;
-		bool					_topicAdminOnly;
-		bool					_isInviteOnly;
 		std::set<char>			_modes;
 
 	public:
@@ -41,6 +40,7 @@ class Channel {
 		bool							getTopicAdminOnly(void) const;
 		bool							getIsInvitedOnly(void) const;
 		unsigned int					getSize(void) const;
+		unsigned int					getNumOfUsers(void) const;
 
 		void							setTopic(const std::string& topic);
 		void							setPassword(const std::string& pass);
@@ -49,11 +49,16 @@ class Channel {
 		void							setIsInvitedOnly(bool b);
 
 		void							addMember(User& user, bool value);
-		void							removeMember(User& user, const std::string& server_name);
+		void							removeMember(User& user, const std::string& server_name, bool sendMsg);
+		void							setKickedUser(User* target);
+		bool							isInKickedlist (const User& user);
+		void							unsetKickedUser(User* target);
 		bool							hasMode(char m);
 		void							addMode(char m);
 		void							removeMode(char m);
 		bool							isChannelAdmin(const User& user);
+		bool							isUserInvited(const User& user);
+		void							addInvitedUser(User* user);
 };
 
 std::ostream&	operator<<(std::ostream& out, const Channel& obj);

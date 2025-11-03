@@ -27,7 +27,7 @@ static std::vector<std::string> split_comma_list(const std::string& list_str, bo
 				result.push_back("");
 			else
 				result.push_back(token);
-			}
+		}
 	}
 	else {
 	    while (std::getline(ss, token, ','))
@@ -162,20 +162,33 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			channel::welcomeUser(server.getName(), *new_channel, *user);
 			continue;
 		}
+
 		if (user::isAlreadyConnected(*channel, *user)) {
 			std::cout << "'" << user->getNickname() << "' already connected to " << channel->getName() << std::endl;
 			error::channel::USERONCHANNEL(user, server.getName(), user->getNickname(), channel->getName());
 			continue;
 		}
-		if (channel->getMembers().size() == channel->getSize()) {
-			std::cout << "Channel '" << channel->getName() << "' already full!" << std::endl;
-			error::channel::CHANNELISFULL(*user, *channel);
+
+		if (!channel->isUserInvited(*user) && channel->hasMode('i')) {
+			error::channel::INVITEONLYCHAN(user, server.getName(), channel->getName());
 			continue;
 		}
-		if (!channel->getPassword().empty() && channel->getPassword() != it->second) {
-			error::common::NOCREDENTIALS(user, server.getName());
+
+		if (!channel->isUserInvited(*user) &&  channel->hasMode('k') && channel->getPassword() != it->second) {
+			error::channel::BADCHANNELKEY(user, server.getName(), channel->getName());
 			continue;
 		}
+
+		if (channel->isInKickedlist(*user)) {
+			error::channel::BANNEDFROMCHAN(user, server.getName(), channel->getName());
+			continue;;
+		}
+
+		if (channel->getSize() == channel->getNumOfUsers()) {
+			error::channel::CHANNELISFULL(user, server.getName(), channel->getName());
+			continue;
+		}
+
 		channel->addMember(*user, false);
 		channel::welcomeUser(server.getName(), *channel, *user);
 		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
@@ -214,7 +227,7 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 		}
 
 		channel::goodbyeUser(*channel, *user);
-		channel->removeMember(*user, server.getName());
+		channel->removeMember(*user, server.getName(), true);
 		if (channel->getMembers().empty())
 			server.deleteChannel(user, *it);
 	}
@@ -265,7 +278,7 @@ void	server::handleQuit(Server& server, User& user) {
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		if (user::isAlreadyConnected(**it, user)) {
 			channel::goodbyeUser(**it, user);
-			(*it)->removeMember(user, server.getName());
+			(*it)->removeMember(user, server.getName(), true);
 		}
 	}
 	// send(user.getPoll().fd, msg.c_str(), msg.size(), 0);

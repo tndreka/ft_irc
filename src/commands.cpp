@@ -1,5 +1,4 @@
 #include "../include/Server.hpp"
-#include <pthread.h>
 
 static bool isAllDigits(const std::string& str) {
     for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
@@ -22,6 +21,8 @@ void Server::channelMode(const User *user, const std::string& line) {
 		return;
 	}
 	
+	if (line == c->getName()) { return; }
+
 	if (!user->getIsAdmin() && !c->isChannelAdmin(*user)) {
 		error::common::CHANOPRIVSNEEDED(user, _name, channel);
 		return;
@@ -44,12 +45,12 @@ void Server::channelMode(const User *user, const std::string& line) {
 	for (size_t i = 0; i < modes.size(); ++i) {
 		std::string param;
 		if (modes[i] == '+' || modes[i] == '-') {
-			isPositive = (modes[0] == '+');
+			isPositive = (modes[i] == '+');
 			continue;
 		}
 
 		if (modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') {
-			iss >> param;
+			if (isPositive) iss >> param;
 			if (isPositive && param.empty()) {
 				error::common::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
 				continue;
@@ -59,19 +60,28 @@ void Server::channelMode(const User *user, const std::string& line) {
 			} else if (modes[i] == 'l') {
 				if (!isPositive) {
 					c->setSize(DEFAULT_SIZE);
-					return;
+				} else {
+					if (!isAllDigits(param)) {
+						error::channel::WRONGMODE(user, _name, 'l');
+						return;
+					}
+					int num = std::atoi(param.c_str());
+					if (num > 2 && num <= MAX_SIZE)
+						c->setSize(num);
+					else {
+						error::channel::WRONGMODE(user, _name, 'l');
+						return;
+					}
 				}
-				if (!isAllDigits(param)) {
-					error::channel::WRONGMODE(user, _name, 'l');
-					return;
-				}
-				int num = std::atoi(param.c_str());
-				if (num > 2 && num <= MAX_SIZE)
-					c->setSize(num);
+
 			} else if (modes[i] == 'o') {
 				User* target = server::getUserFromList(_users, param);
+				if (!target) {
+					error::common::NOSUCHNICK(user, _name, param);
+					continue;
+				}
 				if (!target || !user::isAlreadyConnected(*c, *target)) {
-					error::channel::USERNOTINCHANNEL(user, _name, target->getNickname(), c->getName());
+					error::channel::USERNOTINCHANNEL(user, _name, param, c->getName());
 					continue;
 				}
 				target->setAdmin(isPositive);
@@ -79,11 +89,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 					Server::sendPermisions(target);
 				}
 			}
-		} else if (modes[i] == 't') {
-			c->setTopicAdminOnly(isPositive ? true : false);
-		} else if (modes[i] == 'i') {
-			c->setIsInvitedOnly(isPositive ? true : false);
-		} else {
+		} else if (modes[i] != 't' && modes[i] != 'i') {
 			error::channel::WRONGMODE(user, _name, modes[i]);
 			return;
 		}
@@ -91,6 +97,47 @@ void Server::channelMode(const User *user, const std::string& line) {
 		std::cout << "The channel: " <<  c->getName() << "has these modes: " << c->getModes() << std::endl;
 		Server::sendMode(user, c, isPositive, modes[i]);
 	}
+}
+
+void	Server::cmdInvite(const User* user, const std::string& line) {
+	std::istringstream iss(line);
+	std::string target, channel;
+	iss >> target >> channel;
+
+	if (target.empty() || channel.empty()) {
+		error::common::NEEDMOREPARAMS(user, _name, "Invite");
+		return;
+	}
+
+	if (channel[0] == '#') {
+		channel.erase(0, 1);
+	}
+
+	Channel* c = server::getChannelFromList(_channels, channel);
+	if (!c) {
+		error::channel::NOSUCHCHANNEL(user, _name, "#" + channel);
+		return;
+	}
+
+	if (!user::isAlreadyConnected(*c, *user)) {
+		error::channel::NOTONCHANNEL(user, _name, channel);
+		return;
+	}
+
+	if (c->hasMode('i') && !user->getIsAdmin() && !c->isChannelAdmin(*user)) {
+		error::common::CHANOPRIVSNEEDED(user, _name, channel);
+		return;
+	}
+
+	User* t = server::getUserFromList(_users, target);
+	if (!t) {
+		error::common::NOSUCHNICK(user, _name, target);
+		return;
+	}
+
+	Server::sendInvToTarget(user, c, t);
+	Server::sendInvConfirm(user, c, _name, t);
+	c->addInvitedUser(t);
 }
 
 void Server::channelTopic(const User* u, const std::string& line) {
@@ -135,7 +182,15 @@ void Server::channelKick(const User* u, const std::string& line) {
 	iss >> channel >> target;
 	std::getline(iss, msg);
 
-	channel.erase(0,1);
+	if (channel.empty() || target.empty()) {
+		error::common::NEEDMOREPARAMS(u, channel, "KICK");
+		return;
+	}
+
+	if (!channel.empty() && channel[0] == '#') {
+		channel.erase(0,1);
+	}
+
 	Channel *c = server::getChannelFromList(_channels,  channel);
 	if (!c) {
 		error::channel::NOSUCHCHANNEL(u, _name, channel);
@@ -148,13 +203,19 @@ void Server::channelKick(const User* u, const std::string& line) {
 	}
 
 	User *t = server::getUserFromList(_users, target);
-
-	if (!user::isAlreadyConnected(*c, *t)) {
+	if (!t || !user::isAlreadyConnected(*c, *t)) {
 		error::channel::USERNOTINCHANNEL(u, _name, target, channel);
 		return;
 	}
 
+	if (t == u) {
+		error::common::CANTKICKYOURSELF(u, _name, channel);
+		return;
+	}
+
 	Server::sendKick(u, c, target, msg);
+	c->removeMember(*t, _name, false);
+	c->setKickedUser(t);
 }
 
 void Server::cmdOper(User *user, std::string line) {

@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include <cmath>
 
 void Server::broadcastChannel(const Channel& channel, const std::string& msg) {
 	std::map<User*, bool> usersInChannel = channel.getMembers();
@@ -79,4 +80,23 @@ void Server::sendMode(const User* user, const Channel* c, bool isPossitive, cons
 	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@"
 		+ user->getHostname() + " MODE #" + c->getName() + " " + tag + "\r\n";
 	Server::broadcastChannel(*c, msg);
+}
+
+void Server::sendInvToTarget(const User* user, const Channel* channel, const User* target) {
+	std::string msg = ":"  + user->getNickname() + "!" + user->getUsername() + "@" + user->getHostname()
+		+ " INVITE " + target->getNickname() + " :#" + channel->getName() + "\r\n";
+	send(target->getPoll().fd, msg.c_str(), msg.size(), 0);
+}
+
+void Server::sendInvConfirm(const User* user, const Channel* channel, const std::string& server, const User* target) {
+	std::string msg = ":" + server + " 341 " + user->getNickname() + " " + target->getNickname()
+		+ " #" + channel->getName() + "\r\n";
+	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
+}
+
+void	Server::sendStripChannelOper(const User* user, const Channel* channel, const User* target) {
+	std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@"
+		+ user->getHostname() + "MODE #" +  channel->getName() + "-o " + target->getNickname()
+		+ "\r\n";
+	broadcastChannel(*channel, msg);
 }

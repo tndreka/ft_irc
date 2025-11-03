@@ -32,5 +32,6 @@ namespace error {
 		void	NEEDMOREPARAMS(const User *user, const std::string &server, const std::string &command);
 		void	CHANOPRIVSNEEDED(const User *user, const std::string &server, const std::string &channel);
 		void	NOCREDENTIALS(const User *user, const std::string &server);
+		void	CANTKICKYOURSELF(const User* u, const std::string& server, const std::string& channel);
 	};
 }

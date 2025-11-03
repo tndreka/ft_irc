@@ -79,6 +79,8 @@ void Server::parse(User& user, std::string buff) {
 			Server::channelTopic(&user, line.substr(7));
 		} else if (!line.find("MODE #")) {
 			Server::channelMode(&user, line.substr(6));
+		} else if (!line.find("INVITE ")) {
+			Server::cmdInvite(&user, line.substr(7));
 		}
 	}
 	 std::cout << "DEBUG: parse() completed successfully" << std::endl;

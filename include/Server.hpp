@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <csignal>
 #include <cstring>
+#include <cerrno>
 
 #ifndef MAX_BUFF
 #define MAX_BUFF 4444
@@ -88,6 +89,7 @@ class Server {
 		bool					isNickInUse (std::string& attemptedNick);
 		bool					isValidNick(std::string& attemptedNick);
 		bool					isUserAlreadySigned(User& user);
+		void					shutdownCleanly();
 		//void closeConnection(int fd);
 
 		// Parsing
@@ -106,6 +108,9 @@ class Server {
 		void					sendKick(const User* u, const Channel* c, const std::string target, std::string msg);
 		void					sendPermisions(const User* user);
 		void					sendMode(const User* user, const Channel* c, bool isPossitive, const char m);
+		void					sendInvToTarget(const User* user, const Channel* channel, const User* target);
+		void					sendInvConfirm(const User* user, const Channel* channel, const std::string& server, const User* target);
+		void					sendStripChannelOper(const User* user, const Channel* channel, const User* target);
 
 		// Commands
 		void					cmdNick(User *user, std::string line);
@@ -114,6 +119,7 @@ class Server {
 		void					channelKick(const User* u, const std::string& line);
 		void					channelTopic(const User* u, const std::string& line);
 		void					channelMode(const User *user, const std::string& line);
+		void					cmdInvite(const User* user, const std::string& line);
 
     public:
         Server();

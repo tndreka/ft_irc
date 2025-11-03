@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <unistd.h>
 
 Server::Server() : _name("MalakaIRC"), _users(), _channels() {}
 
@@ -27,12 +28,12 @@ Server &Server::operator=(const Server &other) {
 
 Server::~Server() {}
 
-const std::string& Server::getName() const {
-		return (_name);
+const std::string&	Server::getName() const {
+	return (_name);
 }
 
-const std::string& Server::getPass() const {
-		return (_password);
+const std::string&	Server::getPass() const {
+	return (_password);
 }
 
 const std::map<int, User*>&	Server::getUsers(void) const {
@@ -77,13 +78,14 @@ void	Server::clearUsers(void) {
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
 		const std::string	msg = ":" + it->second->getNickname() + "!" + it->second->getUsername() + "@" + it->second->getHostname() + " QUIT\r\n";
 		send(it->first, msg.c_str(), msg.size(), 0);
+		close(it->first);
 		delete it->second;
 		it->second = NULL;
 	}
 	_users.clear();
 }
 
-std::ostream& operator<<(std::ostream& out, const Server& obj) {
+std::ostream&	operator<<(std::ostream& out, const Server& obj) {
 	const std::map<int, User*>& activeMembers = obj.getUsers();
 	typedef std::map<int, User*>::const_iterator iter; 
 
@@ -122,7 +124,7 @@ std::ostream& operator<<(std::ostream& out, const Server& obj) {
 			being returned.
 		ERROR: -1
 */
-bool Server::createSocket() {
+bool	Server::createSocket() {
 	listening = socket(AF_INET, SOCK_STREAM, 0);
 	if (listening == -1) {
 		std::cerr << " Create Socket() failed " << std::endl;
@@ -154,31 +156,29 @@ bool Server::createSocket() {
 								ERROR => -1
 
 */
-bool Server::bindSocket()
+bool	Server::bindSocket()
 {
-  //quick restarts
-  int opt = 1;
-  if(setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-  {
-   std::cerr << "setsockopt reuseaddr failed\n"; 
-  }
-  // socket non-block
-  if(fcntl(listening, F_SETFL, O_NONBLOCK) == -1)
-  {
-    std::cerr << "fcntl failed \n";
-    close(listening);
-    return false;
-  }
-  // bind socket to IP
-  hint.sin_family = AF_INET;
-  hint.sin_port = htons(port);
-  hint.sin_addr.s_addr = INADDR_ANY;
-  if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
-    std::cerr << "Port failed to bind with an IP !" << std::endl;
-    close(listening);
-    return false;
-  }
-  return true;
+	//quick restarts
+	int opt = 1;
+		if(setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+		std::cerr << "setsockopt reuseaddr failed\n";
+	}
+	// socket non-block
+	if(fcntl(listening, F_SETFL, O_NONBLOCK) == -1) {
+		std::cerr << "fcntl failed \n";
+		close(listening);
+		return false;
+	}
+	// bind socket to IP
+	hint.sin_family = AF_INET;
+	hint.sin_port = htons(port);
+	hint.sin_addr.s_addr = INADDR_ANY;
+	if ((bind(listening, (sockaddr *)&hint, sizeof(hint)) == -1)) {
+		std::cerr << "Port failed to bind with an IP !" << std::endl;
+		close(listening);
+		return false;
+	}
+	return true;
 }
 
 /*
@@ -200,8 +200,8 @@ bool Server::listenSocket() {
 		std::cerr << "Can't listen the socket" << std::endl;
 		close(listening);
 		return false;
-	} else
-		return true;
+	}
+	return true;
 }
 
 /*
@@ -316,7 +316,7 @@ void Server::handle_messages(size_t index)
 	{
 		std::cout << "DEBUG: Invalid index" << index << std::endl;
 		return;
-	}	
+	}
 	int fd = poll_fds[index].fd;
 	User *user = _users[poll_fds[index].fd];
 	if(!user)
@@ -325,7 +325,7 @@ void Server::handle_messages(size_t index)
 		return;
 	}
 	std::cout << "DEBUG: Proccessing user" << user->getNickname() << std::endl;
-		
+	
 	memset(buff, 0, MAX_BUFF);
 	bytes_received = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
 	if (bytes_received <= 0) {
@@ -342,9 +342,7 @@ void Server::handle_messages(size_t index)
 		std::cout << "DEBUG: User deleted during parsing" <<std::endl;
 		return;
 	}
-	std::cout << "DEBUG: calling parser for user:" << user->getNickname() << std::endl;
 	Server::parse(*user, buff);
-	std::cout << "DEBUG: XXXXX parser complete for user:" << user->getNickname() << std::endl;
 }
 
 void Server::handle_disconn_err_hungup(size_t index) {
@@ -417,6 +415,16 @@ bool Server::init_Server() {
 
 //to do clean up ,signals
 
+void Server::shutdownCleanly() {
+    // broadcast QUIT if you want:
+    clearChannels();
+    clearUsers();
+    if (listening != -1) {
+        close(listening);
+        listening = -1;
+    }
+}
+
 void Server::run_Server() {
 	while (!signal_flag) {
 		if (init_poll() == false)
@@ -424,10 +432,10 @@ void Server::run_Server() {
 		for (size_t i = 0; i < poll_fds.size(); i++) {
 			event_check(i);
 			 if (incoming_data || client_hungup || err) {
-                std::cout << "DEBUG: fd=" << poll_fds[i].fd 
+                std::cout << "DEBUG: fd=" << poll_fds[i].fd
                          << " listening=" << is_listening
-                         << " incoming=" << incoming_data 
-                         << " hungup=" << client_hungup 
+                         << " incoming=" << incoming_data
+                         << " hungup=" << client_hungup
                          << " err=" << err << std::endl;
             }
 			if (incoming_data && is_listening)
@@ -462,9 +470,7 @@ void Server::run_Server() {
 			//}
 		}
 	}
-	clearChannels();
-	clearUsers();
+	Server::shutdownCleanly();
 	server::printChannels(_channels);
 	server::printUsers(_users);
-			
 }
