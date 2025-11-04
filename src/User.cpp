@@ -6,8 +6,8 @@ User::User() :
 	_realname("default"),
 	_hostname("default"),
 	_state(WAITING_AUTH),
-	_isAdmin(false)
-	// _ispasswordverified(false)
+	_isAdmin(false),
+	_isPassVerified(false)
 {
 	_poll.fd = -1;
 	_poll.events = POLLIN;
@@ -21,8 +21,8 @@ User::User(int connection, const std::string hostname) :
 	_realname(""),
 	_hostname(hostname),
 	_state(WAITING_AUTH),
-	_isAdmin(false)
-	// _ispasswordverified(false)
+	_isAdmin(false),
+	_isPassVerified(false)
 {
 	_poll.fd = connection;
 	_poll.events = POLLIN;
@@ -37,8 +37,8 @@ User::User(const User& other) :
 	_hostname(other._hostname),
 	_state(other._state),
 	_poll(other._poll),
-	_isAdmin(other._isAdmin)
-	// _ispasswordverified(other._ispasswordverified)
+	_isAdmin(other._isAdmin),
+	_isPassVerified(other._isPassVerified)
 {};
 
 User::~User() {
@@ -55,6 +55,7 @@ User&	User::operator=(const User& other) {
 		_state = other._state;
 		_poll = other._poll;
 		_userBuffer = other._userBuffer;
+		_isPassVerified = other._isPassVerified;
 	}
 	return (*this);
 };
@@ -129,6 +130,13 @@ void User::clearUserBuffer(void) {
 	_userBuffer.clear();
 }
 
+bool	User::getIsPassVerified() const {
+	return _isPassVerified;
+}
+
+void	User::setPassVerified(bool isverified) {
+	_isPassVerified = isverified;
+}
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()
 		<< "\nHostname: " << obj.getHostname() << "\nFD: " << obj.getPoll().fd << "\nState: " << obj.getState();

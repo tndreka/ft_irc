@@ -22,6 +22,7 @@ class User {
 		pollfd		_poll;
 		bool		_isAdmin;
 		std::string	_userBuffer;
+		bool		_isPassVerified;
 		
 	public:
 		User();
@@ -52,7 +53,7 @@ class User {
 		void				setPassVerified(bool isVerified);
 
 		// Utils
-		bool				isPassVerified() const;
+		bool				getIsPassVerified() const;
 		void				appendToBuffer(const std::string& data);
 		void				clearUserBuffer(void);
 };

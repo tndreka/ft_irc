@@ -329,7 +329,6 @@ void Server::handle_messages(size_t index)
 		return;
 	}
 
-
 	local_buf[bytes_received] = '\0';
 	user->appendToBuffer(local_buf);
 

@@ -12,8 +12,6 @@ void Server::parse(User& user, const std::string& line) {
 			sendWrongPassword(user);
 			int fd = user.getPoll().fd;
 			close(fd);
-			_users.erase(fd);
-			delete &user;
 			return;
 		}
 		return;
@@ -92,6 +90,7 @@ int Server::authenticateParser(User& user, const std::string& line) {
 		if (pass != _password) {
 			return -1;
 		}
+		user.setPassVerified(true);
 	} else if (!line.find("NICK ", 0)) {
 		std::string nick = authenticateNickname(user, line);
 		if (!nick.empty()) {
@@ -107,7 +106,7 @@ int Server::authenticateParser(User& user, const std::string& line) {
 		user.setRealname(firstName + " " + lastName);
 		user.setUsername(username);
 	}
-	if (!user.getNickname().empty() && !user.getUsername().empty()) {
+	if (user.getIsPassVerified() && !user.getNickname().empty() && !user.getUsername().empty()) {
 		user.setState(REGISTERED);
 		return 0;
 	}
