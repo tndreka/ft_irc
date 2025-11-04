@@ -32,6 +32,7 @@ class Channel {
 
 		Channel&	operator=(const Channel& other);
 
+		// Getters
 		const std::string&				getName(void) const;
 		const std::string&				getTopic() const;
 		const std::string&				getPassword(void) const;
@@ -42,6 +43,7 @@ class Channel {
 		unsigned int					getSize(void) const;
 		unsigned int					getNumOfUsers(void) const;
 
+		//Setters
 		void							setTopic(const std::string& topic);
 		void							setPassword(const std::string& pass);
 		void							setSize(unsigned int num);

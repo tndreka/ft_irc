@@ -270,7 +270,6 @@ void Server::cmdWhois(User *user, std::string line) {
         }
     }
 
-    // ERR_NOSUCHNICK if not found
     std::string err = ":" + _name + " 401 " + user->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
     send(user->getPoll().fd, err.c_str(), err.size(), 0);
 }

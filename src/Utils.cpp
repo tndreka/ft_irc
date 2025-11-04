@@ -93,7 +93,7 @@ static std::pair<std::string, std::string>  parsePrivMsg(const std::string& line
 	if (colon_pos != std::string::npos)
 		result.second = line.substr(colon_pos + 1);
 	else
-		result.second = ""; 
+		result.second = "";
 	size_t end_of_msg = result.second.find_last_not_of(control_chars);
 	if (end_of_msg != std::string::npos)
 		result.second = result.second.substr(0, end_of_msg + 1);
@@ -117,7 +117,6 @@ static std::map<std::string, std::string> parseJoin(const std::string& line) {
 	std::string command;
 	std::string key_list_str;
 
-	// TODO authenticate channel
 	if (!(iss >> command) || command != "JOIN")
 		return (result);
 	if (!(iss >> command))
@@ -193,7 +192,6 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 		channel::welcomeUser(server.getName(), *channel, *user);
 		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 	}
-	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -230,7 +228,6 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 		if (channel->getMembers().empty())
 			server.deleteChannel(user, *it);
 	}
-	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -270,9 +267,6 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
  * 
  */
 void	server::handleQuit(Server& server, User& user) {
-	// const std::string		prefix = ":" + user.getNickname() + "!" + user.getUsername() + "@" + user.getHostname();
-	// const std::string		postfix = ":Client exiting!\r\n";
-	// const std::string		msg = prefix + " QUIT " + postfix;
 	std::vector<Channel*>	channels = server.getChannels();
 
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
@@ -281,9 +275,7 @@ void	server::handleQuit(Server& server, User& user) {
 			(*it)->removeMember(user, server.getName(), true);
 		}
 	}
-	// send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
 	server.removeUser(user.getPoll().fd);
-	// send message to exit server
 }
 
 /**
@@ -293,20 +285,20 @@ void	server::handleQuit(Server& server, User& user) {
  * 
  * @note Output: <channel_name>, <channel_password>, {<channel_members>}.
  */
-// void    server::printChannels(const std::vector<Channel*>& channels) {
-//     if (channels.empty())
-// 		return ((void)(std::cout << "No active channels!" << std::endl));
-// 	std::cout << "Channel list: ";
-// 	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
-//     for (std::vector<Channel*>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
-// 		std::cout << **it << std::endl;
-// 		channel::printMembers(**it);
-// 		channel::printOperators(**it);
-// 		if (it + 1 != channels.end())
-// 			std::cout << std::endl;
-//     }
-//     std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
-// }
+void    server::printChannels(const std::vector<Channel*>& channels) {
+    if (channels.empty())
+		return ((void)(std::cout << "No active channels!" << std::endl));
+	std::cout << "Channel list: ";
+	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
+    for (std::vector<Channel*>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
+		std::cout << **it << std::endl;
+		channel::printMembers(**it);
+		channel::printOperators(**it);
+		if (it + 1 != channels.end())
+			std::cout << std::endl;
+    }
+    std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
+}
 
 /**
  * @note QUIT :leaving (disconnect)
@@ -507,8 +499,6 @@ void	channel::sendNameList(const std::string& server_name, const Channel& channe
 /****************************************************
 *						USER						*
 ****************************************************/
-
-// void	channel::destroy(Channel* channel) {};
 
 /**
  * @brief Checks if the user is already connected to a specific channel.

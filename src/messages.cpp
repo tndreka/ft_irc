@@ -12,7 +12,7 @@ void Server::broadcast_message(const std::string &message, const User& user) {
 	for (size_t i = 0; i < _pollFds.size(); i++) {
 		if (_pollFds[i].fd != listening && _pollFds[i].fd != user.getPoll().fd)
 			send(_pollFds[i].fd, message.c_str(), message.length(), 0);
-  	}
+	}
 }
 
 void Server::sendWelcome(User& user) {

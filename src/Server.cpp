@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <unistd.h>
 
 Server::Server() : _name("MalakaIRC"), _users(), _channels(), _pollFds() {}
 
@@ -66,7 +67,6 @@ void	Server::deleteChannel(User* user, const std::string& name) {
 
 void	Server::clearChannels(void) {
 	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
-		// TODO close window when user disconnect AND when server closes
 		delete *it;
 		*it = NULL;
 	}
@@ -95,27 +95,27 @@ std::ostream&	operator<<(std::ostream& out, const Server& obj) {
 	else {
 		for (iter it = activeMembers.begin(); it != activeMembers.end(); ++it) {
 			if (it->second != NULL)
-					out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
+				out << "\t'" << it->first << "': '" << it->second->getUsername() << "'\n";
 			else
-					out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
+				out << "\t'" << it->first << "': '(NULL User Pointer)'\n";
 		}
 	}
 	return out;
 }
 
-/*
-						====== Socket_creation ======
-	we use socket() function.
-		socket(int Domain, int type, int protocol);
+/**
+			====== Socket_creation ======
+	we use socket() function. socket(int Domain, int type, int protocol);
 	1)First Param:
 		-int Domain -> use AF_INET -> {is an addres family,
 			that is used to designate the type of address that your socket
 			can communicate in this case IPV4(internet protocol V4)}
 	2)Second Param: -int
 		-type -> SOCK_STREAM -> {Provides sequenced, reliable two way connection
-	based byte streams. it make sure that the data is not dublicated, it doesnt
-	get lost and its delivered on correct order} 3) Third param: -int protocol ->
-	0 -Protocol specifies a particular protocol to be used with the socke.
+		based byte streams. it make sure that the data is not dublicated, it doesnt
+		get lost and its delivered on correct order}
+	3) Third param: -int protocol -> 0 
+		-Protocol specifies a particular protocol to be used with the socket.
 			Normally a single protocol exit to support the socket type
 			within the given protocol family wich most of the times is 0}
 	RETURN:
@@ -132,43 +132,40 @@ bool	Server::createSocket() {
 		return true;
 }
 
-/*
-
-																================== BIND_SOCKET
-	 =================== sockaddr_in this is a structure used  to represent IPv4
-	 internet domain socket address. it is designed for IPv4 only and it contains
-	 mambers for the family addres as:
-				->address_family(sin_family) = should be set as AF_INET to use the IPv4
-				->port_number(sin_port) = holdsthe portnumber in the network byte order
-	 requiring conversion from the host byte order using fucntion hstons().
-				->and IPv4 adress = this is the 32 bit IPv4 addres which it can be
-	 assigned manually or by using functions like inet_addr()
-				====>htons(uint16_t hostshort);
-								->this function converts the unsigned short int hostshort from
-	 host byte order to network byte order.
+/**
+		================== BIND_SOCKET=================== 
+	sockaddr_in this is a structure used  to represent IPv4
+	internet domain socket address. it is designed for IPv4 only and it contains
+	mambers for the family addres as:
+		->address_family(sin_family) = should be set as AF_INET to use the IPv4
+		->port_number(sin_port) = holdsthe portnumber in the network byte order
+	requiring conversion from the host byte order using fucntion hstons().
+		->and IPv4 adress = this is the 32 bit IPv4 addres which it can be
+	assigned manually or by using functions like inet_addr()
+		====>htons(uint16_t hostshort);
+		->this function converts the unsigned short int hostshort from
+	host byte order to network byte order.
 		===>bind() function assigns the address specified by the hinf to the socked
-	 referred to by the file descriptor listening. bind(int sockfd, const struct
-	 sockaddr *addr, socklen_t addrlen) Parameter: 1) sockfd - socket file
-	 descriptor (listening) 2) addr - pointer to sockaddr structure (cast hint to
-	 sockaddr *) 3) addrlen - size of the address structure (sizeof(hint)) RETURN:
-								Success => 0
-								ERROR => -1
-
+	referred to by the file descriptor listening. bind(int sockfd, const struct
+	sockaddr *addr, socklen_t addrlen) Parameter: 1) sockfd - socket file
+	descriptor (listening) 2) addr - pointer to sockaddr structure (cast hint to
+	sockaddr *) 3) addrlen - size of the address structure (sizeof(hint)) RETURN:
+		Success => 0
+		ERROR => -1
 */
 bool	Server::bindSocket()
 {
-	//quick restarts
 	int opt = 1;
 		if(setsockopt(listening, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		std::cerr << "setsockopt reuseaddr failed\n";
 	}
-	// socket non-block
+
 	if(fcntl(listening, F_SETFL, O_NONBLOCK) == -1) {
 		std::cerr << "fcntl failed \n";
 		close(listening);
 		return false;
 	}
-	// bind socket to IP
+
 	hint.sin_family = AF_INET;
 	hint.sin_port = htons(port);
 	hint.sin_addr.s_addr = INADDR_ANY;
@@ -180,7 +177,7 @@ bool	Server::bindSocket()
 	return true;
 }
 
-/*
+/**
 ==================== LISTEN ====================
 listen() -> this function marks the socket referred by sockedfd as a
 passivesocket that will be used to accept incoming connection requests.
@@ -203,7 +200,7 @@ bool Server::listenSocket() {
 	return true;
 }
 
-/*
+/**
 ===================== ACCEPT======================
 the accept() function first extracts the first
 connection request on the queue of pending connections for the listening
@@ -215,8 +212,8 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); Parameters:
 	struct to store client info 3) addrlen - pointer to size of addr struct
 
 	RETURN:
-					success => New socket file descriptor for the connection
-					ERROR => -1
+		success => New socket file descriptor for the connection
+		ERROR => -1
 */
 void Server::accept_connection() {
   clientSize = sizeof(client);
@@ -226,7 +223,7 @@ void Server::accept_connection() {
   _pollFds.push_back(listening_fd);
 }
 
-/*
+/**
 ==================== POLL ======================
 poll() function allows monitoring multiple file descriptors to see if I/O is
 possible on any of them. It's essential for handling multiple clients
@@ -264,9 +261,6 @@ bool Server::init_poll() {
 	return true;
 }
 
-/*
-		=== EVENTS ===
-*/
 void Server::event_state() {
 	incoming_data = false;
 	client_hungup = false;
@@ -296,7 +290,7 @@ void Server::handle_new_host()
 
 	if (new_connection == -1) {
 		std::cerr << "Failed accepting new connections" << std::endl;
-		//close(new_connection);
+		close(new_connection);
 		return;
 	}
 
@@ -315,52 +309,46 @@ void Server::handle_new_host()
 
 void Server::handle_messages(size_t index)
 {
-    if (index >= _pollFds.size())
-        return;
+	if (index >= _pollFds.size())
+		return;
 
-    int fd = _pollFds[index].fd;
-    User* user = _users[fd];
-    if (!user)
-        return;
+	int fd = _pollFds[index].fd;
+	User* user = _users[fd];
+	if (!user)
+		return;
 
-    char local_buf[MAX_BUFF];
-    ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
+	char local_buf[MAX_BUFF];
+	ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
 
-    if (bytes_received <= 0)
-    {
-        std::cout << "Client " << fd << " (" << user->getHostname() << ") disconnected" << std::endl;
-        close(fd);
-        _pollFds.erase(_pollFds.begin() + index);
-        _users.erase(fd);
-        delete user;
-        return;
-    }
+	if (bytes_received <= 0) {
+		std::cout << "Client " << fd << " (" << user->getHostname() << ") disconnected" << std::endl;
+		close(fd);
+		_pollFds.erase(_pollFds.begin() + index);
+		_users.erase(fd);
+		delete user;
+		return;
+	}
 
 
-    local_buf[bytes_received] = '\0';
-	std::cout << "LOCAL:'" << local_buf << "'" << std::endl;
-    user->appendToBuffer(local_buf);
+	local_buf[bytes_received] = '\0';
+	user->appendToBuffer(local_buf);
 
-    std::string& userBuffer = user->getUserBuffer();
-    size_t start = 0;
-    size_t pos;
+	std::string& userBuffer = user->getUserBuffer();
+	size_t start = 0;
+	size_t pos;
 
-	std::cout << "'" << userBuffer << "'" <<std::endl;
-    // Process all complete commands (\r\n terminated)
-    while ((pos = userBuffer.find("\r\n", start)) != std::string::npos)
-    {
+	while ((pos = userBuffer.find("\r\n", start)) != std::string::npos)
+	{
 		std::string command = userBuffer.substr(start, pos - start);
-        if (!command.empty())
-            Server::parse(*user, command);
+		if (!command.empty())
+			Server::parse(*user, command);
 
-        start = pos + 2; // skip "\r\n"
-    }
+		start = pos + 2; // skip "\r\n"
+	}
 
-    // Keep any partial command for next recv()
-    if (start > 0)
-        userBuffer.erase(0, start);
+	if (start > 0)
+		userBuffer.erase(0, start);
 }
-
 
 void Server::handle_disconn_err_hungup(size_t index) {
 	if (index >= _pollFds.size())
@@ -369,7 +357,6 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	User *user = _users[fd];
 	if(!user)
 		return;
-	std::cout << "Client " << fd << "(" << user->getHostname() << ") error/hungup " << std::endl;
 	close(fd);
 	
 	_users.erase(fd);
@@ -421,11 +408,10 @@ void Server::run_Server() {
             short revents = _pollFds[i].revents;
 
             if (revents == 0)
-                continue; // skip fds with no events
+                continue;
 
             if (fd == listening && (revents & POLLIN)) {
                 handle_new_host();
-                // no break — handle multiple new connections per loop
                 continue;
             }
 
@@ -442,6 +428,4 @@ void Server::run_Server() {
     }
 
 	Server::shutdownCleanly();
-	// server::printChannels(_channels);
-	// server::printUsers(_users);
 }

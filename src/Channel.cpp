@@ -1,7 +1,6 @@
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
 #include "../include/error.hpp"
-#include <vector>
 
 Channel::Channel() :
 	_name("default"),
@@ -21,15 +20,13 @@ Channel::Channel(std::string name, std::string pass) :
 	_size(DEFAULT_SIZE),
 	_password(pass),
 	_topic("")
-{
-	// std::cout << "New channel created named " << _name << std::endl;
-};
+{};
 
 Channel::Channel(const Channel& other) :
 	_name(other._name),
 	_members(other._members),
-	_kickedUsers(),
-	_invitedUsers(),
+	_kickedUsers(other._kickedUsers),
+	_invitedUsers(other._invitedUsers),
 	_size(other._size),
 	_password(other._password),
 	_topic("")

@@ -1,7 +1,6 @@
 #include "../include/Server.hpp"
 
 void Server::parse(User& user, const std::string& line) {
-	// std::cout << "DEBUG: parse() started for user: " << user.getNickname() << std::endl;
  
 	if(user.getState() == WAITING_AUTH)
 	{
@@ -24,8 +23,6 @@ void Server::parse(User& user, const std::string& line) {
 		return;
 	}
 
-	// server::printUsers(_users);
-	// std::cout << "Line: '" << line << "'" << std::endl;
     if (!line.compare(0, 5, "PING "))
         Server::sendPong(&user, line);
     else if (!line.compare(0, 5, "JOIN "))
@@ -90,32 +87,27 @@ int Server::authenticateParser(User& user, const std::string& line) {
 
 
 	std::string pass;
-	// while (std::getline(iss, line)) {
-		// if (!line.empty() && line[line.size() - 1] == '\r')
-			// line.erase(line.size() - 1);
-		if (!line.find("PASS ")) {
-			pass = line.substr(5);
-			if (pass != _password) {
-				return -1;
-			}
-			user.setPassVerified(true);
-		} else if (!line.find("NICK ", 0)) {
-			std::string nick = authenticateNickname(user, line);
-			if (!nick.empty()) {
-				user.setNickname(nick);
-			}
-		} else if (!line.find("USER ", 0)) {
-			std::istringstream issUser(line.substr(5));
-			std::string username, hostname, realarg, firstName, lastName;
-			issUser >> username >> hostname >> realarg >> firstName >> lastName;
-			
-			if (firstName[0] == ':')
-				firstName = firstName.substr(1);
-			user.setRealname(firstName + " " + lastName);
-			user.setUsername(username);
+	if (!line.find("PASS ")) {
+		pass = line.substr(5);
+		if (pass != _password) {
+			return -1;
 		}
-	//}
-	if (user.isPassVerified() && !user.getNickname().empty() && !user.getUsername().empty()) {
+	} else if (!line.find("NICK ", 0)) {
+		std::string nick = authenticateNickname(user, line);
+		if (!nick.empty()) {
+			user.setNickname(nick);
+		}
+	} else if (!line.find("USER ", 0)) {
+		std::istringstream issUser(line.substr(5));
+		std::string username, hostname, realarg, firstName, lastName;
+		issUser >> username >> hostname >> realarg >> firstName >> lastName;
+		
+		if (firstName[0] == ':')
+			firstName = firstName.substr(1);
+		user.setRealname(firstName + " " + lastName);
+		user.setUsername(username);
+	}
+	if (!user.getNickname().empty() && !user.getUsername().empty()) {
 		user.setState(REGISTERED);
 		return 0;
 	}

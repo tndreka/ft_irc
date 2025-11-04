@@ -21,12 +21,10 @@ class User {
 		ClientState	_state;
 		pollfd		_poll;
 		bool		_isAdmin;
-		bool		_ispasswordverified;
 		std::string	_userBuffer;
 		
 	public:
 		User();
-		User(const std::string un, const std::string nn, const std::string rn, const std::string hn);
 		User(int fd, const std::string hostname);
 		User(const User& other);
 		~User();

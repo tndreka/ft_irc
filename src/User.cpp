@@ -2,27 +2,12 @@
 
 User::User() :
 	_username("default"),
-_nickname("default"),
-_realname("default"),
-_hostname("default"),
-_state(WAITING_AUTH),
-_isAdmin(false),
-_ispasswordverified(false)
-{
-	_poll.fd = -1;
-	_poll.events = POLLIN;
-	_poll.revents = 0;
-	_userBuffer.reserve(8192);
-};
-
-User::User(const std::string un, const std::string nn, const std::string rn, const std::string hn) :
-_username(un),
-_nickname(nn),
-_realname(rn),
-_hostname(hn),
-_state(WAITING_AUTH),
-_isAdmin(false),
-_ispasswordverified(false)
+	_nickname("default"),
+	_realname("default"),
+	_hostname("default"),
+	_state(WAITING_AUTH),
+	_isAdmin(false)
+	// _ispasswordverified(false)
 {
 	_poll.fd = -1;
 	_poll.events = POLLIN;
@@ -31,35 +16,29 @@ _ispasswordverified(false)
 };
 
 User::User(int connection, const std::string hostname) :
-_username(""),
-_nickname(""),
-_realname(""),
-_hostname(hostname),
-_state(WAITING_AUTH),
-_isAdmin(false),
-_ispasswordverified(false)
+	_username(""),
+	_nickname(""),
+	_realname(""),
+	_hostname(hostname),
+	_state(WAITING_AUTH),
+	_isAdmin(false)
+	// _ispasswordverified(false)
 {
 	_poll.fd = connection;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
 	_userBuffer.reserve(8192);
-	// _poll.fd = connection;
-	// _poll.events = POLLIN;
-	// _poll.revents = 0;
-	// _hostname = hostname;
-	// _state = WAITING_AUTH;
-	// _isAdmin = false;
 };
 
 User::User(const User& other) :
-_username(other._username),
-_nickname(other._nickname),
-_realname(other._realname),
-_hostname(other._hostname),
-_state(other._state),
-_poll(other._poll),
-_isAdmin(other._isAdmin),
-_ispasswordverified(other._ispasswordverified)
+	_username(other._username),
+	_nickname(other._nickname),
+	_realname(other._realname),
+	_hostname(other._hostname),
+	_state(other._state),
+	_poll(other._poll),
+	_isAdmin(other._isAdmin)
+	// _ispasswordverified(other._ispasswordverified)
 {};
 
 User::~User() {
@@ -75,6 +54,7 @@ User&	User::operator=(const User& other) {
 		_isAdmin = other._isAdmin;
 		_state = other._state;
 		_poll = other._poll;
+		_userBuffer = other._userBuffer;
 	}
 	return (*this);
 };
@@ -135,23 +115,19 @@ void	User::setAdmin(bool isAdmin) {
 	_isAdmin = isAdmin;
 }
 
-bool	User::isPassVerified() const {
-	return _ispasswordverified;
-}
-
-void	User::setPassVerified(bool isverified) {
-	_ispasswordverified = isverified;
-}
-
 void	User::appendToBuffer(const std::string& data) {
 	if (!_userBuffer.empty() && _userBuffer[_userBuffer.size() - 1] == '\n')
 		_userBuffer.erase(_userBuffer.size() - 1);
 	_userBuffer += data; 
 }
 
-std::string& User::getUserBuffer(void) {return _userBuffer;}
+std::string& User::getUserBuffer(void) {
+	return _userBuffer;
+}
 
-void User::clearUserBuffer(void) { _userBuffer.clear(); }
+void User::clearUserBuffer(void) {
+	_userBuffer.clear();
+}
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()

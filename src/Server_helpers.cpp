@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
-#include <cerrno>
 
 void Server::removeUser(int fd) {
 
@@ -71,41 +70,38 @@ bool Server::isNickInUse (std::string& attemptedNick) {
 }
 
 void Server::remove_from_vector(size_t index) {
-  if (index >= _pollFds.size())
-    return;
-  if (index != _pollFds.size() - 1)
-    _pollFds[index] = _pollFds.back();
-  _pollFds.pop_back();
+	if (index >= _pollFds.size())
+		return;
+	if (index != _pollFds.size() - 1)
+		_pollFds[index] = _pollFds.back();
+	_pollFds.pop_back();
 }
 
 bool Server::set_Port(const std::string &port)
 {
-  int portNum;
-  char *end = 0;
-  errno = 0;
-  
-  portNum = std::strtol(port.c_str(), &end, 10);
-  //portNum = atoi(port.c_str());
-  if(*end != '\0')
-  {
-    std::cerr << "Invalid port: contains non digit charcters\n";
-    return false;
-  }
-  if (errno == ERANGE || portNum < 1024 || portNum > 65535)
-  {
-    std::cerr << "Invalid range!! Port number must be between 1024 - 65535\n";
-    return false;
-  }
-  this->port = portNum;
-  return true;
+	int portNum;
+	char *end = 0;
+	errno = 0;
+
+	portNum = std::strtol(port.c_str(), &end, 10);
+	if(*end != '\0') {
+		std::cerr << "Invalid port: contains non digit charcters\n";
+		return false;
+	}
+	if (errno == ERANGE || portNum < 1024 || portNum > 65535) {
+		std::cerr << "Invalid range!! Port number must be between 1024 - 65535\n";
+		return false;
+	}
+	this->port = portNum;
+	return true;
 }
 
 bool Server::set_Pass(const std::string &pass) {
-  if (pass.empty()) {
-    std::cerr << "Password can not be empty\n";
-    return false;
-  } else {
-    this->_password = pass;
-    return true;
-  }
+	if (pass.empty()) {
+		std::cerr << "Password can not be empty\n";
+		return false;
+	} else {
+		this->_password = pass;
+		return true;
+	}
 }

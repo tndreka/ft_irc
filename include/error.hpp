@@ -2,10 +2,6 @@
 
 #include "Server.hpp"
 
-namespace PROTOCOL {
-	// const std::string 
-};
-
 namespace error {
 	namespace registration {
 		void	NICKNAMEINUSE(const User& user, std::string _name, std::string& atemptedNick);
