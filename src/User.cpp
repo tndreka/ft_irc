@@ -42,7 +42,7 @@ User::User(const User& other) :
 {};
 
 User::~User() {
-	// close(_poll.fd);
+	_userBuffer.clear();
 };
 
 User&	User::operator=(const User& other) {

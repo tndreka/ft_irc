@@ -11,7 +11,9 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <iostream>
 #include <unistd.h>
+#include <vector>
 
 Server::Server() : _name("MalakaIRC"), _users(), _channels(), _pollFds() {}
 
@@ -321,11 +323,7 @@ void Server::handle_messages(size_t index)
 	ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
 
 	if (bytes_received <= 0) {
-		std::cout << "Client " << fd << " (" << user->getHostname() << ") disconnected" << std::endl;
-		close(fd);
-		_pollFds.erase(_pollFds.begin() + index);
-		_users.erase(fd);
-		delete user;
+		Server::handle_disconn_err_hungup(index);
 		return;
 	}
 
@@ -336,8 +334,7 @@ void Server::handle_messages(size_t index)
 	size_t start = 0;
 	size_t pos;
 
-	while ((pos = userBuffer.find("\r\n", start)) != std::string::npos)
-	{
+	while ((pos = userBuffer.find("\r\n", start)) != std::string::npos) {
 		std::string command = userBuffer.substr(start, pos - start);
 		if (!command.empty())
 			Server::parse(*user, command);
@@ -357,8 +354,13 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	if(!user)
 		return;
 	close(fd);
-	
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+		if (user::isAlreadyConnected(**it, *user)) {
+			(*it)->removeMember(*user, _name, false);
+		}
+	}
 	_users.erase(fd);
+
 	delete user;
 	if (index != _pollFds.size() - 1) {
 		_pollFds[index] = _pollFds.back();

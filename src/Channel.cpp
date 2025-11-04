@@ -1,6 +1,7 @@
 #include "../include/Channel.hpp"
 #include "../include/User.hpp"
 #include "../include/error.hpp"
+#include <vector>
 
 Channel::Channel() :
 	_name("default"),
@@ -82,6 +83,16 @@ void	Channel::removeMember(User& member, const std::string& server_name, bool se
 	}
 	
 	_members.erase(&member);
+	for (std::vector<User *>::iterator it = _kickedUsers.begin(); it != _kickedUsers.end(); ++it) {
+		if ((*it) == &member) {
+			_kickedUsers.erase(it);
+		}
+	}
+	for (std::vector<User *>::iterator it = _invitedUsers.begin(); it != _invitedUsers.end(); ++it) {
+		if ((*it) == &member) {
+			_invitedUsers.erase(it);
+		}
+	}
 };
 
 void	Channel::setKickedUser(User* target) {

@@ -43,8 +43,12 @@ void Server::parse(User& user, const std::string& line) {
         Server::channelTopic(&user, line.substr(6));
     else if (!line.compare(0, 5, "MODE "))
         Server::channelMode(&user, line.substr(5));
-    else if (!line.compare(0, 7, "INVITE "))
-        Server::cmdInvite(&user, line.substr(7));
+    else if (!line.compare(0, 7, "INVITE ")) {
+		Server::cmdInvite(&user, line.substr(7));
+	}
+
+	// server::printUsers(_users);
+	// server::printChannels(_channels);
 }
 
 
