@@ -22,6 +22,7 @@ class User {
 		pollfd		_poll;
 		bool		_isAdmin;
 		bool		_ispasswordverified;
+		std::string	_userBuffer;
 		
 	public:
 		User();
@@ -33,6 +34,7 @@ class User {
 		User&	operator=(const User& other);
 		bool	operator==(const User& other) const;
 
+		// Getters
 		const std::string	getUsername(void) const;
 		const std::string	getNickname(void) const;
 		const std::string	getRealname(void) const;
@@ -40,6 +42,9 @@ class User {
 		bool				getIsAdmin(void) const;
 		ClientState			getState(void) const;
 		pollfd				getPoll(void) const;
+		std::string&		getUserBuffer(void);
+
+		// Setters
 		void				setUsername(std::string str);
 		void				setNickname(std::string str);
 		void				setRealname(std::string str);
@@ -47,7 +52,11 @@ class User {
 		void				setState(ClientState state);
 		void				setAdmin(bool isAdmin);
 		void				setPassVerified(bool isVerified);
+
+		// Utils
 		bool				isPassVerified() const;
+		void				appendToBuffer(const std::string& data);
+		void				clearUserBuffer(void);
 };
 
 std::ostream&	operator<<(std::ostream& out, const User& other);

@@ -12,18 +12,18 @@
 
 #pragma once
 
-#include <arpa/inet.h> // for inet_addr
+#include <arpa/inet.h>
 #include <cstdlib>
-#include <fcntl.h> // fcntl()
+#include <fcntl.h>
 #include <iostream>
 #include <map>
-#include <netdb.h>      // defines NI_MAXHOST
-#include <netinet/in.h> // for socketaddr
-#include <poll.h>       // for poll()
-#include <sstream>      //for istringstream
+#include <netdb.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sstream>
 #include <string.h>
 #include <string>
-#include <sys/socket.h> // for socket liberary
+#include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
@@ -46,31 +46,24 @@ extern volatile sig_atomic_t signal_flag;
 
 class Server {
     private:
-        std::string             _name;
-        std::string             _password;
-        std::map<int, User*>    _users;
-        std::vector<Channel*>   _channels;
+        std::string				_name;
+        std::string				_password;
+        std::map<int, User*>	_users;
+        std::vector<Channel*>	_channels;
 
         int						port;
         int						listening;
         sockaddr_in				hint;
         sockaddr_in				client;
         socklen_t				clientSize;
-        char					host[NI_MAXHOST];    // 1025 max num of hosts
-        char					service[NI_MAXSERV]; // 32 max num of serv
-        std::vector<pollfd>		poll_fds;
+        std::vector<pollfd>		_pollFds;
 
         pollfd					listening_fd;
-        int						poll_count;
-        int						new_connection;
 
         bool					incoming_data;
         bool					client_hungup;
         bool					is_listening;
         bool					err;
-
-        char					buff[MAX_BUFF];
-        int						bytes_received;
 
         // Server
         bool					createSocket();
@@ -90,12 +83,11 @@ class Server {
 		bool					isValidNick(std::string& attemptedNick);
 		bool					isUserAlreadySigned(User& user);
 		void					shutdownCleanly();
-		//void closeConnection(int fd);
 
 		// Parsing
-		int						authenticateParser(User& user, std::string buff);
+		int						authenticateParser(User& user, const std::string& buff);
 		std::string				authenticateNickname(User& user, std::string line);
-		void					parse(User& user, std::string buff);
+		void					parse(User& user, const std::string& line);
  
         // Messages
         void					broadcast_message(const std::string &message, const User& user);
@@ -128,20 +120,23 @@ class Server {
  
         Server  &operator=(const Server &other);
 
+		bool							init_Server();
+		void							run_Server();
+		void							addChannel(Channel* new_channel);
+		void							deleteChannel(User* user, const std::string& name);
+		void							removeUser(int fd);
+		void							clearChannels(void);
+		void							clearUsers(void);
+
+		// Setters
         bool							set_Port(const std::string &port);
         bool							set_Pass(const std::string &pass);
-        int								get_Port() const;
-        bool							init_Server();
-        void							run_Server();
-        void                            addChannel(Channel* new_channel);
-        void                            deleteChannel(User* user, const std::string& name);
-		void					        removeUser(int fd);
+
+		//Getters
         const std::string&   			getName() const;
-        const std::string&		        getPass(void) const;
+        const std::string&				getPass(void) const;
         const std::map<int, User*>&		getUsers(void) const;
 		const std::vector<Channel*>&	getChannels(void) const;
-        void                            clearChannels(void);
-        void                            clearUsers(void);
 };
 
 std::ostream&   operator<<(std::ostream& out, const Server& obj);

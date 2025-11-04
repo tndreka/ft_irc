@@ -1,5 +1,4 @@
 #include "../include/User.hpp"
-#include <unistd.h>
 
 User::User() :
 	_username("default"),
@@ -9,10 +8,11 @@ _hostname("default"),
 _state(WAITING_AUTH),
 _isAdmin(false),
 _ispasswordverified(false)
-{	
+{
 	_poll.fd = -1;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
+	_userBuffer.reserve(8192);
 };
 
 User::User(const std::string un, const std::string nn, const std::string rn, const std::string hn) :
@@ -27,6 +27,7 @@ _ispasswordverified(false)
 	_poll.fd = -1;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
+	_userBuffer.reserve(8192);
 };
 
 User::User(int connection, const std::string hostname) :
@@ -41,6 +42,7 @@ _ispasswordverified(false)
 	_poll.fd = connection;
 	_poll.events = POLLIN;
 	_poll.revents = 0;
+	_userBuffer.reserve(8192);
 	// _poll.fd = connection;
 	// _poll.events = POLLIN;
 	// _poll.revents = 0;
@@ -140,6 +142,16 @@ bool	User::isPassVerified() const {
 void	User::setPassVerified(bool isverified) {
 	_ispasswordverified = isverified;
 }
+
+void	User::appendToBuffer(const std::string& data) {
+	if (!_userBuffer.empty() && _userBuffer[_userBuffer.size() - 1] == '\n')
+		_userBuffer.erase(_userBuffer.size() - 1);
+	_userBuffer += data; 
+}
+
+std::string& User::getUserBuffer(void) {return _userBuffer;}
+
+void User::clearUserBuffer(void) { _userBuffer.clear(); }
 
 std::ostream&	operator<<(std::ostream& out, const User& obj) {
 	out << "Username: " << obj.getUsername() << "\nNickname: " << obj.getNickname() << "\nRealname: " << obj.getRealname()

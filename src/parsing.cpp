@@ -1,92 +1,57 @@
 #include "../include/Server.hpp"
 
-void Server::parse(User& user, std::string buff) {
-	std::cout << "DEBUG: parse() started for user: " << user.getNickname() << std::endl;
+void Server::parse(User& user, const std::string& line) {
+	// std::cout << "DEBUG: parse() started for user: " << user.getNickname() << std::endl;
  
-	std::istringstream iss(buff);
-	std::string line;
-
 	if(user.getState() == WAITING_AUTH)
 	{
-		std::cout << "DEBUG: User in WAITING_AUTH state" << std::endl;
-
-		int auth_res = authenticateParser(user, buff);
-		std::cout << "DEBUG: authenticateParser returned: " << auth_res << std::endl;
- 
-		if(auth_res == 0)
-		{
-			user.setState(VERIFIED);
+		int auth_res = authenticateParser(user, line);
+		if(auth_res == 0) {
 			sendWelcome(user);
 		}
-		else if(auth_res == -1)
-		{
-			std::cout << "DEBUG: Authentication failed, cleaning up" << std::endl;
-
+		else if(auth_res == -1) {
 			sendWrongPassword(user);
-			// server::handleQuit(*this, )
 			int fd = user.getPoll().fd;
-
-			//close(user.getPoll().fd);
-			for(size_t i = 0; i < poll_fds.size(); ++i)
-			{
-				if(poll_fds[i].fd == fd)
-				{
-					poll_fds.erase(poll_fds.begin() + i);
-					break;
-				}
-			}
 			close(fd);
 			_users.erase(fd);
+			delete &user;
 			return;
 		}
-		std::cout << "DEBUG: parse() authentication complete" << std::endl;
- 
 		return;
 	}
 
-	if(user.getState() != VERIFIED && user.getState() != REGISTERED)
-	{
-   	std::cout << "DEBUG: User not verified/registered, returning" << std::endl;
- 
+	if(user.getState() != REGISTERED) {
 		return;
 	}
-	
-	std::cout << "DEBUG: Processing verified user messages" << std::endl;
 
-	server::printUsers(_users);
-	while (std::getline(iss, line)) {
-		if (line.find_last_not_of("\r\n") == std::string::npos)
-			continue;			// every line need to be appended to the previous one until a "\r\n" is provided
-		line.erase(line.find_last_not_of("\r\n") + 1);
-        std::cout << "Line: '" << line << "'" << std::endl;
-		if (!line.find("PING ", 0)) {
-			Server::sendPong(&user, line);
-		} else if (!line.find("JOIN #")) {
-			server::handleJoin(*this, &user, line);
-        } else if (!line.find("PART ")) {
-			server::handlePart(*this, &user, line);
-		} else if (!line.find("NICK ")) {
-			Server::cmdNick(&user, line);
-		} else if (!line.find("WHOIS ")) {
-			Server::cmdWhois(&user, line);
-		} else if (!line.find("OPER ")) {
-			Server::cmdOper(&user, line);
-		} else if (!line.find("KICK ")) {
-			Server::channelKick(&user, line.substr(5));
-		} else if (!line.find("PRIVMSG ") || !line.find("NOTICE ")) {
-            server::handlePrivMsg(*this, user, line);
-        } else if (!line.find("QUIT")) {
-            server::handleQuit(*this, user);
-        } else if (!line.find("TOPIC #")) {
-			Server::channelTopic(&user, line.substr(7));
-		} else if (!line.find("MODE #")) {
-			Server::channelMode(&user, line.substr(6));
-		} else if (!line.find("INVITE ")) {
-			Server::cmdInvite(&user, line.substr(7));
-		}
-	}
-	 std::cout << "DEBUG: parse() completed successfully" << std::endl;
+	// server::printUsers(_users);
+	// std::cout << "Line: '" << line << "'" << std::endl;
+    if (!line.compare(0, 5, "PING "))
+        Server::sendPong(&user, line);
+    else if (!line.compare(0, 5, "JOIN "))
+        server::handleJoin(*this, &user, line);
+    else if (!line.compare(0, 5, "PART "))
+        server::handlePart(*this, &user, line);
+    else if (!line.compare(0, 5, "NICK "))
+        Server::cmdNick(&user, line);
+    else if (!line.compare(0, 6, "WHOIS "))
+        Server::cmdWhois(&user, line);
+    else if (!line.compare(0, 5, "OPER "))
+        Server::cmdOper(&user, line);
+    else if (!line.compare(0, 5, "KICK "))
+        Server::channelKick(&user, line.substr(5));
+    else if (!line.compare(0, 8, "PRIVMSG ") || line.compare(0, 7, "NOTICE "))
+        server::handlePrivMsg(*this, user, line);
+    else if (!line.compare(0, 4, "QUIT"))
+        server::handleQuit(*this, user);
+    else if (!line.compare(0, 6, "TOPIC "))
+        Server::channelTopic(&user, line.substr(6));
+    else if (!line.compare(0, 5, "MODE "))
+        Server::channelMode(&user, line.substr(5));
+    else if (!line.compare(0, 7, "INVITE "))
+        Server::cmdInvite(&user, line.substr(7));
 }
+
 
 std::string Server::authenticateNickname(User &user, std::string line) {
 
@@ -121,25 +86,25 @@ std::string Server::authenticateNickname(User &user, std::string line) {
 	return nickname;
 }
 
-int Server::authenticateParser(User& user, std::string buff) {
+int Server::authenticateParser(User& user, const std::string& line) {
 
-	std::istringstream iss(buff);
-	std::string line;
+
 	std::string pass;
-
-
-	while (std::getline(iss, line)) {
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
-		if (line.find("PASS ") == 0) {
+	// while (std::getline(iss, line)) {
+		// if (!line.empty() && line[line.size() - 1] == '\r')
+			// line.erase(line.size() - 1);
+		if (!line.find("PASS ")) {
 			pass = line.substr(5);
 			if (pass != _password) {
 				return -1;
 			}
 			user.setPassVerified(true);
-		} else if (line.find("NICK ", 0) == 0) {
-			user.setNickname(authenticateNickname(user, line));
-		} else if (line.find("USER ", 0) == 0) {
+		} else if (!line.find("NICK ", 0)) {
+			std::string nick = authenticateNickname(user, line);
+			if (!nick.empty()) {
+				user.setNickname(nick);
+			}
+		} else if (!line.find("USER ", 0)) {
 			std::istringstream issUser(line.substr(5));
 			std::string username, hostname, realarg, firstName, lastName;
 			issUser >> username >> hostname >> realarg >> firstName >> lastName;
@@ -149,9 +114,10 @@ int Server::authenticateParser(User& user, std::string buff) {
 			user.setRealname(firstName + " " + lastName);
 			user.setUsername(username);
 		}
+	//}
+	if (user.isPassVerified() && !user.getNickname().empty() && !user.getUsername().empty()) {
+		user.setState(REGISTERED);
+		return 0;
 	}
-	if (!user.isPassVerified() || user.getNickname().empty() || user.getUsername().empty())
-		return 1;
-	user.setState(REGISTERED);
-	return 0;
+	return 1;
 }

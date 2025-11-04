@@ -11,9 +11,8 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
-#include <unistd.h>
 
-Server::Server() : _name("MalakaIRC"), _users(), _channels() {}
+Server::Server() : _name("MalakaIRC"), _users(), _channels(), _pollFds() {}
 
 Server::Server(const Server &other) {
 	(void)other;
@@ -224,7 +223,7 @@ void Server::accept_connection() {
   listening_fd.fd = listening;
   listening_fd.events = POLLIN;
   listening_fd.revents = 0;
-  poll_fds.push_back(listening_fd);
+  _pollFds.push_back(listening_fd);
 }
 
 /*
@@ -256,7 +255,9 @@ TIMEOUT: 0 (if timeout occurred)
 ERROR: -1
 */
 bool Server::init_poll() {
-	if ((poll_count = poll(&poll_fds[0], poll_fds.size(), -1)) == -1) {
+	int poll_count;
+
+	if ((poll_count = poll(&_pollFds[0], _pollFds.size(), -1)) == -1) {
 		std::cerr << "" << std::endl;
 		return false;
 	}
@@ -276,18 +277,20 @@ void Server::event_state() {
 void Server::event_check(size_t index) {
 	event_state();
 
-	if (poll_fds[index].revents & POLLIN)
+	if (_pollFds[index].revents & POLLIN)
 		incoming_data = true;
-	if (poll_fds[index].revents & POLLHUP)
+	if (_pollFds[index].revents & POLLHUP)
 		client_hungup = true;
-	if (poll_fds[index].revents & POLLERR)
+	if (_pollFds[index].revents & POLLERR)
 		err = true;
-	if (poll_fds[index].fd == listening)
+	if (_pollFds[index].fd == listening)
 		is_listening = true;
 }
 
 void Server::handle_new_host()
 {
+	int new_connection;
+
 	clientSize = sizeof(client);
 	new_connection = accept(listening, (sockaddr *)&client, &clientSize);
 
@@ -305,61 +308,76 @@ void Server::handle_new_host()
 
 	User *user = new User(new_connection, std::string(inet_ntoa(client.sin_addr)));
 	_users[new_connection] = user;
-	poll_fds.push_back(user->getPoll());
+	_pollFds.push_back(user->getPoll());
 	user->setState(WAITING_AUTH);
 	Server::sendCapabilities(*user);
 }
 
 void Server::handle_messages(size_t index)
 {
-	if (index >= poll_fds.size())
-	{
-		std::cout << "DEBUG: Invalid index" << index << std::endl;
-		return;
-	}
-	int fd = poll_fds[index].fd;
-	User *user = _users[poll_fds[index].fd];
-	if(!user)
-	{
-		std::cout << "DEBUG: User not found" << fd << std::endl;
-		return;
-	}
-	std::cout << "DEBUG: Proccessing user" << user->getNickname() << std::endl;
-	
-	memset(buff, 0, MAX_BUFF);
-	bytes_received = recv(poll_fds[index].fd, buff, MAX_BUFF - 1, 0);
-	if (bytes_received <= 0) {
-		std::cout << "Client " << fd << "(" << user->getHostname() << ") disconnected" << std::endl;
-		close(fd);
-		poll_fds.erase(poll_fds.begin() + index);
-    	_users.erase(fd);
-		delete user;
-		return;
-	}
-	buff[bytes_received] = '\0';
-	if (_users.find(fd) == _users.end())
-	{
-		std::cout << "DEBUG: User deleted during parsing" <<std::endl;
-		return;
-	}
-	Server::parse(*user, buff);
+    if (index >= _pollFds.size())
+        return;
+
+    int fd = _pollFds[index].fd;
+    User* user = _users[fd];
+    if (!user)
+        return;
+
+    char local_buf[MAX_BUFF];
+    ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
+
+    if (bytes_received <= 0)
+    {
+        std::cout << "Client " << fd << " (" << user->getHostname() << ") disconnected" << std::endl;
+        close(fd);
+        _pollFds.erase(_pollFds.begin() + index);
+        _users.erase(fd);
+        delete user;
+        return;
+    }
+
+
+    local_buf[bytes_received] = '\0';
+	std::cout << "LOCAL:'" << local_buf << "'" << std::endl;
+    user->appendToBuffer(local_buf);
+
+    std::string& userBuffer = user->getUserBuffer();
+    size_t start = 0;
+    size_t pos;
+
+	std::cout << "'" << userBuffer << "'" <<std::endl;
+    // Process all complete commands (\r\n terminated)
+    while ((pos = userBuffer.find("\r\n", start)) != std::string::npos)
+    {
+		std::string command = userBuffer.substr(start, pos - start);
+        if (!command.empty())
+            Server::parse(*user, command);
+
+        start = pos + 2; // skip "\r\n"
+    }
+
+    // Keep any partial command for next recv()
+    if (start > 0)
+        userBuffer.erase(0, start);
 }
 
+
 void Server::handle_disconn_err_hungup(size_t index) {
-	if (index >= poll_fds.size())
+	if (index >= _pollFds.size())
 		return;
-	int fd = poll_fds[index].fd;
+	int fd = _pollFds[index].fd;
 	User *user = _users[fd];
 	if(!user)
 		return;
 	std::cout << "Client " << fd << "(" << user->getHostname() << ") error/hungup " << std::endl;
 	close(fd);
 	
-	poll_fds.erase(poll_fds.begin() + index);
 	_users.erase(fd);
 	delete user;
-	//user.setHostname("_DISCONNECTED_");
-	//remove_from_vector(index);
+	if (index != _pollFds.size() - 1) {
+		_pollFds[index] = _pollFds.back();
+	}
+	_pollFds.pop_back();
 }
 
 bool Server::init_Server() {
@@ -379,44 +397,7 @@ bool Server::init_Server() {
 	return true;
 }
 
-// void Server::run_Server() {
-// 	while (!signal_flag) {
-// 		if (init_poll() == false)
-// 			break;
-// 		for (size_t i = 0; i < poll_fds.size(); i++) {
-// 			event_check(i);
-// 			if ((client_hungup || err) && !is_listening) {
-// 				handle_disconn_err_hungup(i);
-// 				break;
-// 				//i--;
-// 			}
-// 			if (incoming_data) {
-// 				if (is_listening)
-// 				{
-// 					handle_new_host();
-// 					break;
-// 				}
-// 				else {
-// 					handle_messages(i);
-// 					break;
-// 					//poll_fds[i].revents = 0;
-// 					//i--;
-// 					// server::printChannels(_channels);
-// 				}
-// 			}
-// 		}
-// 	}
-// 	clearChannels();
-// 	clearUsers();
-// 	server::printChannels(_channels);
-// 	server::printUsers(_users);
-			
-// }
-
-//to do clean up ,signals
-
 void Server::shutdownCleanly() {
-    // broadcast QUIT if you want:
     clearChannels();
     clearUsers();
     if (listening != -1) {
@@ -427,50 +408,40 @@ void Server::shutdownCleanly() {
 
 void Server::run_Server() {
 	while (!signal_flag) {
-		if (init_poll() == false)
-			break;
-		for (size_t i = 0; i < poll_fds.size(); i++) {
-			event_check(i);
-			 if (incoming_data || client_hungup || err) {
-                std::cout << "DEBUG: fd=" << poll_fds[i].fd
-                         << " listening=" << is_listening
-                         << " incoming=" << incoming_data
-                         << " hungup=" << client_hungup
-                         << " err=" << err << std::endl;
+        int poll_count = poll(_pollFds.data(), _pollFds.size(), -1);
+        if (poll_count == -1) {
+            if (errno == EINTR)
+                continue;
+            perror("poll");
+            break;
+        }
+
+        for (size_t i = 0; i < _pollFds.size(); ++i) {
+            int fd = _pollFds[i].fd;
+            short revents = _pollFds[i].revents;
+
+            if (revents == 0)
+                continue; // skip fds with no events
+
+            if (fd == listening && (revents & POLLIN)) {
+                handle_new_host();
+                // no break — handle multiple new connections per loop
+                continue;
             }
-			if (incoming_data && is_listening)
-			{
-				std::cout << "DEBUG: Handling new connection" << std::endl;
-				handle_new_host();
-					break;
-			}
-			
-			else if ((client_hungup || err) && !is_listening) {
-				          std::cout << "DEBUG: Handling disconnect for fd=" << poll_fds[i].fd << std::endl;
-				handle_disconn_err_hungup(i);
-				break;
-				//i--;
-			}
-			//if (incoming_data) {
-				// if (is_listening)
-				// {
-				// 	handle_new_host();
-				// 	break;
-				// }
-			else if (incoming_data && !is_listening)
-			{
-				   std::cout << "DEBUG: Handling message for fd=" << poll_fds[i].fd << std::endl;
-                    // handle_messages(i);
-					handle_messages(i);
-					break;
-					//poll_fds[i].revents = 0;
-					//i--;
-					// server::printChannels(_channels);
-				}
-			//}
-		}
-	}
+
+            if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                handle_disconn_err_hungup(i);
+				--i;
+                continue;
+            }
+
+            if (revents & POLLIN) {
+                handle_messages(i);
+            }
+        }
+    }
+
 	Server::shutdownCleanly();
-	server::printChannels(_channels);
-	server::printUsers(_users);
+	// server::printChannels(_channels);
+	// server::printUsers(_users);
 }

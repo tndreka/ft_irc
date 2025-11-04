@@ -193,7 +193,7 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 		channel::welcomeUser(server.getName(), *channel, *user);
 		std::cout << "'" << user->getNickname() << "' just connected to " << channel->getName() << std::endl;
 	}
-	server::printChannels(server.getChannels());
+	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -212,7 +212,6 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 	std::cout << std::endl;
 
 
-	//TODO handle auth
 	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it) {
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
 		if (!channel::isAlreadyExisting(server.getChannels(), *it)) {
@@ -231,7 +230,7 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 		if (channel->getMembers().empty())
 			server.deleteChannel(user, *it);
 	}
-	server::printChannels(server.getChannels());
+	// server::printChannels(server.getChannels());
 }
 
 /**
@@ -294,20 +293,20 @@ void	server::handleQuit(Server& server, User& user) {
  * 
  * @note Output: <channel_name>, <channel_password>, {<channel_members>}.
  */
-void    server::printChannels(const std::vector<Channel*>& channels) {
-    if (channels.empty())
-		return ((void)(std::cout << "No active channels!" << std::endl));
-	std::cout << "Channel list: ";
-	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
-    for (std::vector<Channel*>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
-		std::cout << **it << std::endl;
-		channel::printMembers(**it);
-		channel::printOperators(**it);
-		if (it + 1 != channels.end())
-			std::cout << std::endl;
-    }
-    std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
-}
+// void    server::printChannels(const std::vector<Channel*>& channels) {
+//     if (channels.empty())
+// 		return ((void)(std::cout << "No active channels!" << std::endl));
+// 	std::cout << "Channel list: ";
+// 	std::cout << "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
+//     for (std::vector<Channel*>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
+// 		std::cout << **it << std::endl;
+// 		channel::printMembers(**it);
+// 		channel::printOperators(**it);
+// 		if (it + 1 != channels.end())
+// 			std::cout << std::endl;
+//     }
+//     std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
+// }
 
 /**
  * @note QUIT :leaving (disconnect)

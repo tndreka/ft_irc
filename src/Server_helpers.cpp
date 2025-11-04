@@ -10,16 +10,16 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
+#include "../include/Server.hpp"
 #include <cerrno>
 
 void Server::removeUser(int fd) {
 
 	shutdown(fd, SHUT_WR);
 
-	for (size_t i = 0; i < poll_fds.size(); ++i) {
-		if (poll_fds[i].fd == fd) {
-			poll_fds.erase(poll_fds.begin() + i);
+	for (size_t i = 0; i < _pollFds.size(); ++i) {
+		if (_pollFds[i].fd == fd) {
+			_pollFds.erase(_pollFds.begin() + i);
 			break;
 		}
 	}
@@ -71,11 +71,11 @@ bool Server::isNickInUse (std::string& attemptedNick) {
 }
 
 void Server::remove_from_vector(size_t index) {
-  if (index >= poll_fds.size())
+  if (index >= _pollFds.size())
     return;
-  if (index != poll_fds.size() - 1)
-    poll_fds[index] = poll_fds.back();
-  poll_fds.pop_back();
+  if (index != _pollFds.size() - 1)
+    _pollFds[index] = _pollFds.back();
+  _pollFds.pop_back();
 }
 
 bool Server::set_Port(const std::string &port)

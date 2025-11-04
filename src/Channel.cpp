@@ -22,7 +22,7 @@ Channel::Channel(std::string name, std::string pass) :
 	_password(pass),
 	_topic("")
 {
-	std::cout << "New channel created named " << _name << std::endl;
+	// std::cout << "New channel created named " << _name << std::endl;
 };
 
 Channel::Channel(const Channel& other) :
