@@ -5,17 +5,16 @@ CPP = g++
 CPPFLAGS = -Wall -Wextra -Werror -MMD -MP -g -std=c++98 -I$(INC_DIR) #-fsanitize=address #-fno-omit-frame-pointer
 MAKEFLAGS += -s
 
-#Folders
-SRC_DIR = src
+SRCS = $(shell find ./src -iname "*.cpp")
 
-OBJ_DIR = obj
+SRC_DIR = ./src
+
+OBJ_DIR = ./obj
 
 INC_DIR = include
 
 #Source and object
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-
-OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 all: $(NAME)
 

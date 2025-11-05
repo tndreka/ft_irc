@@ -248,10 +248,10 @@ Events:
 - POLLOUT: Ready for writing
 - POLLHUP: Hang up (connection closed)
 - POLLERR: Error condition
-RETURN:
-SUCCESS: Number of file descriptors with events
-TIMEOUT: 0 (if timeout occurred)
-ERROR: -1
+- RETURN:
+- SUCCESS: Number of file descriptors with events
+- TIMEOUT: 0 (if timeout occurred)
+- ERROR: -1
 */
 bool Server::init_poll() {
 	int poll_count;
@@ -338,8 +338,7 @@ void Server::handle_messages(size_t index)
 		std::string command = userBuffer.substr(start, pos - start);
 		if (!command.empty())
 			Server::parse(*user, command);
-
-		start = pos + 2; // skip "\r\n"
+		start = pos + 2;
 	}
 
 	if (start > 0)
