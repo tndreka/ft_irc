@@ -15,9 +15,13 @@ void Server::channelMode(const User *user, const std::string& line) {
 
 	iss >> channel >> modes;
 
+	// std::cout << "aaa'" << line << "'" << std::endl;
+	// if (!line.find("MODE #" + channel))
+	// 	return;
+
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
-		error::channel::NOSUCHCHANNEL(user, _name, "#" + channel);
+		error::channel::NOSUCHCHANNEL(user, _name, channel);
 		return;
 	}
 	
@@ -115,7 +119,7 @@ void	Server::cmdInvite(const User* user, const std::string& line) {
 
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
-		error::channel::NOSUCHCHANNEL(user, _name, "#" + channel);
+		error::channel::NOSUCHCHANNEL(user, _name, channel);
 		return;
 	}
 
@@ -150,7 +154,7 @@ void Server::channelTopic(const User* u, const std::string& line) {
 
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
-		error::channel::NOSUCHCHANNEL(u, _name, "#" + channel);
+		error::channel::NOSUCHCHANNEL(u, _name, channel);
 		return;
 	}
 	if (!user::isAlreadyConnected(*c, *u)) {
@@ -245,7 +249,7 @@ void Server::cmdWhois(User *user, std::string line) {
     iss >> cmd >> targetNick;
 
     if (targetNick.empty()) {
-        std::string err = ":" + _name + " 431 " + user->getNickname() + " :No nickname given\r\n"; // ERR_NONICKNAMEGIVEN
+        std::string err = ":" + _name + " 431 " + user->getNickname() + " :No nickname given\r\n";
         send(user->getPoll().fd, err.c_str(), err.size(), 0);
         return;
     }

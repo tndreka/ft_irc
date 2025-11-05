@@ -353,15 +353,24 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	User *user = _users[fd];
 	if(!user)
 		return;
-	close(fd);
-	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ) {
 		if (user::isAlreadyConnected(**it, *user)) {
 			(*it)->removeMember(*user, _name, false);
+			channel::goodbyeUser(**it, *user);
+			if ((*it)->getNumOfUsers() == 0) {
+				Channel* ch = *it;
+				it = _channels.erase(it);
+				delete ch;
+				continue;
+			}
 		}
+		++it;
 	}
+	close(fd);
 	_users.erase(fd);
-
 	delete user;
+	if (!user)
+		std::cout << "User doesnt exists" << std::endl;
 	if (index != _pollFds.size() - 1) {
 		_pollFds[index] = _pollFds.back();
 	}

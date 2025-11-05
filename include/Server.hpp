@@ -50,13 +50,13 @@ class Server {
         std::string				_password;
         std::map<int, User*>	_users;
         std::vector<Channel*>	_channels;
+        std::vector<pollfd>		_pollFds;
 
         int						port;
         int						listening;
         sockaddr_in				hint;
         sockaddr_in				client;
         socklen_t				clientSize;
-        std::vector<pollfd>		_pollFds;
 
         pollfd					listening_fd;
 
@@ -99,7 +99,6 @@ class Server {
 		void					broadcastChannel(const Channel& channel, const std::string& msg);
 		void					sendKick(const User* u, const Channel* c, const std::string target, std::string msg);
 		void					sendPermisions(const User* user);
-		void					sendMode(const User* user, const Channel* c, bool isPossitive, const char m);
 		void					sendInvToTarget(const User* user, const Channel* channel, const User* target);
 		void					sendInvConfirm(const User* user, const Channel* channel, const std::string& server, const User* target);
 		void					sendStripChannelOper(const User* user, const Channel* channel, const User* target);
@@ -127,6 +126,7 @@ class Server {
 		void							removeUser(int fd);
 		void							clearChannels(void);
 		void							clearUsers(void);
+		void        					sendMode(const User* user, const Channel* c, bool isPossitive, const char m);
 
 		// Setters
         bool							set_Port(const std::string &port);

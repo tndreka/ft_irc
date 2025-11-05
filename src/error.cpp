@@ -27,7 +27,7 @@ void	error::registration::USERALREADYEXISTS(const User* user) {
 //===============================CHANNEL ERRORS==========================================================
 void	error::channel::NOSUCHCHANNEL(const User *user, const std::string &server, const std::string &channel) {
 	std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-	std::string msg = ":" + server + " 403 " + nick + " #" + channel + " :No such channel\r\n";
+	std::string msg = ":" + server + " 403 " + nick + " #" + channel + " :No such channel!!!!\r\n";
 	send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 }
 

@@ -21,10 +21,14 @@ void Server::parse(User& user, const std::string& line) {
 		return;
 	}
 
+	// std::cout << "Line :'" << line << "'" << std::endl;
+
     if (!line.compare(0, 5, "PING "))
         Server::sendPong(&user, line);
-    else if (!line.compare(0, 5, "JOIN "))
+    else if (!line.compare(0, 5, "JOIN ")) {
+		std::cout << "Line :'" << line << "'" << std::endl;
         server::handleJoin(*this, &user, line);
+	}
     else if (!line.compare(0, 5, "PART "))
         server::handlePart(*this, &user, line);
     else if (!line.compare(0, 5, "NICK "))
@@ -37,18 +41,21 @@ void Server::parse(User& user, const std::string& line) {
         Server::channelKick(&user, line.substr(5));
     else if (!line.compare(0, 8, "PRIVMSG ") || line.compare(0, 7, "NOTICE "))
         server::handlePrivMsg(*this, user, line);
-    else if (!line.compare(0, 4, "QUIT"))
+    else if (!line.find("QUIT "))
+	{
+		std::cout << "Line :'" << line << "'" << std::endl;
         server::handleQuit(*this, user);
+	}
     else if (!line.compare(0, 6, "TOPIC "))
         Server::channelTopic(&user, line.substr(6));
-    else if (!line.compare(0, 5, "MODE "))
+    else if (!line.compare(0, 6, "MODE #"))
         Server::channelMode(&user, line.substr(5));
     else if (!line.compare(0, 7, "INVITE ")) {
 		Server::cmdInvite(&user, line.substr(7));
 	}
 
-	// server::printUsers(_users);
-	// server::printChannels(_channels);
+	server::printUsers(_users);
+	server::printChannels(_channels);
 }
 
 

@@ -159,6 +159,10 @@ void	server::handleJoin(Server& server, User* user, std::string user_input) {
 			new_channel->addMember(*user, true);
 			server.addChannel(new_channel);
 			channel::welcomeUser(server.getName(), *new_channel, *user);
+			if (!it->second.empty()) {
+				new_channel->addMode('k');
+				server.sendMode(user, new_channel, true, 'k');
+			}
 			continue;
 		}
 
@@ -269,10 +273,13 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 void	server::handleQuit(Server& server, User& user) {
 	std::vector<Channel*>	channels = server.getChannels();
 
+	std::cout << "HEWRE" << std::endl;
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		if (user::isAlreadyConnected(**it, user)) {
 			channel::goodbyeUser(**it, user);
 			(*it)->removeMember(user, server.getName(), true);
+			if ((*it)->getMembers().empty())
+				server.deleteChannel(&user, (*it)->getName());
 		}
 	}
 	server.removeUser(user.getPoll().fd);
