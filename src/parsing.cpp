@@ -41,11 +41,6 @@ void Server::parse(User& user, const std::string& line) {
         Server::channelKick(&user, line.substr(5));
     else if (!line.compare(0, 8, "PRIVMSG ") || line.compare(0, 7, "NOTICE "))
         server::handlePrivMsg(*this, user, line);
-    else if (!line.find("QUIT "))
-	{
-		std::cout << "Line :'" << line << "'" << std::endl;
-        server::handleQuit(*this, user);
-	}
     else if (!line.compare(0, 6, "TOPIC "))
         Server::channelTopic(&user, line.substr(6));
     else if (!line.compare(0, 6, "MODE #"))
