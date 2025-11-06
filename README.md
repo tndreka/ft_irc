@@ -40,13 +40,17 @@ The *Server*, is the central hub in the Client-Server model that powers the clas
 
 The project follows an Object Oriented approach, with classes for the *Server*, the *Users* and the *Channels*. The Server class holds all the information associated with the Server's deployment, as well as  all information associated with the connected users and the running channels.
 
-Communication between the Server and the connected Clients is restricted to the client's protocol and therefore follows a format specific to the client used. This server supports the *Irssi* client (v1.2.3-1ubuntu4). More info about the communication protocol can be found in the [Modern IRC Client Protocol](https://modern.ircdocs.horse/) as well as in this project's relevant chapter [Client](##3.-client)
+Communication between the Server and the connected Clients is restricted to the client's protocol and therefore follows a format specific to the client used. This server supports the *Irssi* client (v1.2.3-1ubuntu4). More info about the communication protocol can be found in the [Modern IRC Client Protocol](https://modern.ircdocs.horse/) as well as in this project's relevant chapter [Client](#3-client-irssi)
 
 ### 2.2 Classes
 
 ### 2.2.1 Server
 
-<snapshot>
+<div align="center">
+<img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Server.png" alt="alt text" width="400"/>
+
+  ***Picture 1*** *: Server Class implementation*
+</div>
 
 The program opens up a socket, set as non-blocking to avoid a single slow client from blocking the server, and all of them stored in a dynamic vector of *pollfd* entries (std::vector<pollfd> _pollFds), one for each connected client. It utilizes one main loop, where it listens for data to receive through the *poll()* function. It traverses through the *_pollFds* and listens for events from each fd and depending to the return value, it can accept a new connections, or close and remove an exiting connection/client, or attempt queued writes:
 
@@ -60,17 +64,27 @@ The program opens up a socket, set as non-blocking to avoid a single slow client
 
 #### 2.2.2 User
 
-<snapshot>
+<div align="center">
+<img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/User.png" alt="alt text" width="400"/>
+
+  ***Picture 2*** *: User Class implementation*
+</div>
 
 Each connected client is a separate *User* instance, containing all the relevant information. When first connected to the server, they pass through an authentication process, in which each step is monitored and stored in the enum *ClientState* variable. If they are successfully authenticated, they are marked as *VERIFIED* and there on are allowed to access the server and communicate with the rest of its users. Providing **incorrect server password**, or **invalid (empty) credentials**, such as username/nickname, will result in denied access.
 
-Users can be both *Server Admins* and *Channel Operators*, where each qualification provide different type of priviledges. More on the Channel Operators in the [Channels](####-2.2.3-channels) chapter.
+Users can be both *Server Admins* and *Channel Operators*, where each qualification provide different type of priviledges. More on the Channel Operators in the [Channels](#223-channels) chapter.
 
-Users are able to communicate with each other directly, via private messages, through the appropriate protocol, as stated in the [Private Message](###-3.1-communication-protocol) command.
+Users are able to communicate with each other directly, via private messages, through the appropriate protocol, as stated in the [Private Message](#31-communication-protocol) command.
 
 #### 2.2.3 Channels
 
-<snapshot>
+<div align="center">
+
+  <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Channel.png" alt="alt text" width="400"/>
+
+  ***Picture 3*** *: Channel Class implementation*
+</div>
+
 
 Channels are groups of the Server's users, that allow their members to communicate directly with each other. They can be *password* protected, they can have a specific *topic*, they are by default set to contain 20 members (*size*) and can work under predefined security protocols, called *modes*. All of the aforementioned attributes are potentially **modifiable**.
 
@@ -128,16 +142,21 @@ If executed successfully, a welcome message appears to the terminal and the conn
 
 The nc communication allows for the Server to successfully parse and execute partial user prompts, such as:
 
-<div align="center">
+```
+$ nc <ip> <port_number>
 
-  "PRIVMSG #ch1"
-
-  " :msg^M"
-
-</div>
+PRIVMSG #ch1
+ :msg^M
+```
 
 **IMPORTANT**: The message format the Server supports dictates that all messages sent, regardless if they are coming from the Client or the nc command, need to follow the same pattern, and therefore it is essential for the nc command to be able to communicate with the Server, that all messages sent to it end in "\r\n". This functionality is achieved by the *^M* key combination (Ctrl + V + Ctrl + M), before sending each prompt.
 
-## 3: Collaboration
+<div align="right">
+  <a href="#top">⬆️ Return to top</a>
+</div>
 
-Thanks to the team for the awesome collab: dchrysov, itsiros 
+<br>
+
+## 4: Collaboration
+
+Special thanks to the team for the awesome collab: [dchrysov](https://github.com/chrisov), [itsiros](https://github.com/tsironi93) 💪💪
