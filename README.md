@@ -158,7 +158,7 @@ PRIVMSG #ch1
 
 <br>
 
-3.2 Container
+### 3.2 Container
 
 The Dockerfile inlcuded builds the specific irssi version container, to directly use and test the project's functionality. Both the client's ip and port number are modifiable for the container to communicate with any Server, through its Dockerfile. The commands to build and run the container are as follows:
 
