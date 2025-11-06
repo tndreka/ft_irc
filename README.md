@@ -152,12 +152,6 @@ PRIVMSG #ch1
 
 **IMPORTANT**: The message format the Server supports dictates that all messages sent, regardless if they are coming from the Client or the nc command, need to follow the same pattern, and therefore it is essential for the nc command to be able to communicate with the Server, that all messages sent to it end in "\r\n". This functionality is achieved by the *^M* key combination (Ctrl + V + Ctrl + M), before sending each prompt.
 
-<div align="right">
-  <a href="#top">⬆️ Return to top</a>
-</div>
-
-<br>
-
 ### 3.2 Container
 
 The Dockerfile inlcuded builds the specific irssi version container, to directly use and test the project's functionality. Both the client's ip and port number are modifiable for the container to communicate with any Server, through its Dockerfile. The commands to build and run the container are as follows:
@@ -166,6 +160,12 @@ The Dockerfile inlcuded builds the specific irssi version container, to directly
 $ docker build -t irssi:1.2.3-jammy .
 $ docker run --rm -it irssi:1.2.3-jammy
 ```
+
+<div align="right">
+  <a href="#top">⬆️ Return to top</a>
+</div>
+
+<br>
 
 ## 4: Collaboration
 
