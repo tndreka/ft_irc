@@ -43,9 +43,9 @@ The project follows an Object Oriented approach, with classes for the *Server*, 
 
 Communication between the Server and the connected Clients is restricted to the client's protocol and therefore follows a format specific to the client used. This server supports the *Irssi* client (v1.2.3-1ubuntu4). More info about the communication protocol can be found in the [Modern IRC Client Protocol](https://modern.ircdocs.horse/) as well as in this project's relevant chapter [Client](#3-client-irssi)
 
-### 2.2 Classes
+### 2.1 Classes
 
-### 2.2.1 Server
+### 2.1.1 Server
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Server.png" alt="alt text" width="400"/>
@@ -63,7 +63,7 @@ The program opens up a socket, set as non-blocking to avoid a single slow client
 
 **NOTE**: In the case of either a client session's or the server's process gets killed, all relevant resources are gracefully freed.
 
-#### 2.2.2 User
+#### 2.1.2 User
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/User.png" alt="alt text" width="400"/>
@@ -77,7 +77,7 @@ Users can be both *Server Admins* and *Channel Operators*, where each qualificat
 
 Users are able to communicate with each other directly, via private messages, through the appropriate protocol, as stated in the [Private Message](#31-communication-protocol) command.
 
-#### 2.2.3 Channels
+#### 2.1.3 Channels
 
 <div align="center">
 
