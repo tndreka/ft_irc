@@ -323,7 +323,7 @@ void Server::handle_messages(size_t index)
 	ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
 
 	if (bytes_received <= 0) {
-		Server::handle_disconn_err_hungup(index);
+		// Server::handle_disconn_err_hungup(index);
 		return;
 	}
 
@@ -334,8 +334,10 @@ void Server::handle_messages(size_t index)
 	size_t start = 0;
 	size_t pos;
 
-	while ((pos = userBuffer.find("\r\n", start)) != std::string::npos) {
+	while (!userBuffer.empty() && (pos = userBuffer.find("\r\n", start)) != std::string::npos) {
 		std::string command = userBuffer.substr(start, pos - start);
+		if (!command.compare(0, 4, "QUIT"))
+			return (server::handleQuit(*this, *user));
 		if (!command.empty())
 			Server::parse(*user, command);
 		start = pos + 2;
@@ -352,6 +354,7 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	User *user = _users[fd];
 	if(!user)
 		return;
+	std::cout << "Handle disc" << std::endl;
 	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ) {
 		if (user::isAlreadyConnected(**it, *user)) {
 			(*it)->removeMember(*user, _name, false);
@@ -365,15 +368,14 @@ void Server::handle_disconn_err_hungup(size_t index) {
 		}
 		++it;
 	}
-	close(fd);
-	_users.erase(fd);
-	delete user;
-	if (!user)
-		std::cout << "User doesnt exists" << std::endl;
-	if (index != _pollFds.size() - 1) {
-		_pollFds[index] = _pollFds.back();
-	}
-	_pollFds.pop_back();
+	removeUser(fd);
+	// close(fd);
+	// _users.erase(fd);
+	// delete user;
+	// if (index != _pollFds.size() - 1) {
+	// 	_pollFds[index] = _pollFds.back();
+	// }
+	// _pollFds.pop_back();
 }
 
 bool Server::init_Server() {
@@ -404,37 +406,42 @@ void Server::shutdownCleanly() {
 
 void Server::run_Server() {
 	while (!signal_flag) {
-        int poll_count = poll(_pollFds.data(), _pollFds.size(), -1);
-        if (poll_count == -1) {
-            if (errno == EINTR)
-                continue;
-            perror("poll");
-            break;
-        }
+		int poll_count = poll(_pollFds.data(), _pollFds.size(), -1);
+		if (poll_count == -1) {
+			if (errno == EINTR)
+				continue;
+			perror("poll");
+			break;
+		}
 
-        for (size_t i = 0; i < _pollFds.size(); ++i) {
-            int fd = _pollFds[i].fd;
-            short revents = _pollFds[i].revents;
 
-            if (revents == 0)
-                continue;
 
-            if (fd == listening && (revents & POLLIN)) {
-                handle_new_host();
-                continue;
-            }
+		for (size_t i = 0; i < _pollFds.size(); ++i) {
+			int fd = _pollFds[i].fd;
+			short revents = _pollFds[i].revents;
+			
+			std::cout << "Events (" << fd << "): " << revents << std::endl;
+			if (revents == 0)
+				continue;
 
-            if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                handle_disconn_err_hungup(i);
-				--i;
-                continue;
-            }
+			if (fd == listening && (revents & POLLIN)) {
+				handle_new_host();
+				continue;
+			}
 
-            if (revents & POLLIN) {
-                handle_messages(i);
-            }
-        }
-    }
+			// if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+			// 	std::cout << "Disc loop" << std::endl;
+			// 	handle_disconn_err_hungup(i);
+			// 	--i;
+			// 	continue;
+			// }
+
+			if (revents & POLLIN) {
+				std::cout << "handle msgs" << std::endl;
+				handle_messages(i);
+			}
+		}
+	}
 
 	Server::shutdownCleanly();
 }

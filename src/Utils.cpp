@@ -273,7 +273,7 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 void	server::handleQuit(Server& server, User& user) {
 	std::vector<Channel*>	channels = server.getChannels();
 
-	std::cout << "HEWRE" << std::endl;
+	// std::cout << "HEWRE" << std::endl;
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		if (user::isAlreadyConnected(**it, user)) {
 			channel::goodbyeUser(**it, user);

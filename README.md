@@ -24,7 +24,7 @@ The program is called as follows:
 
 <div align="center">
 
-```$ ./IRC <port_number> <server_password>```
+```$ ./ircserv <port_number> <server_password>```
 </div>
 
 
@@ -39,7 +39,7 @@ The program is called as follows:
 
 The *Server*, is the central hub in the Client-Server model that powers the classic, text-based chat system. Its primary functionality is to accept connections from IRC clients, manage and coordinate all chat activity within its domain, and then efficiently relay messages between Users, both in public discussion forums called *Channels* and in *private* one-on-one conversations.
 
-The project follows an Object Oriented approach, with classes for the *Server*, the *Users* and the *Channels*. The Server class holds all the information associated with the Server's deployment, as well as  all information associated with the connected users and the running channels.
+The project follows an Object Oriented approach, with classes for the *Server*, the *Users* and the *Channels*. The Server class holds all the information associated with the Server's deployment, as well as  all information associated with the connected Users and the running Channels.
 
 Communication between the Server and the connected Clients is restricted to the client's protocol and therefore follows a format specific to the client used. This server supports the *Irssi* client (v1.2.3-1ubuntu4). More info about the communication protocol can be found in the [Modern IRC Client Protocol](https://modern.ircdocs.horse/) as well as in this project's relevant chapter [Client](#3-client-irssi)
 
@@ -48,27 +48,31 @@ Communication between the Server and the connected Clients is restricted to the 
 ### 2.1.1 Server
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Server.png" alt="alt text" width="400"/>
+  <a id="pic1"></a>
+  <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Server.png" alt="alt text" width="400"/>
 
   ***Picture 1*** *: Server Class implementation*
 </div>
 
-The program opens up a socket, set as non-blocking to avoid a single slow client from blocking the server, and all of them stored in a dynamic vector of *pollfd* entries (std::vector<pollfd> _pollFds), one for each connected client. It utilizes one main loop, where it listens for data to receive through the *poll()* function. It traverses through the *_pollFds* and listens for events from each fd and depending to the return value, it can accept a new connections, or close and remove an exiting connection/client, or attempt queued writes:
+The program opens up a socket, set as non-blocking to avoid a single slow client from blocking the server, and all of them stored in a dynamic vector of *pollfd* entries (std::vector<pollfd> _pollFds), one for each connected client. It utilizes one main loop, where it listens for data to receive through the *poll()* function. It traverses through the *_pollFds* and listens for events from each fd and depending on the return value, it can accept a new connections, or close and remove an exiting connection/client, or attempt queued writes:
 
-- **New connection**: A new User instance is created and stored in the server instance, in a std::map<int, User*> variable, where the map's key is the User's fd for quick access.
+- **New connection**: A new User instance is created and stored server-side, in a std::map<int, User*> variable, where the map's key is the User's fd for quick access.
 
 - **Close an existing connection**: When a client disconnects from the server, it handles their safe removal from the program's resources. Their fd is closed, they are removed from the User map, any channel list they may be part of, before their pointer is finally freed.
 
-- **Queued Writes**: In the case where the client attemps to communicate with other clients through the server, the server stores the incoming data into a user-specified *buffer* (std::string _userBuffer), before it gets parsed and send the relevant confirmation message back to all associated clients.
+- **Queued Writes**: In the case where the client attemps to communicate with other clients through the server, the server stores the incoming data into a user-specific *buffer* (std::string _userBuffer, see User Class in [Picture 2](#pic2)), before it gets parsed and send the relevant confirmation message back to all associated clients.
 
 **NOTE**: In the case of either a client session's or the server's process gets killed, all relevant resources are gracefully freed.
 
 #### 2.1.2 User
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/User.png" alt="alt text" width="400"/>
-
+  <a id="pic2"></a>
+  
+  <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/User.png" alt="alt text" width="400"/>
+  
   ***Picture 2*** *: User Class implementation*
+
 </div>
 
 Each connected client is a separate *User* instance, containing all the relevant information. When first connected to the server, they pass through an authentication process, in which each step is monitored and stored in the enum *ClientState* variable. If they are successfully authenticated, they are marked as *VERIFIED* and there on are allowed to access the server and communicate with the rest of its users. Providing **incorrect server password**, or **invalid (empty) credentials**, such as username/nickname, will result in denied access.
@@ -80,6 +84,7 @@ Users are able to communicate with each other directly, via private messages, th
 #### 2.1.3 Channels
 
 <div align="center">
+  <a id="pic3"></a>
 
   <img src="https://raw.githubusercontent.com/tndreka/ft_irc/9456c8cbbcaf953b7777897a1470b58ac46abefc/Channel.png" alt="alt text" width="400"/>
 

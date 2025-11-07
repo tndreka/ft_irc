@@ -21,34 +21,32 @@ void Server::parse(User& user, const std::string& line) {
 		return;
 	}
 
-	// std::cout << "Line :'" << line << "'" << std::endl;
+	std::cout << "Line :'" << line << "'" << std::endl;
 
-    if (!line.compare(0, 5, "PING "))
+    if (!line.compare(0, 5, "PING ")) {
         Server::sendPong(&user, line);
-    else if (!line.compare(0, 5, "JOIN ")) {
-		std::cout << "Line :'" << line << "'" << std::endl;
+	} else if (!line.compare(0, 5, "JOIN ")) {
         server::handleJoin(*this, &user, line);
-	}
-    else if (!line.compare(0, 5, "PART "))
+	} else if (!line.compare(0, 5, "PART ")) {
         server::handlePart(*this, &user, line);
-    else if (!line.compare(0, 5, "NICK "))
+	} else if (!line.compare(0, 5, "NICK ")) {
         Server::cmdNick(&user, line);
-    else if (!line.compare(0, 6, "WHOIS "))
+	} else if (!line.compare(0, 6, "WHOIS ")) {
         Server::cmdWhois(&user, line);
-    else if (!line.compare(0, 5, "OPER "))
+	} else if (!line.compare(0, 5, "OPER ")) {
         Server::cmdOper(&user, line);
-    else if (!line.compare(0, 5, "KICK "))
+	} else if (!line.compare(0, 5, "KICK ")) {
         Server::channelKick(&user, line.substr(5));
-    else if (!line.compare(0, 8, "PRIVMSG ") || line.compare(0, 7, "NOTICE "))
+	} else if (!line.compare(0, 8, "PRIVMSG ") || !line.compare(0, 7, "NOTICE ")) {
         server::handlePrivMsg(*this, user, line);
-    else if (!line.compare(0, 6, "TOPIC "))
+	} else if (!line.compare(0, 6, "TOPIC ")) {
         Server::channelTopic(&user, line.substr(6));
-    else if (!line.compare(0, 6, "MODE #"))
-        Server::channelMode(&user, line.substr(5));
-    else if (!line.compare(0, 7, "INVITE ")) {
+	} else if (!line.compare(0, 6, "MODE #")) {
+        Server::channelMode(&user, line.substr(6));
+	} else if (!line.compare(0, 7, "INVITE ")) {
 		Server::cmdInvite(&user, line.substr(7));
 	}
-
+	
 	server::printUsers(_users);
 	server::printChannels(_channels);
 }

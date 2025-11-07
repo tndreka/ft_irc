@@ -15,7 +15,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 
 	iss >> channel >> modes;
 
-	// std::cout << "aaa'" << line << "'" << std::endl;
+	// std::cout << "channel : '" << channel << "'" << std::endl;
 	// if (!line.find("MODE #" + channel))
 	// 	return;
 

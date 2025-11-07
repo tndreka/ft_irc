@@ -26,6 +26,7 @@ void Server::removeUser(int fd) {
 	std::map<int, User*>::iterator it = _users.find(fd);
 	if (it != _users.end()) {
 		delete it->second;
+		it->second = NULL;
 		_users.erase(it);
 	}
 
@@ -48,7 +49,8 @@ bool Server::isValidNick(std::string& attemptedNick) {
 bool Server::isUserAlreadySigned(User& user) {
 	for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
     	User* u = it->second;
-    	if (!u) continue;
+    	if (!u)
+			continue;
     	if (u->getUsername() == user.getUsername() && u->getHostname() == user.getHostname())
 			return true;
 	}
