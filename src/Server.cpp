@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/11/13 15:34:57 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/11/13 19:18:01 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -371,11 +371,12 @@ void Server::handle_disconn_err_hungup(size_t index) {
 	User *user = _users[fd];
 	if(!user)
 		return;
-	std::cout << "Handle disc" << std::endl;
+	// std::cout << "Handle disc" << std::endl;
 	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ) {
-		if (user::isAlreadyConnected(**it, *user)) {
-			(*it)->removeMember(*user, _name, false);
+		if (user::isAlreadyConnected(**it, *user))
+		{
 			channel::goodbyeUser(**it, *user);
+			(*it)->removeMember(*user, _name, false);
 			if ((*it)->getNumOfUsers() == 0) {
 				Channel* ch = *it;
 				it = _channels.erase(it);
