@@ -25,7 +25,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 		return;
 	}
 	
-	if (line == c->getName()) { return; }
+	//if (line == c->getName()) { return; }
 
 	if (!user->getIsAdmin() && !c->isChannelAdmin(*user)) {
 		error::common::CHANOPRIVSNEEDED(user, _name, channel);
@@ -37,14 +37,14 @@ void Server::channelMode(const User *user, const std::string& line) {
 		return;
 	}
 
-	std::cout << "this is the mode requested: " << modes<< std::endl;
+	// std::cout << "this is the mode requested: " << modes<< std::endl;
 
 	if (modes[0] != '+' && modes[0] != '-') {
 		error::channel::WRONGMODE(user, _name, '+');
 		return;
 	}
 
-	bool isPositive;
+	bool isPositive = true;
 
 	for (size_t i = 0; i < modes.size(); ++i) {
 		std::string param;
@@ -93,7 +93,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 						continue;
 					}
 					int num = std::atoi(param.c_str());
-					if (num > 2 && num <= MAX_SIZE)
+					if (num > 0 && num <= MAX_SIZE)
 					{
 						c->setSize(num);
 						c->addMode('l');
@@ -227,6 +227,10 @@ void Server::channelTopic(const User* u, const std::string& line) {
 	iss >> channel;
 	std::getline(iss, topic);
 
+	//remove the prefix
+	if(!channel.empty() && channel[0] == '#')
+		channel.erase(0, 1);
+
 	Channel* c = server::getChannelFromList(_channels, channel);
 	if (!c) {
 		error::channel::NOSUCHCHANNEL(u, _name, channel);
@@ -236,22 +240,35 @@ void Server::channelTopic(const User* u, const std::string& line) {
 		error::channel::NOTONCHANNEL(u, _name, channel);
 		return;
 	}
-	if (c->hasMode('t') && !u->getIsAdmin() && !c->isChannelAdmin(*u)) {
-		error::common::CHANOPRIVSNEEDED(u, _name, channel);
-		return;
-	}
 	if (!topic.empty() && topic[0] == ' ') {
 		topic.erase(0 , 1);
 	}
 	if (!topic.empty() && topic[0] == ':') {
 		topic.erase(0 , 1);
 	}
-	if (!topic.empty()) {
-		c->setTopic(topic);
-		const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
-			+ u->getHostname() + " TOPIC #" + channel + " :" + topic + "\n";
-		Server::broadcastChannel(*c, msg);
+	if (topic.empty())
+	{
+		std::string current_topic = c->getTopic();
+		std::string msg;
+		if(current_topic.empty())
+		{
+			msg = ":" + _name + " 331 " + u->getNickname() + " #" + channel + " :No topic is set\r\n";  
+		}
+		else
+		{
+			msg = ":" + _name + " 332 " + u->getNickname() + " #" + channel + " :" +current_topic + "\r\n";
+		}
+		send(u->getPoll().fd, msg.c_str(), msg.size(), 0);
+		return;
 	}
+	if (c->hasMode('t') && !u->getIsAdmin() && !c->isChannelAdmin(*u)) {
+		error::common::CHANOPRIVSNEEDED(u, _name, channel);
+		return;
+	}
+	c->setTopic(topic);
+	const std::string msg = ":" + u->getNickname() + "!" + u->getUsername() + "@"
+	+ u->getHostname() + " TOPIC #" + channel + " :" + topic + "\r\n";
+	Server::broadcastChannel(*c, msg);
 }
 
 void Server::channelKick(const User* u, const std::string& line) {
