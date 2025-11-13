@@ -46,7 +46,7 @@ void	error::channel::USERNOTINCHANNEL(const User *user, const std::string &serve
 
 void	error::channel::USERONCHANNEL(const User *user, const std::string &server, const std::string &target, const std::string &channel) {
 	std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-	std::string msg = ":" + server + " 443 " + nick + " #" + target + " " + channel +
+	std::string msg = ":" + server + " 443 " + nick + " " + target + " #" + channel +
 					" :is already on channel\r\n";
 	send(user->getPoll().fd, msg.c_str(), msg.length(), 0);
 }
