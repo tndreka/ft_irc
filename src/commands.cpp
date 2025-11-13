@@ -54,52 +54,122 @@ void Server::channelMode(const User *user, const std::string& line) {
 		}
 
 		if (modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') {
-			if (isPositive) iss >> param;
+			iss >> param;
+			//if (isPositive) iss >> param;
+			
 			if (isPositive && param.empty()) {
 				error::common::NEEDMOREPARAMS(user, _name, "MODE +/-" + modes);
 				continue;
 			}
-			if (modes[i] == 'k') {
-				isPositive ? c->setPassword(param) : c->setPassword("");
-			} else if (modes[i] == 'l') {
-				if (!isPositive) {
+			if (modes[i] == 'k')
+			{
+				//isPositive ? c->setPassword(param) : c->setPassword("");
+				if(isPositive)
+				{
+					c->setPassword(param);
+					c->addMode('k');
+				}
+				else
+				{
+					c->setPassword("");
+					c->removeMode('k');
+				}
+				Server::sendMode(user, c, isPositive, 'k');
+			} 
+			else if (modes[i] == 'l')
+			{
+				if (!isPositive)
+				{
 					c->setSize(DEFAULT_SIZE);
-				} else {
-					if (!isAllDigits(param)) {
+					c->removeMode('l');
+					Server::sendMode(user, c, isPositive, 'l');
+				} 
+				else
+				{
+					if (!isAllDigits(param))
+					{
 						error::channel::WRONGMODE(user, _name, 'l');
-						return;
+						//return;
+						continue;
 					}
 					int num = std::atoi(param.c_str());
 					if (num > 2 && num <= MAX_SIZE)
+					{
 						c->setSize(num);
-					else {
+						c->addMode('l');
+						Server::sendMode(user, c, isPositive, 'l');
+					}
+					else
+					{
 						error::channel::WRONGMODE(user, _name, 'l');
-						return;
+						//return;
 					}
 				}
 
-			} else if (modes[i] == 'o') {
+			}
+			else if (modes[i] == 'o')
+			{
 				User* target = server::getUserFromList(_users, param);
-				if (!target) {
+			
+				if (!target)
+				{
 					error::common::NOSUCHNICK(user, _name, param);
 					continue;
 				}
-				if (!target || !user::isAlreadyConnected(*c, *target)) {
+				if (!user::isAlreadyConnected(*c, *target))
+				{
 					error::channel::USERNOTINCHANNEL(user, _name, param, c->getName());
 					continue;
 				}
-				target->setAdmin(isPositive);
-				if (isPositive) {
-					Server::sendPermisions(target);
+				//set operator status
+				std::map<User*, bool> &members = const_cast<std::map<User*, bool>&>(c->getMembers());
+				std::map<User*, bool>::iterator it = members.find(target);
+				if(it != members.end())
+				{
+					it->second = isPositive;
 				}
+				target->setAdmin(isPositive);
+				if(isPositive)
+					Server::sendPermisions(target);
+				std::string msg = ":" + user->getNickname() + "!" + user->getUsername() + "@" + user->getHostname() + " MODE #" + c->getName() + " " + (isPositive ? "+" : "-") + "o " + target->getNickname() + "\r\n";
+				Server::broadcastChannel(*c, msg);
+
+
+
+				// if (!target || !user::isAlreadyConnected(*c, *target)) {
+				// 	error::channel::USERNOTINCHANNEL(user, _name, param, c->getName());
+				// 	continue;
+				// }
+				// target->setAdmin(isPositive);
+				// if (isPositive) {
+				// 	Server::sendPermisions(target);
+				// }
 			}
-		} else if (modes[i] != 't' && modes[i] != 'i') {
-			error::channel::WRONGMODE(user, _name, modes[i]);
-			return;
+		} 
+		else if(modes[i] == 't' || modes[i] == 'i')
+		{
+			if(isPositive)
+			{
+				c->addMode(modes[i]);
+			}
+			else
+			{
+				c->removeMode(modes[i]);
+			}
+			Server::sendMode(user, c, isPositive, modes[i]);
 		}
-		isPositive ? c->addMode(modes[i]) : c->removeMode(modes[i]);
-		std::cout << "The channel: " <<  c->getName() << "has these modes: " << c->getModes() << std::endl;
-		Server::sendMode(user, c, isPositive, modes[i]);
+		else
+		{
+			error::channel::WRONGMODE(user, _name, modes[i]);
+		}
+		// else if (modes[i] != 't' && modes[i] != 'i') 
+		// {
+		// 	error::channel::WRONGMODE(user, _name, modes[i]);
+		// 	return;
+		// }
+		// isPositive ? c->addMode(modes[i]) : c->removeMode(modes[i]);
+		// std::cout << "The channel: " <<  c->getName() << "has these modes: " << c->getModes() << std::endl;
+		// Server::sendMode(user, c, isPositive, modes[i]);
 	}
 }
 
