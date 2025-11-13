@@ -214,11 +214,13 @@ void	server::handlePart(Server& server, User* user, std::string user_input) {
 	std::cout << std::endl;
 
 
-	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it) {
+	for (std::vector<std::string>::const_iterator it = channels_to_leave.begin(); it != channels_to_leave.end(); ++it)
+	{
 		Channel* channel = server::getChannelFromList(server.getChannels(), *it);
-		if (!channel::isAlreadyExisting(server.getChannels(), *it)) {
+		if(!channel)
+		{
 			std::cout << "The channel doesn't exist!" << std::endl;
-			error::channel::NOSUCHCHANNEL(user, server.getName(), channel->getName());
+			error::channel::NOSUCHCHANNEL(user, server.getName(), *it);
 			continue;
 		}
 		if (!user::isAlreadyConnected(*channel, *user)) {
@@ -502,7 +504,7 @@ void	channel::sendNameList(const std::string& server_name, const Channel& channe
 		msg += it->first->getNickname() + " ";
 	msg += postfix;
 	send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
-	msg = prefix + PROTOCOL::RPL_ENDOFNAMES + user.getNickname() + " " + channel.getName() + " :End of /NAMES list" + postfix;
+	msg = prefix + PROTOCOL::RPL_ENDOFNAMES + user.getNickname() + " #" + channel.getName() + " :End of /NAMES list" + postfix;
 	send(user.getPoll().fd, msg.c_str(), msg.size(), 0);
 }
 
