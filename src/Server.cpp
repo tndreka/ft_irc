@@ -6,7 +6,7 @@
 /*   By: tndreka <tndreka@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:22:24 by tndreka           #+#    #+#             */
-/*   Updated: 2025/10/28 22:48:41 by tndreka          ###   ########.fr       */
+/*   Updated: 2025/11/13 15:34:57 by tndreka          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,8 +322,17 @@ void Server::handle_messages(size_t index)
 	char local_buf[MAX_BUFF];
 	ssize_t bytes_received = recv(fd, local_buf, sizeof(local_buf) - 1, MSG_DONTWAIT);
 
-	if (bytes_received <= 0) {
-		// Server::handle_disconn_err_hungup(index);
+	if (bytes_received < 0) {
+		//handle error for recv()
+		if(errno == EAGAIN || errno == EWOULDBLOCK)
+			return;
+		Server::handle_disconn_err_hungup(index);
+		return;
+	}
+	
+	if(bytes_received == 0)
+	{
+		Server::handle_disconn_err_hungup(index);
 		return;
 	}
 
@@ -333,17 +342,25 @@ void Server::handle_messages(size_t index)
 	std::string& userBuffer = user->getUserBuffer();
 	size_t start = 0;
 	size_t pos;
+	bool user_quit = false;
 
 	while (!userBuffer.empty() && (pos = userBuffer.find("\r\n", start)) != std::string::npos) {
 		std::string command = userBuffer.substr(start, pos - start);
+		//when quit dont return break and clear buffer
 		if (!command.compare(0, 4, "QUIT"))
-			return (server::handleQuit(*this, *user));
+		{
+			server::handleQuit(*this, *user);
+			user_quit = true;
+			// userBuffer.clear();
+			break;
+		}
 		if (!command.empty())
 			Server::parse(*user, command);
 		start = pos + 2;
 	}
 
-	if (start > 0)
+	//clean buffer is user still exist and not QUITED
+	if (!user_quit && _users.find(fd) != _users.end() && start > 0)	
 		userBuffer.erase(0, start);
 }
 
@@ -420,7 +437,7 @@ void Server::run_Server() {
 			int fd = _pollFds[i].fd;
 			short revents = _pollFds[i].revents;
 			
-			std::cout << "Events (" << fd << "): " << revents << std::endl;
+			// std::cout << "Events (" << fd << "): " << revents << std::endl;
 			if (revents == 0)
 				continue;
 
@@ -428,16 +445,14 @@ void Server::run_Server() {
 				handle_new_host();
 				continue;
 			}
-
-			// if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
-			// 	std::cout << "Disc loop" << std::endl;
-			// 	handle_disconn_err_hungup(i);
-			// 	--i;
-			// 	continue;
-			// }
-
+			if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+				// std::cout << "Disc loop" << std::endl;
+				handle_disconn_err_hungup(i);
+				--i;
+				continue;
+			}
 			if (revents & POLLIN) {
-				std::cout << "handle msgs" << std::endl;
+				// std::cout << "handle msgs" << std::endl;
 				handle_messages(i);
 			}
 		}
