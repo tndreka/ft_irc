@@ -356,7 +356,9 @@ void Server::cmdNick(User *user, std::string line) {
 	std::istringstream iss(line);
 
 	iss >> command >> newNick;
-	if (newNick.empty()) {
+	
+	if (newNick.empty())
+	{
 		return;
 	}
 
@@ -368,6 +370,21 @@ void Server::cmdNick(User *user, std::string line) {
 	std::string msg = ":" + oldNick + "!" + user->getUsername() + "@" + user->getHostname()
 		+ " NICK :" + newNick + "\r\n";
 
-	std::cout << msg.c_str() << std::endl;
+	//std::cout << msg.c_str() << std::endl;
 	send(user->getPoll().fd, msg.c_str(), msg.size(), 0);
+	//broadcast to all channels user
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if(user::isAlreadyConnected(**it, *user))
+		{
+			const std::map<User*, bool>& members = (*it)->getMembers();
+			for (std::map<User*, bool>::const_iterator mit = members.begin(); mit != members.end(); ++mit)
+			{
+				if(mit->first != user)
+					send(mit->first->getPoll().fd, msg.c_str(), msg.size(), 0);
+			}
+			
+		}
+	}
+	
 }
