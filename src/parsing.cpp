@@ -21,7 +21,7 @@ void Server::parse(User& user, const std::string& line) {
 		return;
 	}
 
-	std::cout << "Line :'" << line << "'" << std::endl;
+	//std::cout << "Line :'" << line << "'" << std::endl;
 
     if (!line.compare(0, 5, "PING ")) {
         Server::sendPong(&user, line);
