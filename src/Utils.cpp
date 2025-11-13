@@ -273,6 +273,9 @@ void	server::handlePrivMsg(Server& server, User& sender, const std::string& user
 void	server::handleQuit(Server& server, User& user) {
 	std::vector<Channel*>	channels = server.getChannels();
 
+	std::string quit_msg = "ERROR : Closing Link: " + user.getHostname() + "(Client Quit)\r\n";
+	send(user.getPoll().fd, quit_msg.c_str(), quit_msg.size(), 0);
+
 	// std::cout << "HEWRE" << std::endl;
 	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		if (user::isAlreadyConnected(**it, user)) {
