@@ -208,6 +208,11 @@ void	Server::cmdInvite(const User* user, const std::string& line) {
 		error::common::NOSUCHNICK(user, _name, target);
 		return;
 	}
+	if(user::isAlreadyConnected(*c, *t))
+	{
+		error::channel::USERONCHANNEL(user, _name, target, channel);
+		return ;
+	}
 
 	Server::sendInvToTarget(user, c, t);
 	Server::sendInvConfirm(user, c, _name, t);
