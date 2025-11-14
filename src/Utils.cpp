@@ -458,7 +458,8 @@ void	channel::goodbyeUser(const Channel& channel, const User& user) {
 	const std::string 			msg = prefix + info + postfix;
 	
 	for (std::map<User*, bool>::const_iterator it = members.begin(); it != members.end(); ++it)
-		send(it->first->getPoll().fd, msg.c_str(), msg.size(), 0);
+		if (it->first->getPoll().fd != user.getPoll().fd)
+			send(it->first->getPoll().fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
 }
 
 /**

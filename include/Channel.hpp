@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#define MIN_SIZE 3
 #define DEFAULT_SIZE 20
 #define MAX_SIZE 200
 

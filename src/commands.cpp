@@ -93,7 +93,7 @@ void Server::channelMode(const User *user, const std::string& line) {
 						continue;
 					}
 					int num = std::atoi(param.c_str());
-					if (num > 0 && num <= MAX_SIZE)
+					if (num >= MIN_SIZE && num <= MAX_SIZE)
 					{
 						c->setSize(num);
 						c->addMode('l');
